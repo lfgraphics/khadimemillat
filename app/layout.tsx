@@ -47,7 +47,7 @@ export default function RootLayout({
         > <SidebarProvider>
             <AppSidebar />
             <main>
-              <SidebarTrigger />
+              <SidebarTrigger className="fixed top-1" />
               {children}
             </main>
           </SidebarProvider>
