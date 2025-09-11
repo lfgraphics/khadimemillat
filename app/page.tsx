@@ -1,103 +1,206 @@
+import { Footer } from "@/components/footer";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Headphones, Heart, Mail, Phone, ShoppingBag, Store, Truck, Users } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
+        <div className="absolute inset-0 "></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20" data-testid="hero-section">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6" data-testid="hero-title">
+              Transforming Communities
+            </h1>
+            <p className="text-xl md:text-2xl mb-8 text-primary-foreground/90 max-w-3xl mx-auto" data-testid="hero-description">
+              Established in 2021 in Gorakhpur, Uttar Pradesh. Through sustainable scrap collection and redistribution, we create opportunities and support those in need
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/donate" data-testid="donate-button">
+                <Button size="lg" variant="secondary" className="px-8 py-4">
+                  <Heart className="mr-2 h-5 w-5" />
+                  Donate Scrap
+                </Button>
+              </Link>
+              <Link href="/marketplace" data-testid="marketplace-button">
+                <Button size="lg" variant="outline" className="px-8 py-4 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10">
+                  <ShoppingBag className="mr-2 h-5 w-5" />
+                  Browse Marketplace
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </section>
+
+      {/* Stats Section */}
+      <section className="bg-card py-16" data-testid="stats-section">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="text-center" data-testid="stat-items-collected">
+              <div className="text-3xl md:text-4xl font-bold text-primary mb-2">25,847</div>
+              <div className="text-muted-foreground">Items Collected</div>
+            </div>
+            <div className="text-center" data-testid="stat-families-helped">
+              <div className="text-3xl md:text-4xl font-bold text-primary mb-2">1,250</div>
+              <div className="text-muted-foreground">Families Helped</div>
+            </div>
+            <div className="text-center" data-testid="stat-volunteers">
+              <div className="text-3xl md:text-4xl font-bold text-primary mb-2">187</div>
+              <div className="text-muted-foreground">Active Volunteers</div>
+            </div>
+            <div className="text-center" data-testid="stat-cities">
+              <div className="text-3xl md:text-4xl font-bold text-primary mb-2">12</div>
+              <div className="text-muted-foreground">Cities Served</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="bg-background py-16" data-testid="how-it-works-section">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4" data-testid="how-it-works-title">
+              How Our Process Works
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto" data-testid="how-it-works-description">
+              A transparent, efficient system that maximizes impact and ensures every donation reaches those who need it most
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center group" data-testid="step-request">
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
+                <Phone className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">1. Request Collection</h3>
+              <p className="text-muted-foreground">Submit a donation request through our app with your contact details and location</p>
+            </div>
+
+            <div className="text-center group" data-testid="step-collection">
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
+                <Truck className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">2. Verification & Collection</h3>
+              <p className="text-muted-foreground">Our team verifies and collects your items, processing them for maximum utility</p>
+            </div>
+
+            <div className="text-center group" data-testid="step-marketplace">
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
+                <Store className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">3. Marketplace Distribution</h3>
+              <p className="text-muted-foreground">Items are listed on our marketplace, with proceeds supporting welfare programs</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Our Programs Section */}
+      <section className="bg-card py-16" data-testid="programs-section">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4" data-testid="programs-title">
+              Our Welfare Programs
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto" data-testid="programs-description">
+              Supporting communities through various initiatives funded by our sustainable scrap collection operations
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <Card className="overflow-hidden" data-testid="program-education">
+              <CardContent className="p-6">
+                <div className="w-full h-48 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 rounded-lg mb-4 flex items-center justify-center">
+                  <Users className="h-16 w-16 text-blue-600 dark:text-blue-300" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">Education Support</h3>
+                <p className="text-muted-foreground mb-4">Providing school supplies, books, and educational resources to underprivileged children</p>
+                <div className="flex items-center text-sm text-primary">
+                  <Users className="mr-2 h-4 w-4" />
+                  <span>450 students supported</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="overflow-hidden" data-testid="program-healthcare">
+              <CardContent className="p-6">
+                <div className="w-full h-48 bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900 dark:to-green-800 rounded-lg mb-4 flex items-center justify-center">
+                  <Heart className="h-16 w-16 text-green-600 dark:text-green-300" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">Healthcare Access</h3>
+                <p className="text-muted-foreground mb-4">Medical equipment and supplies distribution to local healthcare facilities</p>
+                <div className="flex items-center text-sm text-primary">
+                  <Heart className="mr-2 h-4 w-4" />
+                  <span>23 facilities equipped</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="overflow-hidden" data-testid="program-emergency">
+              <CardContent className="p-6">
+                <div className="w-full h-48 bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900 dark:to-orange-800 rounded-lg mb-4 flex items-center justify-center">
+                  <Truck className="h-16 w-16 text-orange-600 dark:text-orange-300" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">Emergency Relief</h3>
+                <p className="text-muted-foreground mb-4">Rapid response support during natural disasters and emergency situations</p>
+                <div className="flex items-center text-sm text-primary">
+                  <Truck className="mr-2 h-4 w-4" />
+                  <span>18 emergency responses</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section className="bg-background py-16" data-testid="contact-section">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4" data-testid="contact-title">
+              Get In Touch
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Have questions or want to get involved? We'd love to hear from you.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center" data-testid="contact-phone">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Phone className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="font-semibold mb-2">Phone</h3>
+              <p className="text-muted-foreground">8081747259</p>
+              <p className="text-muted-foreground">9935904289</p>
+              <p className="text-muted-foreground">9839353055</p>
+            </div>
+
+            <div className="text-center" data-testid="contact-email">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Mail className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="font-semibold mb-2">Email</h3>
+              <p className="text-muted-foreground">info@khadimenullat.org</p>
+            </div>
+
+            <div className="text-center" data-testid="contact-whatsapp">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Headphones className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="font-semibold mb-2">WhatsApp</h3>
+              <p className="text-muted-foreground">Quick support available</p>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
+
   );
 }

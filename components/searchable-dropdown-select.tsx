@@ -9,7 +9,7 @@ export type ComboboxOption = {
     label: string;
 };
 
-type ComboboxProps = {
+type SearchableDropDownSelectProps = {
     options: ComboboxOption[];
     value: string;
     onChange: (value: string) => void;
@@ -20,7 +20,7 @@ type ComboboxProps = {
     width?: string;
 };
 
-const Combobox = ({
+const SearchableDropDownSelect = ({
     options,
     value,
     onChange,
@@ -29,7 +29,7 @@ const Combobox = ({
     onSearchTermChange,
     className,
     width = "w-[200px]",
-}: ComboboxProps) => {
+}: SearchableDropDownSelectProps) => {
     const [highlightedIndex, setHighlightedIndex] = React.useState<number>(-1);
     const inputRef = React.useRef<HTMLInputElement>(null);
     const wrapperRef = React.useRef<HTMLDivElement>(null);
@@ -168,4 +168,4 @@ const Combobox = ({
     );
 };
 
-export default Combobox;
+export default SearchableDropDownSelect;

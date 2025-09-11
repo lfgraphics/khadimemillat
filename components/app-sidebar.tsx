@@ -8,60 +8,62 @@ import {
 } from "@/components/ui/sidebar"
 import {
     SignInButton,
-    SignOutButton,
-    SignUpButton,
     SignedIn,
     SignedOut,
-    UserButton,
     useUser
 } from '@clerk/nextjs'
-import ThemeChanger from "./ThemeChanger"
 import Loading from "@/app/loading"
+import ProfileDropdown from "./profile-dropdown"
+import Link from "next/link"
+import { UserCircle } from "lucide-react"
+import RoleGuard from "./role-guard"
 
 export function AppSidebar() {
     const { isLoaded, isSignedIn, user } = useUser()
-    if (!isLoaded || !isSignedIn) {
+
+    if (!isLoaded) {
         return <Loading />
     }
+
     return (
         <Sidebar>
             <SidebarHeader>
-                <SignedOut>
-                    <SignInButton />
-                    {/* <SignUpButton>
-                        <button className="bg-[#6c47ff] text-ceramic-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
-                            Sign Up
-                        </button>
-                    </SignUpButton> */}
-                </SignedOut>
-                <SignedIn>
-                    <div className="flex gap-2 items-center">
-                        <UserButton />
-                        <h3>Welcome, {user.firstName}!</h3>
-                        <p>Email: {user.primaryEmailAddress?.emailAddress}</p>
-                        <p>User ID: {user.id}</p>
-                        {/* Display metadata */}
-                        <div>
-                            <h4>Public Metadata:</h4>
-                            <pre>{JSON.stringify(user.publicMetadata, null, 2)}</pre>
-                        </div>
-
-                        <div>
-                            <h4>Unsafe Metadata:</h4>
-                            <pre>{JSON.stringify(user.unsafeMetadata, null, 2)}</pre>
-                        </div>
+                <Link href="/" className="flex gap-2 items-center hover:bg-secondary transition-all p-1 rounded-md">
+                    <img className="rounded-md w-[60px]" src="/android-chrome-512x512.png" />
+                    <div className="branding flex flex-col items-start">
+                        <h1 className="font-bold text-xl">KMWF</h1>
+                        <h6 className="font-semibold text-sm">Khadim-e-Millat Welfare Foundation</h6>
                     </div>
-                </SignedIn>
+                </Link>
             </SidebarHeader>
-            <SidebarContent>
-                <SidebarGroup />
-                <SidebarGroup />
+
+            <SidebarContent className="p-4">
+                {/* Administrative rights pages */}
+                <SidebarGroup>
+                    <RoleGuard allowedRoles={["admin", "scrapper"]}>
+                        
+                        <Link href="/list-donation">List Donation</Link>
+                    </RoleGuard>
+                </SidebarGroup>
+
+                {/* Public Pages pages */}
+                <SidebarGroup>
+                </SidebarGroup>
+
             </SidebarContent>
-            <SidebarFooter>
-                <ThemeChanger />
+
+            <SidebarFooter className="p-4">
                 <SignedIn>
-                    <SignOutButton />
+                    <ProfileDropdown />
                 </SignedIn>
+                <SignedOut>
+                    <SignInButton>
+                        <div className="flex gap-2 items-center cursor-pointer p-1 rounded-md hover:bg-secondary transition-all">
+                            <UserCircle />
+                            Login/ Signup
+                        </div>
+                    </SignInButton>
+                </SignedOut>
             </SidebarFooter>
         </Sidebar>
     )
