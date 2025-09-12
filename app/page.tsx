@@ -10,7 +10,7 @@ export default function Home() {
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
-        <div className="absolute inset-0 "></div>
+        {/* <div className="absolute inset-0 bg-gradient-to-br from-[#0d89d7] to-[#001018]"></div> */}
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20" data-testid="hero-section">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6" data-testid="hero-title">
@@ -187,7 +187,7 @@ export default function Home() {
                 <Mail className="h-8 w-8 text-primary" />
               </div>
               <h3 className="font-semibold mb-2">Email</h3>
-              <p className="text-muted-foreground">info@khadimenullat.org</p>
+              <p className="text-muted-foreground">info@khadimemillat.org</p>
             </div>
 
             <div className="text-center" data-testid="contact-whatsapp">

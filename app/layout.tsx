@@ -1,6 +1,6 @@
 import { ThemeProvider } from "@/components/theme-provider"
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "sonner"
 import "./globals.css";
 import "./loading";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
@@ -34,6 +34,7 @@ export default function RootLayout({
                 <main className="min-h-screen">
                   <SidebarTrigger className="fixed top-0 z-50" />
                   {children}
+                  <Toaster richColors closeButton />
                 </main>
                 <Footer />
               </SidebarInset>
