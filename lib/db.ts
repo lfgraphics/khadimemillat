@@ -1,18 +1,30 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
-let isConnected = false // global flag
+const MONGODB_URI = process.env.MONGODB_URI || "";
 
-export const connectDB = async () => {
-    if (isConnected) return
+if (!MONGODB_URI) {
+    throw new Error("Please define the MONGODB_URI environment variable");
+}
 
+type ConnectionObject = {
+    isConnected?: number;
+};
+
+const connection: ConnectionObject = {};
+
+async function connectDB(): Promise<void> {
+    if (connection.isConnected) {
+        console.log("Using existing database connection");
+        return;
+    }
     try {
-        await mongoose.connect(process.env.MONGODB_URI as string, {
-            dbName: "kmwf",
-        })
-        isConnected = true
-        console.log("✅ MongoDB connected")
-    } catch (err) {
-        console.error("❌ MongoDB connection error:", err)
-        throw new Error("DB connection failed")
+        const db = await mongoose.connect(MONGODB_URI, {});
+        connection.isConnected = db.connections[0].readyState;
+        console.log("New database connection");
+    } catch (error) {
+        console.error("Error connecting to database:", error);
+        process.exit(1);
     }
 }
+
+export default connectDB;

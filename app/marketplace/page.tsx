@@ -1,11 +1,15 @@
-import React from 'react'
+import { PaginationProvider } from "@/components/marketplace/PaginationProvider"
+import { ImageModalProvider } from "@/components/marketplace/ImageModalProvider"
+import { MarketplaceContent } from "./MarketplaceContent"
 
-const page = () => {
-  return (
-    <div className='p-6'>
-      Marketplace will be updated soon!
-    </div>
-  )
+ function MarketplacePage() {
+    return (
+        <ImageModalProvider>
+            <PaginationProvider>
+                <MarketplaceContent />
+            </PaginationProvider>
+        </ImageModalProvider>
+    )
 }
 
-export default page
+export default MarketplacePage;

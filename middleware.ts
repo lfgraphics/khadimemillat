@@ -30,10 +30,20 @@ const protectedRoutes = [
 ]
 
 export default clerkMiddleware(async (auth, req) => {
-    // First, protect all non-public routes (authentication check)
-    if (!isPublicRoute(req)) {
-        await auth.protect()
+    const { userId } = await auth()
+    
+    if (!isPublicRoute(req) && !userId) {
+        const signInUrl = new URL('/sign-in', req.url)
+
+        // Store last attempted URL in a cookie
+        const res = NextResponse.redirect(signInUrl)
+        res.cookies.set('redirectTo', req.nextUrl.pathname + req.nextUrl.search, {
+            path: '/',
+            httpOnly: true,
+        })
+        return res
     }
+
 
     // Then check role-based authorization for protected routes
     for (const route of protectedRoutes) {

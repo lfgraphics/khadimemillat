@@ -1,7 +1,13 @@
+import ScrapItem from '@/models/ScrapItem';
 import { NextResponse } from "next/server"
-import { connectDB } from "@/lib/db"
-import ScrapEntry from "@/models/ScrapEntry"
-import User from "@/models/User"
+import connectDB from "@/lib/db"
+
+export async function GET(req:Request) {
+    try{
+        await connectDB()
+        
+    }catch(err){}
+}
 
 export async function POST(req: Request) {
     try {

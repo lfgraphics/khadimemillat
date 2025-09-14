@@ -3,8 +3,7 @@ import mongoose, { Schema, Document } from "mongoose"
 export interface IScrapItem extends Document {
     scrapEntry: mongoose.Types.ObjectId
     name: string
-    status: "pending" | "collected" | "verified" | "listed" | "sold"
-    condition: "new" | "good" | "repairable" | "scrap"
+    condition: "new" | "good" | "repairable" | "scrap" | 'not applicable'
     photos: { before: string[]; after: string[] }
     marketplaceListing: {
         listed: boolean
@@ -17,10 +16,9 @@ export interface IScrapItem extends Document {
 }
 
 const scrapItemSchema = new Schema<IScrapItem>({
-    scrapEntry: { type: Schema.Types.ObjectId, ref: "ScrapEntry", required: true },
+    scrapEntry: { type: Schema.Types.ObjectId, ref: "DonationEntry", required: true },
     name: { type: String, required: true },
-    status: { type: String, enum: ["pending", "collected", "verified", "listed", "sold"], default: "pending" },
-    condition: { type: String, enum: ["new", "good", "repairable", "scrap"], required: true },
+    condition: { type: String, enum: ["new", "good", "repairable", "scrap", 'not applicable'], required: true },
     photos: {
         before: [String],
         after: [String],
