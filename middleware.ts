@@ -53,7 +53,11 @@ export default clerkMiddleware(async (auth, req) => {
             break // Exit loop once we find a matching route
         }
     }
-})
+},
+    {
+        authorizedParties: ['http://localhost:3000', 'https://localhost:3000', 'https://khadimemillat.org']
+    }
+)
 
 export const config = {
     matcher: [

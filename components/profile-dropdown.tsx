@@ -17,7 +17,7 @@ import {
     UserCog,
     ChevronsUpDown,
 } from "lucide-react"
-import { SignOutButton, useUser } from "@clerk/nextjs"
+import { SignOutButton, UserButton, useUser } from "@clerk/nextjs"
 import ThemeChanger from "./ThemeChanger"
 import { Separator } from "./ui/separator"
 import Link from "next/link"
@@ -61,12 +61,7 @@ export default function ProfilePopover() {
     // --- NavUser style trigger ---
     const triggerContent = (
         <div className="flex items-center gap-2 p-1 cursor-pointer rounded-md hover:bg-secondary w-full">
-            <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user?.imageUrl || ""} alt={user?.fullName || "User"} />
-                <AvatarFallback className="rounded-lg">
-                    {user?.firstName?.[0] || "U"}
-                </AvatarFallback>
-            </Avatar>
+            <UserButton />
             <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">
                     {user?.fullName || "shadcn"}
