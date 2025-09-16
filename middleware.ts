@@ -33,6 +33,10 @@ export default clerkMiddleware(async (auth, req) => {
     const { userId } = await auth()
     
     if (!isPublicRoute(req) && !userId) {
+        console.log('User not authenticated, redirecting to sign-in')
+        console.log('userId:', userId)
+        console.log('Request URL:', req.url)
+        
         const signInUrl = new URL('/sign-in', req.url)
 
         // Store last attempted URL in a cookie
