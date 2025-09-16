@@ -18,6 +18,7 @@ type SearchableDropDownSelectProps = {
     onSearchTermChange: (term: string) => void;
     className?: string;
     width?: string;
+    onCreateOption?: (label: string) => void; // allow creating a new option
 };
 
 const SearchableDropDownSelect = ({
@@ -29,6 +30,7 @@ const SearchableDropDownSelect = ({
     onSearchTermChange,
     className,
     width = "w-[200px]",
+    onCreateOption,
 }: SearchableDropDownSelectProps) => {
     const [highlightedIndex, setHighlightedIndex] = React.useState<number>(-1);
     const inputRef = React.useRef<HTMLInputElement>(null);
@@ -126,7 +128,21 @@ const SearchableDropDownSelect = ({
                         placeholder="Search..."
                     />
                     {filteredOptions.length === 0 ? (
-                        <div className="p-2 text-sm text-muted-foreground">No option found.</div>
+                        <div className="p-2 text-sm text-muted-foreground flex flex-col gap-2">
+                            <span>No option found.</span>
+                            {onCreateOption && searchTerm.trim() !== '' && (
+                                <button
+                                    type="button"
+                                    className="text-primary underline text-left"
+                                    onClick={() => {
+                                        onCreateOption(searchTerm.trim());
+                                        setOpen(false);
+                                    }}
+                                >
+                                    Create "{searchTerm.trim()}"
+                                </button>
+                            )}
+                        </div>
                     ) : (
                         filteredOptions.map((item, index) => (
                             <div

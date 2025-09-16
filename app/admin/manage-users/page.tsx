@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation"
-import { checkRole, ROLES } from "@/utils/roles"
+import { ROLES } from "@/utils/roles"
 import { clerkClient } from "@clerk/nextjs/server"
 import { SearchUsers } from "@/components/search-users"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,9 +8,6 @@ import { RoleForm } from "@/forms/roles-form"
 export default async function AdminDashboard(params: {
     searchParams: Promise<{ search?: string }>
 }) {
-    if (!checkRole("admin")) {
-        redirect("/")
-    }
 
     const query = (await params.searchParams).search
     const client = await clerkClient()

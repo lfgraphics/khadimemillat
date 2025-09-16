@@ -14,10 +14,10 @@ export function ItemCard({ item }: ItemCardProps) {
         <div className="rounded-2xl shadow-md p-4 bg-white hover:shadow-lg transition">
             <div
                 className="cursor-pointer"
-                onClick={() => openModal([...item.photos.before, ...item.photos.after])}
+                onClick={() => openModal([...(item.photos?.before || []), ...(item.photos?.after || [])])}
             >
                 <CldImage
-                    src={item.photos.before?.[0] || "/placeholder.png"}
+                    src={item.photos?.before?.[0] || "/placeholder.png"}
                     alt={item.name}
                     className="w-full h-48 object-cover rounded-lg"
                 />
