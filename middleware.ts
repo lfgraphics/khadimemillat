@@ -36,7 +36,7 @@ export default clerkMiddleware(async (auth, req) => {
         console.log('User not authenticated, redirecting to sign-in')
         console.log('userId:', userId)
         console.log('Request URL:', req.url)
-        
+
         const signInUrl = new URL('/sign-in', req.url)
 
         // Store last attempted URL in a cookie
@@ -69,7 +69,7 @@ export default clerkMiddleware(async (auth, req) => {
     }
 },
     {
-        authorizedParties: ['http://localhost:3000', 'https://localhost:3000', 'https://khadimemillat.org']
+        authorizedParties: ['http://localhost:3000', 'https://localhost:3000', 'https://khadimemillat.org', 'https://www.khadimemillat.org']
     }
 )
 
