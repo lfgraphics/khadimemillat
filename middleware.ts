@@ -23,8 +23,18 @@ const protectedRoutes = [
         routeName: 'Moderator'
     },
     {
+        matcher: createRouteMatcher(['/scrapper(.*)']),
+        allowedRoles: ['admin', 'scrapper'],
+        routeName: 'Scrapper'
+    },
+    {
+        matcher: createRouteMatcher(['/list-donation(.*)']),
+        allowedRoles: ['admin', 'scrapper'],
+        routeName: 'List Donation'
+    },
+    {
         matcher: createRouteMatcher(['/dashboard(.*)']),
-        allowedRoles: ['admin', 'moderator', 'user'],
+        allowedRoles: ['admin', 'moderator', 'user', 'scrapper'],
         routeName: 'Dashboard'
     }
 ]

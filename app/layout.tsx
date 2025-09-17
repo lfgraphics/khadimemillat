@@ -5,7 +5,7 @@ import "./globals.css";
 import "./loading";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar";
-import { ClerkProvider } from '@clerk/nextjs';
+import { ClerkProvider, SignedIn } from '@clerk/nextjs';
 import { Footer } from "@/components/footer";
 
 export const metadata: Metadata = {
@@ -32,8 +32,11 @@ export default function RootLayout({
               <AppSidebar />
               <SidebarInset>
                 <main className="min-h-screen">
-                  <SidebarTrigger className="fixed top-0 z-50" />
-                  {children}
+                  {/* Sidebar trigger placed in document flow near top-left with minor margin */}
+                  <div className="p-2">
+                    <SidebarTrigger />
+                  </div>
+                  <div className="pt-2">{children}</div>
                   <Toaster richColors closeButton />
                 </main>
                 <Footer />

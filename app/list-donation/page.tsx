@@ -15,6 +15,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import SearchableDropDownSelect, { ComboboxOption } from '@/components/searchable-dropdown-select';
+import UserSearchAndCreate, { Donor } from '@/components/UserSearchAndCreate';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import Loading from '@/app/loading';
 
 interface UserOption { id: string; name: string; email?: string; phone?: string; clerkUserId?: string; mongoUserId?: string }
@@ -33,80 +37,22 @@ const presetOptions: ComboboxOption[] = PRESET_ITEM_NAMES.map(n => ({ value: n, 
 type NewUserForm = { name: string; mobile: string };
 
 const DonationListManager: React.FC = () => {
-  const [users, setUsers] = useState<UserOption[]>([]);
-  const [search, setSearch] = useState('');
-  // selectedUser stores the Mongo ObjectId to submit
-  const [selectedUser, setSelectedUser] = useState('');
-  const [creatingUser, setCreatingUser] = useState(false);
-  const [userForm, setUserForm] = useState<NewUserForm>({ name: '', mobile: '' });
-  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [donor, setDonor] = useState<Donor | null>(null);
 
-  const emptyItem = useCallback((): LocalItem => ({ tempId: crypto.randomUUID(), name: '', description: '', donorId: selectedUser, donorName: users.find(u => u.id === selectedUser)?.name || '', condition: 'good', photos: { before: [], after: [] }, marketplace: { listed: false } }), [selectedUser, users]);
+  const emptyItem = useCallback((): LocalItem => ({ tempId: crypto.randomUUID(), name: '', description: '', donorId: donor?.mongoUserId || donor?.id || '', donorName: donor?.name || '', condition: 'good', photos: { before: [], after: [] }, marketplace: { listed: false } }), [donor]);
   const [items, setItems] = useState<LocalItem[]>([]);
   const [currentItem, setCurrentItem] = useState<LocalItem>(emptyItem());
   const [submitting, setSubmitting] = useState(false);
   const [itemNameSearch, setItemNameSearch] = useState('');
   const [preset, setPreset] = useState('');
-  const [loadingSearchUsers, setLoadingSearchUsers] = useState(false);
+  const [loadingSearchUsers] = useState(false);
 
-  // Debounced search for users (Clerk + Mongo) when search changes
-  useEffect(() => {
-    const controller = new AbortController();
-    const timer = setTimeout(async () => {
-      setLoadingSearchUsers(true);
-      try {
-        const url = new URL('/api/protected/users', window.location.origin);
-        if (search.trim()) url.searchParams.set('search', search.trim());
-        const res = await fetch(url.toString(), { signal: controller.signal });
-        const json = await res.json();
-        if (json.users) setUsers(json.users.map((u: any) => ({
-          id: u.mongoUserId || u._id || u.clerkUserId,
-          name: u.name,
-          email: u.email,
-          phone: u.phone,
-          clerkUserId: u.clerkUserId,
-          mongoUserId: u.mongoUserId || u._id
-        })));
-      } catch (e) { if ((e as any).name !== 'AbortError') console.error(e); }
-      finally { setLoadingSearchUsers(false); }
-    }, 350);
-    return () => { clearTimeout(timer); controller.abort(); };
-  }, [search]);
-
-  // Initial load (without search) once
-  useEffect(() => {
-    (async () => {
-      setLoadingUsers(true);
-      try {
-        const res = await fetch('/api/protected/users');
-        const json = await res.json();
-  if (json.users) setUsers(json.users.map((u: any) => ({ id: u._id, name: u.name, email: u.email, phone: u.phone, clerkUserId: u.clerkUserId, mongoUserId: u._id })));
-      } catch (e) { console.error(e); } finally { setLoadingUsers(false); }
-    })();
-  }, []);
-
-  useEffect(() => { setCurrentItem(emptyItem()); }, [selectedUser, emptyItem]);
-
-  const userOptions: ComboboxOption[] = users.map(u => ({ value: u.mongoUserId || u.id, label: u.name }));
-
-  const handleCreateUser = async () => {
-    if (!userForm.name.trim() || !userForm.mobile.trim()) return;
-    setCreatingUser(true);
-    try {
-      const res = await fetch('/api/protected/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(userForm) });
-      const json = await res.json();
-      if (json.user) {
-  const newU: UserOption = { id: json.user.id, mongoUserId: json.user.id, name: json.user.name, email: json.user.email, phone: json.user.phone, clerkUserId: json.user.clerkUserId };
-        setUsers(prev => [newU, ...prev]);
-        setSelectedUser(newU.id);
-        setUserForm({ name: '', mobile: '' });
-      }
-    } catch (err) { console.error(err); } finally { setCreatingUser(false); }
-  };
+  useEffect(() => { setCurrentItem(emptyItem()); }, [donor, emptyItem]);
 
   const pushItem = () => {
+    const selectedUser = donor?.mongoUserId || donor?.id || '';
     if (!selectedUser || !currentItem.name.trim()) return;
-    setItems(prev => [{ ...currentItem, donorId: selectedUser, donorName: users.find(u => u.id === selectedUser)?.name || '' }, ...prev]);
+    setItems(prev => [{ ...currentItem, donorId: selectedUser, donorName: donor?.name || '' }, ...prev]);
     setCurrentItem(emptyItem());
     setPreset('');
     setItemNameSearch('');
@@ -183,50 +129,55 @@ const DonationListManager: React.FC = () => {
     handlePresetSelect(label);
   };
 
-  const selectedUserDetails = users.find(u => u.id === selectedUser);
+  const selectedUser = donor?.mongoUserId || donor?.id || '';
+  const selectedUserDetails = donor;
+
+  const [donorPanelOpen, setDonorPanelOpen] = useState<boolean>(!donor);
 
   return (
     <div className="space-y-10 relative">
-      {(loadingUsers || loadingSearchUsers || submitting) && <Loading />}
+  {(loadingSearchUsers || submitting) && <Loading />}
       <header>
         <h1 className="text-2xl font-bold">Donation Intake & Barcodes</h1>
         <p className="text-sm text-muted-foreground">Create or select a donor, add detailed items with images & marketplace info, then submit to persist and generate verifiable barcodes.</p>
       </header>
 
       <section className="space-y-4">
-        <h2 className="font-semibold text-lg">Donor</h2>
-        <div className="grid md:grid-cols-3 gap-6 items-start">
-          <div>
-            <label className="text-sm font-medium mb-1 block">Select Existing</label>
-            <SearchableDropDownSelect
-              options={userOptions}
-              value={selectedUser}
-              onChange={v => setSelectedUser(v)}
-              searchTerm={search}
-              onSearchTermChange={setSearch}
-              placeholder="Search donor..."
-              width="w-full"
-            />
-            {selectedUserDetails && (
-              <div className="mt-2 text-xs border rounded p-2 space-y-1 bg-muted/30">
-                <div><span className="font-medium">Name:</span> {selectedUserDetails.name}</div>
-                {selectedUserDetails.email && <div><span className="font-medium">Email:</span> {selectedUserDetails.email}</div>}
-                {selectedUserDetails.phone && <div><span className="font-medium">Phone:</span> {selectedUserDetails.phone}</div>}
-                {selectedUserDetails.clerkUserId && <div><span className="font-medium">Clerk ID:</span> {selectedUserDetails.clerkUserId}</div>}
-                {selectedUserDetails.mongoUserId && <div><span className="font-medium">Mongo ID:</span> {selectedUserDetails.mongoUserId}</div>}
+        <div className="flex items-start justify-between gap-4">
+          <h2 className="font-semibold text-lg shrink-0">Donor</h2>
+          <div className="ml-auto">
+            <Collapsible open={donorPanelOpen} onOpenChange={setDonorPanelOpen}>
+              <div className="flex justify-end mb-1">
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    {donor ? (donorPanelOpen ? 'Hide Donor Panel' : 'Change Donor') : 'Select / Create Donor'}
+                  </Button>
+                </CollapsibleTrigger>
               </div>
-            )}
-          </div>
-          <div className="md:col-span-2 border rounded-lg p-4 space-y-3">
-            <p className="text-sm font-medium">Quick Create Donor</p>
-            <div className="grid md:grid-cols-3 gap-3">
-              <Input placeholder="Full Name" value={userForm.name} onChange={e => setUserForm(f => ({ ...f, name: e.target.value }))} />
-              <Input placeholder="Mobile Number" value={userForm.mobile} onChange={e => setUserForm(f => ({ ...f, mobile: e.target.value }))} />
-              <Button type="button" onClick={handleCreateUser} disabled={creatingUser}>{creatingUser ? 'Creating...' : 'Add Donor'}</Button>
-            </div>
-            <p className="text-[11px] text-muted-foreground">Email/username/password auto-generated. Phone stored only in Mongo. Clerk linkage established.</p>
+              <CollapsibleContent className="space-y-4 pt-1">
+                <UserSearchAndCreate onSelect={(d)=> { setDonor(d); if(d) setDonorPanelOpen(false); }} />
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         </div>
+        {donor && (
+          <Card className="p-4 border shadow-sm flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-sm">{donor.name}</p>
+                <p className="text-xs text-muted-foreground">{donor.email || donor.phone}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-[10px]">Selected</Badge>
+                <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={()=> setDonorPanelOpen(o=> !o)}>{donorPanelOpen ? 'Close' : 'Change'}</Button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-[10px] text-muted-foreground">
+              {donor.phone && <span>Phone: {donor.phone}</span>}
+              {donor.mongoUserId && <span>ID: {donor.mongoUserId.slice(0,6)}…</span>}
+            </div>
+          </Card>
+        )}
       </section>
 
       <section className="space-y-4">
@@ -295,7 +246,7 @@ const DonationListManager: React.FC = () => {
             </div>
           </div>
         </div>
-        <Button type="button" onClick={pushItem} disabled={!selectedUser || !currentItem.name}>Add Item to List</Button>
+  <Button type="button" onClick={pushItem} disabled={!selectedUser || !currentItem.name}>Add Item to List</Button>
       </section>
 
       <section className="space-y-4">
@@ -324,7 +275,7 @@ const DonationListManager: React.FC = () => {
             </div>
           ))}
         </div>
-        <Button type="button" onClick={openConfirm} disabled={finalizing || items.length === 0 || !selectedUser}>{finalizing ? 'Submitting...' : 'Finalize & Print'}</Button>
+  <Button type="button" onClick={openConfirm} disabled={finalizing || items.length === 0 || !selectedUser}>{finalizing ? 'Submitting...' : 'Finalize & Print'}</Button>
         {confirmOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
             <div className="bg-background border rounded-lg p-6 w-full max-w-md space-y-4 shadow-lg">

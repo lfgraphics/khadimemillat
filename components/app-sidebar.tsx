@@ -2,22 +2,17 @@
 
 import * as React from "react"
 import {
-    AudioWaveform,
-    BookOpen,
-    Bot,
-    ChevronRight,
-    Command,
-    Frame,
-    GalleryVerticalEnd,
-    List,
-    Map,
-    PieChart,
-    Settings2,
-    SquareTerminal,
     UserCircle,
-    UserCog2Icon,
-    UserStar,
-} from "lucide-react"
+    UserCog2 as UserCog2Icon,
+    User as UserIcon,
+    Bell as BellIcon,
+    ClipboardCheck,
+    Truck,
+    FileCheck,
+    List as ListIcon,
+    Heart,
+    ChevronRight,
+} from 'lucide-react'
 
 import {
     Sidebar,
@@ -40,215 +35,151 @@ import { TeamSwitcher } from "./team-switcher"
 import ProfilePopover from "./profile-dropdown"
 import RoleGuard from "./role-guard"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible"
+import NotificationBell from '@/components/NotificationBell'
 
-// This is sample data.
-const data = {
-    teams: [
-        {
-            name: "Acme Inc",
-            logo: GalleryVerticalEnd,
-            plan: "Enterprise",
-        },
-        {
-            name: "Acme Corp.",
-            logo: AudioWaveform,
-            plan: "Startup",
-        },
-        {
-            name: "Evil Corp.",
-            logo: Command,
-            plan: "Free",
-        },
-    ],
-    navMain: [
-        {
-            title: "Playground",
-            url: "#",
-            icon: SquareTerminal,
-            isActive: true,
-            items: [
-                {
-                    title: "History",
-                    url: "#",
-                },
-                {
-                    title: "Starred",
-                    url: "#",
-                },
-                {
-                    title: "Settings",
-                    url: "#",
-                },
-            ],
-        },
-        {
-            title: "Models",
-            url: "#",
-            icon: Bot,
-            items: [
-                {
-                    title: "Genesis",
-                    url: "#",
-                },
-                {
-                    title: "Explorer",
-                    url: "#",
-                },
-                {
-                    title: "Quantum",
-                    url: "#",
-                },
-            ],
-        },
-        {
-            title: "Documentation",
-            url: "#",
-            icon: BookOpen,
-            items: [
-                {
-                    title: "Introduction",
-                    url: "#",
-                },
-                {
-                    title: "Get Started",
-                    url: "#",
-                },
-                {
-                    title: "Tutorials",
-                    url: "#",
-                },
-                {
-                    title: "Changelog",
-                    url: "#",
-                },
-            ],
-        },
-        {
-            title: "Settings",
-            url: "#",
-            icon: Settings2,
-            items: [
-                {
-                    title: "General",
-                    url: "#",
-                },
-                {
-                    title: "Team",
-                    url: "#",
-                },
-                {
-                    title: "Billing",
-                    url: "#",
-                },
-                {
-                    title: "Limits",
-                    url: "#",
-                },
-            ],
-        },
-    ],
-    projects: [
-        {
-            name: "Design Engineering",
-            url: "#",
-            icon: Frame,
-        },
-        {
-            name: "Sales & Marketing",
-            url: "#",
-            icon: PieChart,
-        },
-        {
-            name: "Travel",
-            url: "#",
-            icon: Map,
-        },
-    ],
-}
+// Removed sample data; focused navigation defined inline below.
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-    const { user } = useUser()
     return (
         <Sidebar collapsible="icon" {...props}>
             <SidebarHeader>
-                <TeamSwitcher />
+                <div className="flex items-center justify-between gap-2">
+                    <TeamSwitcher />
+                </div>
             </SidebarHeader>
             <SidebarContent>
-                <SidebarGroup>
-                    <SidebarGroupLabel>For Staff</SidebarGroupLabel>
-                    <SidebarMenu>
-                        <Collapsible
-                            // key={item.title}
-                            asChild
-                            // defaultOpen={item.isActive}
-                            className="group/collapsible"
-                        >
+                {/* Global quick action row */}
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <NotificationBell intervalMs={20000} limit={8} />
+                    </SidebarMenuItem>
+                </SidebarMenu>
+
+                {/* Admin Section */}
+                <RoleGuard allowedRoles={["admin"]}>
+                    <SidebarGroup>
+                        <SidebarGroupLabel>Admin</SidebarGroupLabel>
+                        <SidebarMenu>
                             <SidebarMenuItem>
-                                <CollapsibleTrigger asChild>
-                                    <SidebarMenuButton tooltip={"Admin Routes"}>
-                                        {/* {item.icon && <item.icon />} */}
-                                        <UserStar />
-                                        <span>Admin Managed</span>
-                                        <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                                    </SidebarMenuButton>
-                                </CollapsibleTrigger>
-                                <CollapsibleContent>
-                                    <SidebarMenuSub>
-                                        <RoleGuard allowedRoles={["admin", "scrapper"]}>
-                                            <SidebarMenuSubItem>
-                                                <SidebarMenuSubButton asChild>
-                                                    <Link href="/list-donation">
-                                                        <SidebarMenuButton>
-                                                            <List />
-                                                            <span>
-                                                                List Donation
-                                                            </span>
-                                                        </SidebarMenuButton>
-                                                    </Link>
-                                                </SidebarMenuSubButton>
-                                            </SidebarMenuSubItem>
-                                        </RoleGuard>
-                                        <RoleGuard allowedRoles={["admin"]}>
-                                            <SidebarMenuSubItem>
-                                                <SidebarMenuSubButton asChild>
-                                                    <Link href="/admin/manage-users">
-                                                        <SidebarMenuButton>
-                                                            <UserCog2Icon />
-                                                            <span>
-                                                                Manage Users
-                                                            </span>
-                                                        </SidebarMenuButton>
-                                                    </Link>
-                                                </SidebarMenuSubButton>
-                                            </SidebarMenuSubItem>
-                                        </RoleGuard>
-                                    </SidebarMenuSub>
-                                </CollapsibleContent>
+                                <SidebarMenuButton asChild tooltip="Verify Requests">
+                                    <Link href="/admin/verify-requests">
+                                        <ClipboardCheck className="h-4 w-4" />
+                                        <span>Verify Requests</span>
+                                    </Link>
+                                </SidebarMenuButton>
                             </SidebarMenuItem>
-                        </Collapsible>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild tooltip="Manage Users">
+                                    <Link href="/admin/manage-users">
+                                        <UserCog2Icon className="h-4 w-4" />
+                                        <span>Manage Users</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild tooltip="All Donations">
+                                    <Link href="/list-donation">
+                                        <ListIcon className="h-4 w-4" />
+                                        <span>List Donation</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                    </SidebarGroup>
+                </RoleGuard>
+
+                {/* Scrapper Section */}
+                <RoleGuard allowedRoles={["scrapper","admin"]}>
+                    <SidebarGroup>
+                        <SidebarGroupLabel>Scrapper</SidebarGroupLabel>
+                        <SidebarMenu>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild tooltip="Assigned">
+                                    <Link href="/scrapper/assigned">
+                                        <Truck className="h-4 w-4" />
+                                        <span>Assigned</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild tooltip="List Donation">
+                                    <Link href="/list-donation">
+                                        <ListIcon className="h-4 w-4" />
+                                        <span>List Donation</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                    </SidebarGroup>
+                </RoleGuard>
+
+                {/* Moderator Section */}
+                <RoleGuard allowedRoles={["moderator","admin"]}>
+                    <SidebarGroup>
+                        <SidebarGroupLabel>Moderator</SidebarGroupLabel>
+                        <SidebarMenu>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild tooltip="Review">
+                                    <Link href="/moderator/review">
+                                        <FileCheck className="h-4 w-4" />
+                                        <span>Review</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                    </SidebarGroup>
+                </RoleGuard>
+
+                {/* General Section */}
+                <SidebarGroup>
+                    <SidebarGroupLabel>General</SidebarGroupLabel>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild tooltip="Donate Scrap">
+                                <Link href="/donate">
+                                    <Heart className="h-4 w-4" />
+                                    <span>Donate Scrap</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild tooltip="Account">
+                                <Link href="/account">
+                                    <UserIcon className="h-4 w-4" />
+                                    <span>Account</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild tooltip="Notifications">
+                                <Link href="/notifications">
+                                    <BellIcon className="h-4 w-4" />
+                                    <span>Notifications</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
                     </SidebarMenu>
-                    <SignedOut>
-                        <SidebarMenuButton>
-                            <span>Login as an staff to see the navs</span>
-                        </SidebarMenuButton>
-                    </SignedOut>
                 </SidebarGroup>
-                {/* <NavMain items={data.navMain} />
-                <NavProjects projects={data.projects} /> */}
+
+                <SignedOut>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild>
+                                <SignInButton>
+                                    <div className="flex gap-2 items-center">
+                                        <UserCircle className="h-4 w-4" />
+                                        <span>Login / Signup</span>
+                                    </div>
+                                </SignInButton>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SignedOut>
             </SidebarContent>
             <SidebarFooter>
                 <SignedIn>
-                    {/* <NavUser user={user} /> */}
                     <ProfilePopover />
                 </SignedIn>
-                <SignedOut>
-                    <SignInButton>
-                        <SidebarMenuButton className="flex gap-2 items-center cursor-pointer p-1 rounded-md hover:bg-secondary transition-all">
-                            <UserCircle />
-                            <span>Login/ Signup</span>
-                        </SidebarMenuButton>
-                    </SignInButton>
-                </SignedOut>
             </SidebarFooter>
             <SidebarRail />
         </Sidebar>
