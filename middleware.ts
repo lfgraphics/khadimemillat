@@ -11,7 +11,15 @@ const isPublicRoute = createRouteMatcher([
 ])
 
 // Define protected routes and their allowed roles
+// Order matters: more specific routes MUST come before broader catch-alls.
 const protectedRoutes = [
+    // Verification page accessible to admin and moderator (placed first so it matches before general /admin)
+    {
+        matcher: createRouteMatcher(['/admin/verify-requests']),
+        allowedRoles: ['admin', 'moderator'],
+        routeName: 'Verify Requests'
+    },
+    // All other admin routes (catch-all). We removed the unsupported negative lookahead pattern.
     {
         matcher: createRouteMatcher(['/admin(.*)']),
         allowedRoles: ['admin'],
@@ -62,7 +70,7 @@ export default clerkMiddleware(async (auth, req) => {
     // Then check role-based authorization for protected routes
     for (const route of protectedRoutes) {
         if (route.matcher(req)) {
-            const userRole = (await auth()).sessionClaims?.metadata?.role
+            const userRole = ((await auth()).sessionClaims?.metadata as { role?: string } | undefined)?.role
 
             // In your middleware
             if (!userRole || !route.allowedRoles.includes(userRole)) {

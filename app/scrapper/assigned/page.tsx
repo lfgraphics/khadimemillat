@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Loader2, Phone, MapPin, Calendar, User } from 'lucide-react'
 
-interface RequestItem { _id: string; donor?: any; phone: string; address: string; requestedPickupTime: string; status: string }
+interface RequestItem { _id: string; donor?: any; donorDetails?: { name?: string; phone?: string }; phone: string; address: string; requestedPickupTime: string; status: string }
 
 export default function ScrapperAssignedPage() {
   const [items, setItems] = useState<RequestItem[]>([])
@@ -17,9 +17,20 @@ export default function ScrapperAssignedPage() {
   const load = async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/protected/collection-requests?status=verified&assignedTo=self')
-      const json = await res.json()
-      setItems(json.items || [])
+      const res = await fetch('/api/protected/collection-requests?status=verified&assignedTo=self', { cache: 'no-store' })
+      let data: any = null
+      if (res.headers.get('content-type')?.includes('application/json')) {
+        data = await res.json().catch(()=> null)
+      } else {
+        const text = await res.text()
+        data = { error: text }
+      }
+      if (!res.ok) {
+        console.warn('[ASSIGNED_LOAD_ERROR]', data?.error)
+        setItems([])
+        return
+      }
+      setItems(data.items || [])
     } catch(e){ console.error(e) } finally { setLoading(false) }
   }
   useEffect(()=>{ load() },[])
@@ -28,12 +39,21 @@ export default function ScrapperAssignedPage() {
     setProcessing(true)
     try {
       const res = await fetch(`/api/protected/collection-requests/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'collect' }) })
-      const json = await res.json()
-      if (res.ok && json.request?.donationEntryId) {
-        window.location.href = `/list-donation?collectionRequestId=${id}`
+      let data: any = null
+      if (res.headers.get('content-type')?.includes('application/json')) {
+        data = await res.json().catch(()=> null)
       } else {
-        load()
+        const text = await res.text()
+        data = { error: text }
       }
+      if (res.ok && data?.request?.donationEntryId) {
+        window.location.href = `/list-donation?collectionRequest=${id}`
+        return
+      }
+      if (!res.ok) {
+        console.warn('[COLLECT_ERROR]', data?.error)
+      }
+      load()
     } catch(e){ console.error(e) } finally { setProcessing(false); setCollectingId(null) }
   }
 
@@ -56,7 +76,7 @@ export default function ScrapperAssignedPage() {
               <span className='text-[10px] text-muted-foreground'>{new Date(r.requestedPickupTime).toLocaleDateString()}</span>
             </div>
             <div className='space-y-1 text-xs'>
-              <p className='flex items-center gap-1'><User className='h-3 w-3' /> {r.donor?.name || '—'}</p>
+              <p className='flex items-center gap-1'><User className='h-3 w-3' /> {r.donorDetails?.name || '—'}</p>
               <p className='flex items-center gap-1'><Phone className='h-3 w-3' /> <a href={`tel:${r.phone}`} className='text-blue-600'>{r.phone}</a></p>
               <p className='flex items-center gap-1'><MapPin className='h-3 w-3' /> {r.address}</p>
               <p className='flex items-center gap-1'><Calendar className='h-3 w-3' /> {new Date(r.requestedPickupTime).toLocaleString()}</p>
@@ -70,7 +90,7 @@ export default function ScrapperAssignedPage() {
                   <DialogHeader>
                     <DialogTitle>Confirm Collection</DialogTitle>
                   </DialogHeader>
-                  <p className='text-xs text-muted-foreground'>Confirm you have collected items from <span className='font-medium'>{r.donor?.name || '—'}</span>. A donation entry will be created and you will proceed to item listing.</p>
+                  <p className='text-xs text-muted-foreground'>Confirm you have collected items from <span className='font-medium'>{r.donorDetails?.name || '—'}</span>. A donation entry will be created and you will proceed to item listing.</p>
                   <DialogFooter className='pt-2'>
                     <Button variant='outline' size='sm' onClick={()=> setCollectingId(null)} disabled={processing}>Cancel</Button>
                     <Button size='sm' onClick={()=> markCollected(r._id)} disabled={processing}>{processing ? <Loader2 className='h-3 w-3 animate-spin' /> : 'Confirm & Continue'}</Button>

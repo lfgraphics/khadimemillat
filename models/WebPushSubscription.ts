@@ -1,0 +1,28 @@
+import mongoose, { Schema, Document } from 'mongoose'
+
+export interface IWebPushSubscription extends Document {
+  clerkUserId: string
+  endpoint: string
+  keys: {
+    p256dh: string
+    auth: string
+  }
+  userAgent?: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+const webPushSubscriptionSchema = new Schema<IWebPushSubscription>({
+  clerkUserId: { type: String, required: true },
+  endpoint: { type: String, required: true },
+  keys: {
+    p256dh: { type: String, required: true },
+    auth: { type: String, required: true }
+  },
+  userAgent: { type: String }
+}, { timestamps: true })
+
+// Unique per user (replace old subscription on re-subscribe)
+webPushSubscriptionSchema.index({ clerkUserId: 1 }, { unique: true })
+
+export default mongoose.models.WebPushSubscription || mongoose.model<IWebPushSubscription>('WebPushSubscription', webPushSubscriptionSchema, 'web-push-subscriptions')

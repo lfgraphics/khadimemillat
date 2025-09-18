@@ -10,7 +10,8 @@ import { z } from 'zod';
 import connectDB from '@/lib/db';
 import DonationEntry from '@/models/DonationEntry';
 import ScrapItem from '@/models/ScrapItem';
-import { uploadImage } from '@/lib/cloudinary';
+import { uploadImage } from '@/lib/cloudinary-server';
+import { notificationService } from '@/lib/services/notification.service';
 
 // Zod schema for full submission
 const scrapItemInputSchema = z.object({
@@ -27,9 +28,11 @@ const scrapItemInputSchema = z.object({
   }).optional(),
 });
 
+// Accept either a 24-char mongo id or a Clerk user id (len != 24) then resolve
 const fullDonationSchema = z.object({
-  donorId: z.string().length(24),
+  donorId: z.string().min(10),
   items: z.array(scrapItemInputSchema).min(1),
+  collectionRequestId: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -38,8 +41,36 @@ export async function POST(req: NextRequest) {
     const parsed = fullDonationSchema.parse(json);
 
     await connectDB();
-    // Create base donation entry first
-    const donation = await DonationEntry.create({ donor: parsed.donorId, items: [] });
+    let donorMongoId = parsed.donorId;
+    const isMongo = /^[a-fA-F0-9]{24}$/.test(donorMongoId);
+    if (!isMongo) {
+      // Attempt to find user by Clerk ID
+      const UserModel = (await import('@/models/User')).default as any;
+      const maybeUser: any = await UserModel.findOne({ clerkUserId: donorMongoId }).lean();
+      if (maybeUser && maybeUser._id) {
+        donorMongoId = maybeUser._id.toString();
+      } else {
+        throw new Error('Donor clerk user not synced locally. Load user list once (which performs enrichment) then retry.');
+      }
+    }
+  let donation: any
+    if (parsed.collectionRequestId) {
+      // Try find existing donation entry for this collection request
+      donation = await DonationEntry.findOne({ collectionRequest: parsed.collectionRequestId }).lean()
+      if (!donation) {
+        return NextResponse.json({ error: 'Donation entry not found for collection request' }, { status: 404 })
+      }
+      // If found, ensure we have a mutable reference (re-fetch as doc)
+      donation = await DonationEntry.findById(donation._id)
+    } else {
+      // We currently have donorMongoId (local _id). Need to fetch user doc to get clerkUserId for Clerk-first storage.
+      const UserModel = (await import('@/models/User')).default as any;
+      const userDoc = await UserModel.findById(donorMongoId).lean();
+      if (!userDoc || !userDoc.clerkUserId) {
+        throw new Error('Could not resolve Clerk user id for donor');
+      }
+      donation = await DonationEntry.create({ donor: userDoc.clerkUserId, items: [] })
+    }
 
     const createdItemIds: string[] = [];
 
@@ -82,8 +113,31 @@ export async function POST(req: NextRequest) {
       createdItemIds.push(scrapDoc._id.toString());
     }
 
-    donation.items = createdItemIds as any;
+  // Merge with existing items if any
+  const existingItems = Array.isArray(donation.items) ? donation.items.map((x: any)=> x.toString()) : []
+  const wasEmpty = existingItems.length === 0;
+  donation.items = [...existingItems, ...createdItemIds] as any;
+    // If coming from collection request, ensure status at least collected
+    if (parsed.collectionRequestId && donation.status === 'collected') {
+      // keep as collected
+    }
     await donation.save();
+
+    // Idempotent notification: only when first batch added for collection request
+    if (parsed.collectionRequestId && wasEmpty && createdItemIds.length > 0 && !donation.itemsListedNotifiedAt) {
+      try {
+        await notificationService.notifyByRole(['moderator','admin'], {
+          title: 'Collection Ready for Review',
+          body: 'Collected items have been listed and need review.',
+          url: '/moderator/review',
+          type: 'review_needed'
+        })
+        donation.itemsListedNotifiedAt = new Date()
+        await donation.save()
+      } catch (e) {
+        console.warn('[NOTIFICATION_FAILED]', e)
+      }
+    }
 
   return NextResponse.json({ success: true, donationId: donation._id.toString(), itemIds: createdItemIds });
   } catch (err: any) {

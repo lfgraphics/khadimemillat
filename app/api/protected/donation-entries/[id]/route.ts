@@ -8,6 +8,7 @@ import { getDonationEntryById, updateDonationEntry, deleteDonationEntry } from "
 import connectDB from '@/lib/db';
 import ScrapItem, { IScrapItem } from '@/models/ScrapItem';
 import DonationEntry, { ISDonationEntry } from '@/models/DonationEntry';
+import { getClerkUserWithSupplementaryData } from '@/lib/services/user.service';
 import { donationEntryUpdateSchema } from "@/lib/validators/donationEntry.validator";
 import { checkRole } from "@/utils/roles";
 
@@ -15,18 +16,23 @@ export async function GET(req: NextRequest, { params }: any) {
     try {
         requireUser(req); // ensure authenticated; detailed role check can be added here
         await connectDB();
-        const donationDoc = await DonationEntry.findById(params.id).populate('donor').lean<ISDonationEntry & { donor?: any }>();
+                const donationDoc = await DonationEntry.findById(params.id).lean<ISDonationEntry>();
         if (!donationDoc) return NextResponse.json({ error: 'Not found' }, { status: 404 });
         const itemDocs = await ScrapItem.find({ scrapEntry: donationDoc._id }).lean<IScrapItem[]>();
+                // Enrich donor & collectedBy (picker)
+                let donorDetails: any = null;
+                if (donationDoc.donor) {
+                    try { donorDetails = await getClerkUserWithSupplementaryData(donationDoc.donor); } catch(e){ donorDetails = { id: donationDoc.donor, name: 'Unknown Donor' }; }
+                }
+                let pickerDetails: any = null;
+                if ((donationDoc as any).collectedBy) {
+                    try { pickerDetails = await getClerkUserWithSupplementaryData((donationDoc as any).collectedBy); } catch(e){ pickerDetails = { id: (donationDoc as any).collectedBy, name: 'Unknown User' }; }
+                }
         return NextResponse.json({
                     donation: {
                     id: (donationDoc as any)._id.toString(),
-                        donor: donationDoc.donor ? {
-                            id: (donationDoc.donor as any)._id?.toString?.() || '',
-                            name: (donationDoc.donor as any).name,
-                            email: (donationDoc.donor as any).email,
-                            phone: (donationDoc.donor as any).phone,
-                        } : null,
+                                                donor: donorDetails ? { id: donorDetails.id, name: donorDetails.name, email: donorDetails.email, phone: donorDetails.phone } : null,
+                                                collectedBy: pickerDetails ? { id: pickerDetails.id, name: pickerDetails.name, email: pickerDetails.email } : null,
                         createdAt: (donationDoc as any).createdAt,
                         items: itemDocs.map(it => ({
                             id: (it as any)._id?.toString?.() || '',
@@ -34,6 +40,7 @@ export async function GET(req: NextRequest, { params }: any) {
                             condition: it.condition,
                             photos: it.photos,
                             marketplaceListing: it.marketplaceListing,
+                                                        repairingCost: (it as any).repairingCost,
                         }))
                     }
         });

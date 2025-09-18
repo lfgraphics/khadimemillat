@@ -7,6 +7,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { AppSidebar } from "@/components/app-sidebar";
 import { ClerkProvider, SignedIn } from '@clerk/nextjs';
 import { Footer } from "@/components/footer";
+import WebPushManager from "@/components/WebPushManager";
 
 export const metadata: Metadata = {
   title: "Khadim-Millat Welfare Foundation",
@@ -34,8 +35,9 @@ export default function RootLayout({
                 <main className="min-h-screen">
                   {/* Sidebar trigger placed in document flow near top-left with minor margin */}
                   <div className="p-2">
-                    <SidebarTrigger />
+                    <SidebarTrigger className="fixed top-0 z-50" />
                   </div>
+                  <WebPushManager />
                   <div className="pt-2">{children}</div>
                   <Toaster richColors closeButton />
                 </main>

@@ -3,6 +3,23 @@ import CollectionRequest, { ICollectionRequest } from '@/models/CollectionReques
 import { Types } from 'mongoose'
 import { notificationService } from './notification.service'
 import DonationEntry from '@/models/DonationEntry'
+import { clerkClient } from '@clerk/nextjs/server'
+
+async function getClerkClient() {
+  return typeof clerkClient === 'function' ? await (clerkClient as any)() : clerkClient
+}
+
+export async function getAllScrappers() {
+  const client: any = await getClerkClient()
+  const users = await client.users.getUserList({ limit: 500 })
+  return users.data.filter((u: any) => u.publicMetadata?.role === 'scrapper')
+}
+
+export async function getUsersByRole(role: string) {
+  const client: any = await getClerkClient()
+  const users = await client.users.getUserList({ limit: 500 })
+  return users.data.filter((u: any) => u.publicMetadata?.role === role)
+}
 
 export async function createCollectionRequest(data: Partial<ICollectionRequest>) {
   await connectDB()
@@ -24,7 +41,7 @@ export async function listCollectionRequests({ status, assignedTo, page = 1, lim
   if (assignedTo) query.assignedScrappers = assignedTo
   const skip = (page - 1) * limit
   const [items, total] = await Promise.all([
-    CollectionRequest.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).populate('donor').lean(),
+    CollectionRequest.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
     CollectionRequest.countDocuments(query)
   ])
   return { items, total, page, limit }
@@ -33,7 +50,7 @@ export async function listCollectionRequests({ status, assignedTo, page = 1, lim
 export async function getCollectionRequestById(id: string) {
   await connectDB()
   if (!Types.ObjectId.isValid(id)) return null
-  return CollectionRequest.findById(id).populate('donor assignedScrappers').lean()
+  return CollectionRequest.findById(id).lean()
 }
 
 export async function updateCollectionRequest(id: string, data: Partial<ICollectionRequest>) {
@@ -42,13 +59,24 @@ export async function updateCollectionRequest(id: string, data: Partial<ICollect
   return CollectionRequest.findByIdAndUpdate(id, data, { new: true }).lean()
 }
 
-export async function assignScrappers(id: string, scrapperIds: string[]) {
+export async function assignScrappers(id: string, scrapperIds?: string[]) {
   await connectDB()
   if (!Types.ObjectId.isValid(id)) throw new Error('Invalid id')
-  const validIds = scrapperIds.filter(i => Types.ObjectId.isValid(i))
-  const doc = await CollectionRequest.findByIdAndUpdate(id, { $addToSet: { assignedScrappers: { $each: validIds } }, status: 'verified' }, { new: true }).lean()
-  if (doc) {
-    await notificationService.notifyUsers(validIds, {
+
+  let targetIds = scrapperIds
+  if (!targetIds || targetIds.length === 0) {
+    const allScrappers = await getAllScrappers()
+    targetIds = allScrappers.map((s: any) => s.id)
+  }
+
+  const doc = await CollectionRequest.findByIdAndUpdate(
+    id,
+    { assignedScrappers: targetIds, status: 'verified' },
+    { new: true }
+  ).lean()
+
+  if (doc && targetIds) {
+    await notificationService.notifyUsers(targetIds, {
       title: 'Collection Assigned',
       body: 'You have a new collection assignment.',
       url: '/scrapper/assigned',
@@ -61,24 +89,34 @@ export async function assignScrappers(id: string, scrapperIds: string[]) {
 export async function markAsCollected(id: string, { actualPickupTime = new Date(), collectedBy }: { actualPickupTime?: Date, collectedBy?: string } = {}) {
   await connectDB()
   if (!Types.ObjectId.isValid(id)) throw new Error('Invalid id')
-  const doc = await CollectionRequest.findByIdAndUpdate(id, { status: 'collected', actualPickupTime }, { new: true }).lean()
-  if (doc) {
-    const single = doc as any
-    // Create a DonationEntry shell referencing this collection request (no items yet)
-    const donationEntry = await DonationEntry.create({
-      donor: single.donor,
-      collectionRequest: single._id,
-      status: 'collected'
-    } as any)
-    await notificationService.notifyByRole(['moderator','admin'], {
-      title: 'Collection Ready for Review',
-      body: 'Collected items need review.',
-      url: '/moderator/review',
-      type: 'review_needed'
-    })
-    return { ...single, donationEntryId: donationEntry._id }
+  // Fetch existing collection request
+  const existing = await CollectionRequest.findById(id).lean()
+  if (!existing) throw new Error('Collection request not found')
+  // Idempotent: reuse existing donation entry if present
+  let donationEntry = await DonationEntry.findOne({ collectionRequest: id }).lean()
+  if (!donationEntry) {
+    donationEntry = (await DonationEntry.create({
+      donor: (existing as any).donor,
+      collectionRequest: id,
+      status: 'collected',
+      collectedBy,
+      requestedPickupTime: (existing as any).requestedPickupTime,
+      actualPickupTime
+    } as any)).toObject()
   }
-  return doc
+
+  // Update collection request with link
+  const updated = await CollectionRequest.findByIdAndUpdate(
+    id,
+    { status: 'collected', actualPickupTime, donationEntryId: (donationEntry as any)._id },
+    { new: true }
+  ).lean()
+
+  if (updated) {
+    // Notification moved to donation-entries/full API after items are actually listed
+    return { ...updated, donationEntryId: (donationEntry as any)._id }
+  }
+  return updated
 }
 
 export const collectionRequestService = {
@@ -87,5 +125,7 @@ export const collectionRequestService = {
   getCollectionRequestById,
   updateCollectionRequest,
   assignScrappers,
-  markAsCollected
+  markAsCollected,
+  getAllScrappers,
+  getUsersByRole
 }

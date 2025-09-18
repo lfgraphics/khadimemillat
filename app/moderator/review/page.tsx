@@ -17,14 +17,16 @@ import { Separator } from "@/components/ui/separator";
 
 type CollectionRequest = {
   _id: string;
-  donor: { _id: string; email?: string; firstName?: string; lastName?: string } | string;
+  donor: string; // clerk id
+  donorDetails?: { id: string; name: string; email?: string };
+  collectedByDetails?: { id: string; name: string; email?: string };
   address?: string;
   phone?: string;
   notes?: string;
   requestedPickupTime?: string;
   actualPickupTime?: string;
   status: string;
-  assignedScrappers?: Array<{ _id: string; email?: string } | string>;
+  assignedScrappers?: string[];
   createdAt: string;
   updatedAt: string;
 };
@@ -42,6 +44,7 @@ export default function ModeratorReviewPage() {
   const [error, setError] = useState<string | null>(null);
   const [requests, setRequests] = useState<CollectionRequest[]>([]);
   const [updatingIds, setUpdatingIds] = useState<Record<string, boolean>>({});
+  // filter can be 'all' | specific status. Use 'all' instead of empty string to satisfy Select requirements
   const [filter, setFilter] = useState<string>("collected");
   const [confirmId, setConfirmId] = useState<string | null>(null);
 
@@ -50,7 +53,7 @@ export default function ModeratorReviewPage() {
     setError(null);
     try {
       const params = new URLSearchParams();
-      if (filter) params.set("status", filter);
+  if (filter && filter !== 'all') params.set("status", filter);
       // We want only collected (awaiting moderation) by default
       const res = await fetch(`/api/protected/collection-requests?${params.toString()}`, {
         cache: "no-store",
@@ -99,7 +102,7 @@ export default function ModeratorReviewPage() {
               <SelectValue placeholder="Filter status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All</SelectItem>
+              <SelectItem value="all">All</SelectItem>
               <SelectItem value="collected">Collected</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
             </SelectContent>
@@ -121,7 +124,8 @@ export default function ModeratorReviewPage() {
       )}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {requests.map(r => {
-          const donorName = typeof r.donor === "string" ? r.donor : [r.donor?.firstName, r.donor?.lastName].filter(Boolean).join(" ") || r.donor?.email || "Unknown";
+          const donorName = r.donorDetails?.name || r.donorDetails?.email || r.donor || 'Unknown';
+          const collectorName = r.collectedByDetails?.name || r.collectedByDetails?.email;
           return (
             <Card key={r._id} className="flex flex-col">
               <CardHeader className="space-y-2 pb-2">
@@ -137,6 +141,9 @@ export default function ModeratorReviewPage() {
                   )}
                   {r.actualPickupTime && (
                     <span>Collected: {format(new Date(r.actualPickupTime), "PPp")}</span>
+                  )}
+                  {collectorName && (
+                    <span>Picker: {collectorName}</span>
                   )}
                   <span>Created: {format(new Date(r.createdAt), "PPp")}</span>
                 </div>

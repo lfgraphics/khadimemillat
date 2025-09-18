@@ -95,6 +95,15 @@ const SearchableDropDownSelect = ({
         }
     };
 
+    function escapeRegExp(s: string){
+        return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    }
+    function highlight(label: string, term: string){
+        if (!term) return [label]
+        const parts = label.split(new RegExp(`(${escapeRegExp(term)})`, 'ig'))
+        return parts.map((part, i) => part.toLowerCase() === term.toLowerCase() ? <strong key={i}>{part}</strong> : <span key={i}>{part}</span>)
+    }
+
     return (
         <div
             ref={wrapperRef}
@@ -144,9 +153,11 @@ const SearchableDropDownSelect = ({
                             )}
                         </div>
                     ) : (
-                        filteredOptions.map((item, index) => (
+                        filteredOptions.map((item, index) => {
+                            const uniqueKey = `${item.value}-${index}`;
+                            return (
                             <div
-                                key={item.value}
+                                key={uniqueKey}
                                 role="option"
                                 aria-selected={value === item.value}
                                 className={cn(
@@ -167,16 +178,9 @@ const SearchableDropDownSelect = ({
                                         value === item.value ? "opacity-100" : "opacity-0"
                                     )}
                                 />
-                                <span
-                                    dangerouslySetInnerHTML={{
-                                        __html: item.label.replace(
-                                            new RegExp(`(${searchTerm})`, "ig"),
-                                            "<strong>$1</strong>"
-                                        ),
-                                    }}
-                                />
+                                <span>{highlight(item.label, searchTerm)}</span>
                             </div>
-                        ))
+                        )})
                     )}
                 </div>
             )}

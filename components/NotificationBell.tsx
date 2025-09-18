@@ -68,13 +68,25 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ intervalMs =
         }
     }, [limit]);
 
-    useEffect(() => {
-        fetchNotifications();
-        if (intervalMs > 0) {
-            pollRef.current = setInterval(fetchNotifications, intervalMs);
-            return () => { if (pollRef.current) clearInterval(pollRef.current); };
-        }
-    }, [fetchNotifications, intervalMs]);
+        useEffect(() => {
+                fetchNotifications();
+                // Opportunistically ensure push subscription (in case WebPushManager missed due to hydration ordering)
+                (async () => {
+                    try {
+                        if ('serviceWorker' in navigator) {
+                            const reg = await navigator.serviceWorker.ready;
+                            const sub = await reg.pushManager.getSubscription();
+                            if (sub) {
+                                fetch('/api/protected/web-push/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: sub }) });
+                            }
+                        }
+                    } catch(e) { /* ignore */ }
+                })();
+                if (intervalMs > 0) {
+                        pollRef.current = setInterval(fetchNotifications, intervalMs);
+                        return () => { if (pollRef.current) clearInterval(pollRef.current); };
+                }
+        }, [fetchNotifications, intervalMs]);
 
     const markAsRead = async (id: string) => {
         try {

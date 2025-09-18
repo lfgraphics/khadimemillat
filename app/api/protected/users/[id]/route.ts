@@ -1,14 +1,15 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import connectDB from '@/lib/db'
 import User from '@/models/User'
 import { auth, clerkClient } from '@clerk/nextjs/server'
 import { Types } from 'mongoose'
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { userId, sessionClaims } = await auth()
     if (!userId) return new NextResponse('Unauthorized', { status: 401 })
-    const mongoId = params.id
+    const { id } = await params
+    const mongoId = id
     if (!Types.ObjectId.isValid(mongoId)) return new NextResponse('Invalid user id', { status: 400 })
 
     await connectDB()

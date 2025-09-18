@@ -1,17 +1,19 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { markAsRead } from '@/lib/services/notification.service'
-import User from '@/models/User'
 import connectDB from '@/lib/db'
 
-export async function PATCH(_req: Request, { params }: { params: { id: string } }) {
+// Mark a notification as read. Notification.recipient stores the Clerk user ID directly,
+// so we should not translate to a Mongo _id. Previous implementation incorrectly looked up
+// a User document and passed its _id, which would never match Notification.recipient (Clerk ID),
+// resulting in markAsRead returning null and a client-side "Failed to mark read" error.
+export async function PATCH(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { userId: clerkUserId } = await auth()
     if (!clerkUserId) return new NextResponse('Unauthorized', { status: 401 })
     await connectDB()
-  const mongoUser = await User.findOne({ clerkUserId }).select('_id').lean() as { _id: any } | null
-  if (!mongoUser || !mongoUser._id) return new NextResponse('User not provisioned', { status: 404 })
-  const updated = await markAsRead(params.id, String(mongoUser._id))
+    const { id } = await params
+    const updated = await markAsRead(id, clerkUserId)
     if (!updated) return new NextResponse('Forbidden', { status: 403 })
     return NextResponse.json({ success: true, notification: updated })
   } catch (e) {

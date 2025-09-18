@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Headphones, Heart, Mail, Phone, ShoppingBag, Store, Truck, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import SuspenseSection from "@/components/SuspenseSection";
+import Loading from "@/components/Loading";
 
 export default function Home() {
   return (
@@ -37,68 +39,76 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Stats Section (suspense localized) */}
       <section className="bg-card py-16" data-testid="stats-section">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="text-center" data-testid="stat-items-collected">
-              <div className="text-3xl md:text-4xl font-bold text-primary mb-2">25,847</div>
-              <div className="text-muted-foreground">Items Collected</div>
-            </div>
-            <div className="text-center" data-testid="stat-families-helped">
-              <div className="text-3xl md:text-4xl font-bold text-primary mb-2">1,250</div>
-              <div className="text-muted-foreground">Families Helped</div>
-            </div>
-            <div className="text-center" data-testid="stat-volunteers">
-              <div className="text-3xl md:text-4xl font-bold text-primary mb-2">187</div>
-              <div className="text-muted-foreground">Active Volunteers</div>
-            </div>
-            <div className="text-center" data-testid="stat-cities">
-              <div className="text-3xl md:text-4xl font-bold text-primary mb-2">12</div>
-              <div className="text-muted-foreground">Cities Served</div>
+        <SuspenseSection
+          fallback={<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><Loading inline={false} label="Loading stats" /></div>}
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              <div className="text-center" data-testid="stat-items-collected">
+                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">25,847</div>
+                <div className="text-muted-foreground">Items Collected</div>
+              </div>
+              <div className="text-center" data-testid="stat-families-helped">
+                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">1,250</div>
+                <div className="text-muted-foreground">Families Helped</div>
+              </div>
+              <div className="text-center" data-testid="stat-volunteers">
+                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">187</div>
+                <div className="text-muted-foreground">Active Volunteers</div>
+              </div>
+              <div className="text-center" data-testid="stat-cities">
+                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">12</div>
+                <div className="text-muted-foreground">Cities Served</div>
+              </div>
             </div>
           </div>
-        </div>
+        </SuspenseSection>
       </section>
 
-      {/* How It Works Section */}
+      {/* How It Works Section (suspense) */}
       <section className="bg-background py-16" data-testid="how-it-works-section">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4" data-testid="how-it-works-title">
-              How Our Process Works
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto" data-testid="how-it-works-description">
-              A transparent, efficient system that maximizes impact and ensures every donation reaches those who need it most
-            </p>
+        <SuspenseSection
+          fallback={<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><Loading inline={false} label="Loading process" /></div>}
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4" data-testid="how-it-works-title">
+                How Our Process Works
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto" data-testid="how-it-works-description">
+                A transparent, efficient system that maximizes impact and ensures every donation reaches those who need it most
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center group" data-testid="step-request">
+                <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
+                  <Phone className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">1. Request Collection</h3>
+                <p className="text-muted-foreground">Submit a donation request through our app with your contact details and location</p>
+              </div>
+
+              <div className="text-center group" data-testid="step-collection">
+                <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
+                  <Truck className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">2. Verification & Collection</h3>
+                <p className="text-muted-foreground">Our team verifies and collects your items, processing them for maximum utility</p>
+              </div>
+
+              <div className="text-center group" data-testid="step-marketplace">
+                <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
+                  <Store className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">3. Marketplace Distribution</h3>
+                <p className="text-muted-foreground">Items are listed on our marketplace, with proceeds supporting welfare programs</p>
+              </div>
+            </div>
           </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center group" data-testid="step-request">
-              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
-                <Phone className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">1. Request Collection</h3>
-              <p className="text-muted-foreground">Submit a donation request through our app with your contact details and location</p>
-            </div>
-
-            <div className="text-center group" data-testid="step-collection">
-              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
-                <Truck className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">2. Verification & Collection</h3>
-              <p className="text-muted-foreground">Our team verifies and collects your items, processing them for maximum utility</p>
-            </div>
-
-            <div className="text-center group" data-testid="step-marketplace">
-              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
-                <Store className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">3. Marketplace Distribution</h3>
-              <p className="text-muted-foreground">Items are listed on our marketplace, with proceeds supporting welfare programs</p>
-            </div>
-          </div>
-        </div>
+        </SuspenseSection>
       </section>
 
       {/* Our Programs Section */}

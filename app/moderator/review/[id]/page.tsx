@@ -6,6 +6,8 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -14,20 +16,39 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getCloudinaryUrl } from '@/lib/cloudinary-client';
 
 type CollectionRequest = {
   _id: string;
-  donor: { _id: string; email?: string; firstName?: string; lastName?: string } | string;
+  donor: string;
+  donorDetails?: { id: string; name: string; email?: string; phone?: string };
+  collectedByDetails?: { id: string; name: string; email?: string };
   address?: string;
   phone?: string;
   notes?: string;
   requestedPickupTime?: string;
   actualPickupTime?: string;
   status: string;
-  assignedScrappers?: Array<{ _id: string; email?: string } | string>;
+  assignedScrappers?: string[];
   createdAt: string;
   updatedAt: string;
   moderatorNotes?: string;
+  donationEntryId?: string;
+};
+
+type DonationDetail = {
+  id: string;
+  donor?: { id: string; name: string; email?: string; phone?: string } | null;
+  collectedBy?: { id: string; name: string; email?: string } | null;
+  createdAt: string;
+  items: Array<{
+    id: string;
+    name: string;
+    condition: string;
+    photos: { before?: string[]; after?: string[] };
+    marketplaceListing: { listed?: boolean; demandedPrice?: number; salePrice?: number; sold?: boolean };
+    repairingCost?: number;
+  }>;
 };
 
 const STATUS_OPTIONS = ["pending", "verified", "collected", "completed"];
@@ -42,50 +63,160 @@ export default function ModeratorReviewDetailPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [request, setRequest] = useState<CollectionRequest | null>(null);
+  const [donation, setDonation] = useState<DonationDetail | null>(null);
+  const [itemEdits, setItemEdits] = useState<Record<string, any>>({});
+  const [itemSaving, setItemSaving] = useState<Record<string, boolean>>({});
+  const [itemErrors, setItemErrors] = useState<Record<string, string | null>>({});
+  const [uploadingPhotos, setUploadingPhotos] = useState<Record<string, boolean>>({});
+  const updateEdit = (id: string, patch: any) => {
+    setItemEdits(prev => ({ ...prev, [id]: { ...(prev[id] || {}), ...patch } }));
+  };
+
+  const saveItem = async (id: string) => {
+    if (!donation) return;
+    const edit = itemEdits[id] || {};
+    setItemSaving(p => ({ ...p, [id]: true }));
+    setItemErrors(p => ({ ...p, [id]: null }));
+    try {
+      const payload: any = {};
+      if (edit.condition) payload.condition = edit.condition;
+      if (typeof edit.repairingCost === 'number') payload.repairingCost = edit.repairingCost;
+      if ('listed' in edit || 'demandedPrice' in edit || 'salePrice' in edit || 'sold' in edit) {
+        payload.marketplaceListing = {
+          listed: edit.listed ?? edit.marketplaceListing?.listed,
+          demandedPrice: edit.demandedPrice,
+          salePrice: edit.salePrice,
+          sold: edit.sold,
+        };
+      }
+      if (Array.isArray(edit.afterPhotos)) payload.afterPhotos = edit.afterPhotos;
+      const res = await fetch(`/api/protected/scrap-items/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      if (!res.ok) throw new Error('Save failed');
+      const json = await res.json();
+      setDonation(d => d ? { ...d, items: d.items.map(it => it.id === id ? { ...it, ...json.item, marketplaceListing: json.item.marketplaceListing || it.marketplaceListing } : it) } : d);
+      setItemEdits(prev => ({ ...prev, [id]: {} }));
+    } catch (e: any) {
+      setItemErrors(p => ({ ...p, [id]: e.message || 'Error' }));
+    } finally {
+      setItemSaving(p => ({ ...p, [id]: false }));
+    }
+  };
+
+  const handleAfterPhotoSelect = (id: string, files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploadingPhotos(p => ({ ...p, [id]: true }));
+    const readers: Promise<string>[] = [];
+    for (const f of Array.from(files)) {
+      readers.push(new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(fr.result as string);
+        fr.onerror = reject;
+        fr.readAsDataURL(f);
+      }));
+    }
+    Promise.all(readers).then(base64s => {
+      updateEdit(id, { afterPhotos: [ ...(itemEdits[id]?.afterPhotos || []), ...base64s ] });
+    }).finally(() => setUploadingPhotos(p => ({ ...p, [id]: false })));
+  };
   const [moderatorNotes, setModeratorNotes] = useState("");
   const [status, setStatus] = useState("pending");
+  // WhatsApp dialog state
+  const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
+  const [sendingWhatsapp, setSendingWhatsapp] = useState(false);
+
+  const sendWhatsappConfirmation = async () => {
+    const rawPhone = request?.donorDetails?.phone || request?.phone;
+    if (!rawPhone) {
+      toast.error('No phone number available for donor');
+      return;
+    }
+    setSendingWhatsapp(true);
+    try {
+      const name = request?.donorDetails?.name || 'Donor';
+      const DEFAULT_COUNTRY_CODE = process.env.NEXT_PUBLIC_DEFAULT_COUNTRY_CODE || '91'; // fallback to India '91'
+      let normalized = rawPhone.replace(/[^0-9]/g, '');
+      // If number length seems local (e.g., 10 digits) and doesn't start with country code, prefix default
+      if (!normalized.startsWith(DEFAULT_COUNTRY_CODE)) {
+        if (normalized.length <= 10) {
+          toast.warning('Phone normalized with default country code prefix');
+          normalized = DEFAULT_COUNTRY_CODE + normalized;
+        }
+      }
+      const message = `Hello ${name}, your donation has been processed and completed. Thank you for your contribution to Khadim-e-Millat Welfare Foundation!`;
+      const whatsappUrl = `https://wa.me/${normalized}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+      try {
+        await fetch('/api/protected/whatsapp/send-confirmation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: rawPhone, normalizedPhone: normalized, message, collectionRequestId: id })
+        });
+      } catch {}
+      toast.success('WhatsApp opened with confirmation message');
+      setWhatsappDialogOpen(false);
+    } catch (e) {
+      toast.error('Failed to open WhatsApp');
+    } finally {
+      setSendingWhatsapp(false);
+    }
+  };
 
   const fetchRequest = useCallback(async () => {
     if (!id) return;
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/protected/collection-requests/${id}`, { cache: "no-store" });
-      if (!res.ok) throw new Error(`Failed: ${res.status}`);
-  const data = await res.json();
-  const req = data.request;
-  setRequest(req);
-  setModeratorNotes(req.moderatorNotes || "");
-  setStatus(req.status);
+      const res = await fetch(`/api/protected/collection-requests/${id}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`Failed to load request (${res.status})`);
+      const data = await res.json();
+      const req = data.request;
+      setRequest(req);
+      setModeratorNotes(req.moderatorNotes || "");
+      setStatus(req.status);
+      if (req.donationEntryId) {
+        try {
+          const dRes = await fetch(`/api/protected/donation-entries/${req.donationEntryId}`, { cache: 'no-store' });
+          if (dRes.ok) {
+            const dj = await dRes.json();
+            setDonation(dj.donation);
+          }
+        } catch (e) {
+          console.warn('[DONATION_FETCH_FAIL]', e);
+        }
+      } else {
+        setDonation(null);
+      }
     } catch (e: any) {
-      setError(e.message || "Failed to load");
+      setError(e.message || 'Failed to load');
     } finally {
       setLoading(false);
     }
   }, [id]);
 
-  useEffect(() => { fetchRequest(); }, [fetchRequest]);
-
-  const save = async () => {
+  const save = useCallback(async () => {
     if (!id) return;
     setSaving(true);
     setError(null);
     try {
       const res = await fetch(`/api/protected/collection-requests/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ moderatorNotes, status }),
       });
-      if (!res.ok) throw new Error("Update failed");
+      if (!res.ok) throw new Error('Update failed');
       await fetchRequest();
       toast.success('Request updated');
     } catch (e: any) {
-      setError(e.message || "Failed to update");
+      setError(e.message || 'Failed to update');
       toast.error(e.message || 'Update failed');
     } finally {
       setSaving(false);
     }
-  };
+  }, [id, moderatorNotes, status, fetchRequest]);
+
+  useEffect(() => { fetchRequest(); }, [fetchRequest]);
+
+  // Using shared getCloudinaryUrl from client helper
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -107,8 +238,14 @@ export default function ModeratorReviewDetailPage() {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">Donor</p>
-                  <p>{typeof request.donor === "string" ? request.donor : [request.donor?.firstName, request.donor?.lastName].filter(Boolean).join(" ") || request.donor?.email || "Unknown"}</p>
+                  <p>{request.donorDetails?.name || request.donorDetails?.email || request.donor}</p>
                 </div>
+                {request.collectedByDetails && (
+                  <div>
+                    <p className="text-muted-foreground">Picker</p>
+                    <p>{request.collectedByDetails.name || request.collectedByDetails.email}</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-muted-foreground">Status</p>
                   <p><Badge>{request.status}</Badge></p>
@@ -189,6 +326,33 @@ export default function ModeratorReviewDetailPage() {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
+                {(request?.donorDetails?.phone || request?.phone) && (
+                  <Dialog open={whatsappDialogOpen} onOpenChange={setWhatsappDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" disabled={!(request?.donorDetails?.phone || request?.phone)}>Send WhatsApp</Button>
+                    </DialogTrigger>
+                    <DialogContent className='max-w-md'>
+                      <DialogHeader>
+                        <DialogTitle>Send WhatsApp Confirmation</DialogTitle>
+                      </DialogHeader>
+                      <div className='space-y-3'>
+                        <p className='text-sm text-muted-foreground'>
+                          Send a confirmation message to <span className='font-medium'>{request?.donorDetails?.name || 'Donor'}</span> at {(request?.donorDetails?.phone || request?.phone)}
+                        </p>
+                        <div className='bg-muted/40 p-3 rounded text-xs'>
+                          Hello {request?.donorDetails?.name || 'Donor'}, your donation has been processed and completed. Thank you for your contribution to Khadim-e-Millat Welfare Foundation!
+                        </div>
+                      </div>
+                      <DialogFooter className='pt-2'>
+                        <Button variant='outline' size='sm' onClick={() => setWhatsappDialogOpen(false)}>Cancel</Button>
+                        <Button size='sm' onClick={sendWhatsappConfirmation} disabled={sendingWhatsapp}>
+                          {sendingWhatsapp ? <Loader2 className='h-3 w-3 animate-spin mr-2' /> : null}
+                          Open WhatsApp
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
                 <Button variant="outline" onClick={() => router.push('/moderator/review')}>Done</Button>
               </div>
             </CardContent>
@@ -204,6 +368,81 @@ export default function ModeratorReviewDetailPage() {
                 <p>Use moderator notes for quality assessment or discrepancies (e.g., weight mismatch, contamination).</p>
               </CardContent>
             </Card>
+            {donation && (
+              <Card>
+                <CardHeader className='pb-3'>
+                  <CardTitle className='text-base'>Donation Items</CardTitle>
+                </CardHeader>
+                <CardContent className='space-y-4'>
+                  {donation.items.length === 0 && <p className='text-xs text-muted-foreground'>No items yet.</p>}
+                  <div className='space-y-5'>
+                    {donation.items.map(it => {
+                      const edit = itemEdits[it.id] || {};
+                      const combinedAfter = [ ...(it.photos?.after || []), ...(edit.afterPhotos || []) ];
+                      const sale = (edit.salePrice ?? it.marketplaceListing?.salePrice);
+                      const repair = (edit.repairingCost ?? it.repairingCost);
+                      const profit = (typeof sale === 'number' && typeof repair === 'number') ? sale - repair : null;
+                      return (
+                        <div key={it.id} className='border rounded p-3 space-y-3 text-xs bg-background'>
+                          <div className='flex flex-wrap justify-between gap-2'>
+                            <div className='font-medium'>{it.name}</div>
+                            <div className='flex items-center gap-2'>
+                              <label className='text-muted-foreground'>Condition:</label>
+                              <select
+                                className='bg-muted/40 border rounded px-1 py-0.5 text-[11px]'
+                                value={edit.condition || it.condition}
+                                onChange={e => updateEdit(it.id, { condition: e.target.value })}
+                              >
+                                {['new','good','repairable','scrap','not applicable'].map(c => <option key={c} value={c}>{c}</option>)}
+                              </select>
+                            </div>
+                          </div>
+                          <div className='flex flex-wrap gap-2'>
+                            {(it.photos?.before || []).slice(0,4).map((p,i)=>(<img key={i} src={getCloudinaryUrl(p)} alt='before' className='h-14 w-14 object-cover rounded border' />))}
+                            {combinedAfter.slice(0,4).map((p,i)=>(<img key={i} src={getCloudinaryUrl(p)} alt='after' className='h-14 w-14 object-cover rounded border ring-2 ring-green-400' />))}
+                          </div>
+                          <div className='flex flex-wrap gap-4 items-center'>
+                            <div className='flex items-center gap-1'>
+                              <Switch checked={(edit.listed ?? it.marketplaceListing?.listed) || false} onCheckedChange={(v)=> updateEdit(it.id, { listed: v })} />
+                              <span>Listed</span>
+                            </div>
+                            <div className='flex items-center gap-1'>
+                              <Switch checked={(edit.sold ?? it.marketplaceListing?.sold) || false} onCheckedChange={(v)=> updateEdit(it.id, { sold: v })} />
+                              <span>Sold</span>
+                            </div>
+                            <div className='flex items-center gap-1'>
+                              <span>Ask:</span>
+                              <Input type='number' className='h-7 w-20 text-xs' value={edit.demandedPrice ?? it.marketplaceListing?.demandedPrice ?? ''} onChange={e=> updateEdit(it.id, { demandedPrice: e.target.value === '' ? undefined : Number(e.target.value) })} />
+                            </div>
+                            <div className='flex items-center gap-1'>
+                              <span>Sold:</span>
+                              <Input type='number' className='h-7 w-20 text-xs' value={edit.salePrice ?? it.marketplaceListing?.salePrice ?? ''} onChange={e=> updateEdit(it.id, { salePrice: e.target.value === '' ? undefined : Number(e.target.value) })} />
+                            </div>
+                            <div className='flex items-center gap-1'>
+                              <span>Repair:</span>
+                              <Input type='number' className='h-7 w-20 text-xs' value={edit.repairingCost ?? it.repairingCost ?? ''} onChange={e=> updateEdit(it.id, { repairingCost: e.target.value === '' ? undefined : Number(e.target.value) })} />
+                            </div>
+                            {profit !== null && <span className={profit >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>Profit: {profit}</span>}
+                          </div>
+                          <div className='flex flex-wrap gap-2 items-center'>
+                            <label className='cursor-pointer text-xs bg-muted px-2 py-1 rounded border hover:bg-background transition'>
+                              {uploadingPhotos[it.id] ? 'Uploading...' : 'Add After Photos'}
+                              <input type='file' multiple accept='image/*' onChange={(e)=> handleAfterPhotoSelect(it.id, e.target.files)} className='hidden' />
+                            </label>
+                            <Button size='sm' className='h-7 px-3' disabled={itemSaving[it.id]} onClick={()=> saveItem(it.id)}>
+                              {itemSaving[it.id] ? <Loader2 className='h-3 w-3 animate-spin' /> : 'Save'}
+                            </Button>
+                            {itemErrors[it.id] && <span className='text-red-500 text-[10px]'>{itemErrors[it.id]}</span>}
+                            {Object.keys(edit).length > 0 && !itemSaving[it.id] && <span className='text-[10px] text-amber-500'>Unsaved changes</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className='text-[10px] text-muted-foreground'>Changes are applied per item via its Save button.</p>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       )}

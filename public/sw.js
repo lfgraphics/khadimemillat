@@ -1,25 +1,33 @@
 self.addEventListener('push', function (event) {
     if (!event.data) return;
-
-    const data = event.data.json();
+    let data = {};
+    try {
+        data = event.data.json();
+    } catch (e) {
+        console.error('[SW] Failed to parse push payload', e);
+        return;
+    }
     console.log('[SW] Push received:', data);
 
+    const actions = data.actions || [] // e.g. [{action:'open', title:'Open'}]
     const options = {
         body: data.body,
-        icon: data.icon || '/android-chrome-512x512.png',
-        vibrate: [100, 50, 100],
+        icon: data.icon || '/android-chrome-192x192.png',
+        badge: '/favicon-32x32.png',
+        vibrate: [80, 30, 80],
         data: {
-            url: data.url || 'https://www.khadimemillat.org',
+            url: data.url || '/',
             dateOfArrival: Date.now(),
             primaryKey: data.id || 'unknown',
+            meta: data.meta || {}
         },
+        actions: actions.slice(0, 2) // browser limit typically 2
     };
 
     event.waitUntil(
         (async () => {
             try {
-                // Show the notification
-                await self.registration.showNotification(data.title, options);
+                await self.registration.showNotification(data.title || 'Notification', options);
             } catch (err) {
                 console.error('[SW] Error handling push:', err);
             }
@@ -29,25 +37,29 @@ self.addEventListener('push', function (event) {
 
 
 self.addEventListener('notificationclick', function (event) {
-    console.log('Notification click received:', event);
-    // Extract the URL from the notification's data
-    const targetUrl = event.notification.data?.url || 'https://www.khadimemillat.org';
-    console.log(event)
-    // Open the URL dynamically
+    console.log('[SW] Notification click:', event);
+    event.notification.close();
+    const targetUrl = event.notification.data?.url || '/';
     event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            // Check if the URL is already open
-            for (let client of clientList) {
-                if (client.url === targetUrl && 'focus' in client) {
+        (async () => {
+            const allClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+            for (const client of allClients) {
+                if ('focus' in client) {
+                    // If already open on same origin, navigate if needed
+                    try {
+                        const url = new URL(client.url);
+                        if (targetUrl && (url.pathname !== targetUrl)) {
+                            client.navigate(targetUrl);
+                        }
+                    } catch (_) {}
                     return client.focus();
                 }
             }
-            // Open a new window if not already open
-            if (clients.openWindow) {
-                return clients.openWindow(targetUrl);
-            }
-        })
+            if (clients.openWindow) return clients.openWindow(targetUrl);
+        })()
     );
-    // Close the notification
-    event.notification.close();
+});
+
+self.addEventListener('notificationclose', function (event) {
+    console.log('[SW] Notification closed', event.notification?.data?.primaryKey);
 });
