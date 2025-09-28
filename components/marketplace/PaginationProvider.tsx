@@ -7,11 +7,24 @@ interface PaginationContextValue {
     items: any[]
     isLoading: boolean
     isReachingEnd?: boolean
+    error?: string
 }
 
 const PaginationContext = createContext<PaginationContextValue | null>(null)
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+const fetcher = async (url: string) => {
+    const res = await fetch(url)
+    const ct = res.headers.get('content-type') || ''
+    if (!res.ok) {
+        const text = await res.text().catch(() => '')
+        throw new Error(`HTTP ${res.status} ${res.statusText}: ${text.slice(0, 120)}`)
+    }
+    if (!ct.includes('application/json')) {
+        const text = await res.text().catch(() => '')
+        throw new Error(`Non-JSON response (${ct}): ${text.slice(0, 120)}`)
+    }
+    return res.json()
+}
 
 export function PaginationProvider({ children }: { children: React.ReactNode }) {
     const {
@@ -19,6 +32,7 @@ export function PaginationProvider({ children }: { children: React.ReactNode }) 
         size,
         setSize,
         isLoading,
+        error,
     } = useSWRInfinite(
         (index, previousPageData) => {
             // stop fetching if no more data
@@ -30,7 +44,7 @@ export function PaginationProvider({ children }: { children: React.ReactNode }) 
     )
 
     const loaderRef = useRef<HTMLDivElement | null>(null)
-    const items = data ? data.flatMap((d) => d.items) : []
+    const items = data ? data.flatMap((d) => Array.isArray(d.items) ? d.items : []) : []
 
     const isReachingEnd =
         data && data[data.length - 1]?.items.length === 0
@@ -50,7 +64,7 @@ export function PaginationProvider({ children }: { children: React.ReactNode }) 
     }, [isReachingEnd, setSize])
 
     return (
-        <PaginationContext.Provider value={{ items, isLoading, isReachingEnd }}>
+        <PaginationContext.Provider value={{ items, isLoading, isReachingEnd, error: error ? String(error.message || error) : undefined }}>
             {children}
             {!isReachingEnd && <div ref={loaderRef} className="h-10" />}
         </PaginationContext.Provider>

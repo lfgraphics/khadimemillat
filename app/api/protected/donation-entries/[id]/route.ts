@@ -11,38 +11,45 @@ import DonationEntry, { ISDonationEntry } from '@/models/DonationEntry';
 import { getClerkUserWithSupplementaryData } from '@/lib/services/user.service';
 import { donationEntryUpdateSchema } from "@/lib/validators/donationEntry.validator";
 import { checkRole } from "@/utils/roles";
+import { getAuth } from "@clerk/nextjs/server";
 
 export async function GET(req: NextRequest, { params }: any) {
     try {
-        requireUser(req); // ensure authenticated; detailed role check can be added here
+        const userId = requireUser(req);
+        const { sessionClaims }: any = getAuth(req)
+        const role = sessionClaims?.metadata?.role as string | undefined
         await connectDB();
-                const donationDoc = await DonationEntry.findById(params.id).lean<ISDonationEntry>();
+        const donationDoc = await DonationEntry.findById((await params).id).lean<ISDonationEntry>();
         if (!donationDoc) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        if (role !== 'admin' && role !== 'moderator' && String(donationDoc.donor) !== String(userId)) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+        }
         const itemDocs = await ScrapItem.find({ scrapEntry: donationDoc._id }).lean<IScrapItem[]>();
-                // Enrich donor & collectedBy (picker)
-                let donorDetails: any = null;
-                if (donationDoc.donor) {
-                    try { donorDetails = await getClerkUserWithSupplementaryData(donationDoc.donor); } catch(e){ donorDetails = { id: donationDoc.donor, name: 'Unknown Donor' }; }
-                }
-                let pickerDetails: any = null;
-                if ((donationDoc as any).collectedBy) {
-                    try { pickerDetails = await getClerkUserWithSupplementaryData((donationDoc as any).collectedBy); } catch(e){ pickerDetails = { id: (donationDoc as any).collectedBy, name: 'Unknown User' }; }
-                }
+        // Enrich donor & collectedBy (picker)
+        let donorDetails: any = null;
+        if (donationDoc.donor) {
+            try { donorDetails = await getClerkUserWithSupplementaryData(donationDoc.donor); } catch (e) { donorDetails = { id: donationDoc.donor, name: 'Unknown Donor' }; }
+        }
+        let pickerDetails: any = null;
+        if ((donationDoc as any).collectedBy) {
+            try { pickerDetails = await getClerkUserWithSupplementaryData((donationDoc as any).collectedBy); } catch (e) { pickerDetails = { id: (donationDoc as any).collectedBy, name: 'Unknown User' }; }
+        }
         return NextResponse.json({
-                    donation: {
-                    id: (donationDoc as any)._id.toString(),
-                                                donor: donorDetails ? { id: donorDetails.id, name: donorDetails.name, email: donorDetails.email, phone: donorDetails.phone } : null,
-                                                collectedBy: pickerDetails ? { id: pickerDetails.id, name: pickerDetails.name, email: pickerDetails.email } : null,
-                        createdAt: (donationDoc as any).createdAt,
-                        items: itemDocs.map(it => ({
-                            id: (it as any)._id?.toString?.() || '',
-                            name: it.name,
-                            condition: it.condition,
-                            photos: it.photos,
-                            marketplaceListing: it.marketplaceListing,
-                                                        repairingCost: (it as any).repairingCost,
-                        }))
-                    }
+            donation: {
+                id: (donationDoc as any)._id.toString(),
+                donor: donorDetails ? { id: donorDetails.id, name: donorDetails.name, email: donorDetails.email, phone: donorDetails.phone } : null,
+                collectedBy: pickerDetails ? { id: pickerDetails.id, name: pickerDetails.name, email: pickerDetails.email } : null,
+                createdAt: (donationDoc as any).createdAt,
+                status: (donationDoc as any).status,
+                items: itemDocs.map(it => ({
+                    id: (it as any)._id?.toString?.() || '',
+                    name: it.name,
+                    condition: it.condition,
+                    photos: it.photos,
+                    marketplaceListing: it.marketplaceListing,
+                    repairingCost: (it as any).repairingCost,
+                }))
+            }
         });
     } catch (err: any) {
         return NextResponse.json({ error: err.message }, { status: 500 });
@@ -54,12 +61,13 @@ export async function PUT(req: NextRequest, { params }: any) {
         const userId = requireUser(req);
         const json = await req.json();
         const parsed = donationEntryUpdateSchema.parse(json);
-        const existing = await getDonationEntryById(params.id);
+        const existing = await getDonationEntryById((await params).id);
         if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-        if (await checkRole('admin')) {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
-        const updated = await updateDonationEntry(params.id, parsed);
+        // Only admin or moderator allowed to update donation entry
+        const isAdmin = await checkRole('admin')
+        const isModerator = await checkRole('moderator' as any)
+        if (!isAdmin && !isModerator) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        const updated = await updateDonationEntry((await params).id, parsed);
         return NextResponse.json({ success: true, data: updated });
     } catch (err: any) {
         return NextResponse.json({ error: err.message }, { status: 400 });
@@ -69,12 +77,12 @@ export async function PUT(req: NextRequest, { params }: any) {
 export async function DELETE(req: NextRequest, { params }: any) {
     try {
         const userId = requireUser(req);
-        const existing = await getDonationEntryById(params.id);
+        const existing = await getDonationEntryById((await params).id);
         if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-        if (await checkRole('admin')) {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
-        await deleteDonationEntry(params.id);
+        // Only admin allowed to delete
+        const isAdmin = await checkRole('admin')
+        if (!isAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        await deleteDonationEntry((await params).id);
         return NextResponse.json({ success: true });
     } catch (err: any) {
         return NextResponse.json({ error: err.message }, { status: 401 });

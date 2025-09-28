@@ -1,5 +1,6 @@
 "use client"
 import React, { useEffect, useState, useCallback } from 'react'
+import { safeJson } from '@/lib/utils'
 import { useUser } from '@clerk/nextjs'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -8,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import ScrapperAssignmentModal from '@/components/ScrapperAssignmentModal'
 import { Loader2, Phone, MapPin, Calendar, User } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface RequestItem { _id: string; donor?: any; phone: string; address: string; requestedPickupTime: string; status: string; notes?: string }
 
@@ -35,11 +37,7 @@ export default function VerifyRequestsPage() {
       const params = new URLSearchParams()
       if (statusFilter) params.set('status', statusFilter)
       const res = await fetch(`/api/protected/collection-requests?${params.toString()}`, { cache: 'no-store' })
-      if(!res.ok){
-        const txt = await res.text()
-        throw new Error(`Fetch failed (${res.status}) ${txt}`)
-      }
-      const json = await res.json()
+      const json = await safeJson<any>(res)
       const incoming = json.items || []
       if (incoming.length === 0) {
         console.debug('[VERIFY_REQUESTS] No items returned for filter', statusFilter)
@@ -48,6 +46,7 @@ export default function VerifyRequestsPage() {
     } catch(e:any){
       console.error('[VERIFY_REQUESTS_LOAD_ERROR]', e)
       setError(e.message || 'Failed to load')
+      toast.error(e.message || 'Failed to load requests')
     } finally { setLoading(false) }
   }, [statusFilter, canAccess])
 
@@ -59,6 +58,7 @@ export default function VerifyRequestsPage() {
       const res = await fetch(`/api/protected/collection-requests/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'verify' }) })
       if (!res.ok) throw new Error('Verification failed')
       setItems(prev => prev.filter(p => p._id !== id))
+      toast.success('Request verified')
     } catch(e){ console.error(e); } finally { setProcessing(false); setVerifyingId(null) }
   }
 
@@ -69,7 +69,8 @@ export default function VerifyRequestsPage() {
       if (!res.ok) throw new Error('Auto-assign failed')
       // remove from list after assignment attempt (or refresh list)
       setItems(prev => prev.filter(p => p._id !== id))
-    } catch(e){ console.error(e) } finally { setAutoAssigningId(null) }
+      toast.success('Auto-assignment triggered')
+    } catch(e:any){ console.error(e); toast.error(e.message || 'Auto-assign failed') } finally { setAutoAssigningId(null) }
   }
 
   const openEdit = (r: any) => {
@@ -92,12 +93,12 @@ export default function VerifyRequestsPage() {
         notes: editForm.notes,
         requestedPickupTime: editForm.requestedPickupTime
       }
-      const res = await fetch(`/api/protected/collection-requests/${editingId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      if(!res.ok) throw new Error('Update failed')
-      const json = await res.json()
+  const res = await fetch(`/api/protected/collection-requests/${editingId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+  const json = await safeJson<any>(res)
       setItems(prev => prev.map(it => it._id === editingId ? { ...it, ...json.request } : it))
       setEditingId(null)
-    } catch(e){ console.error(e) } finally { setProcessing(false) }
+      toast.success('Request updated')
+    } catch(e:any){ console.error(e); toast.error(e.message || 'Update failed') } finally { setProcessing(false) }
   }
 
   if (!canAccess) {

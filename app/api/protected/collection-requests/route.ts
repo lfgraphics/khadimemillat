@@ -52,14 +52,33 @@ export async function POST(req: Request) {
     const parsed = createCollectionRequestSchema.safeParse(json)
     if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
 
+    // Allow admins/moderators to create on behalf of a donor by passing donor as Clerk ID or Mongo ID; default to current user
+    let donorClerkId = parsed.data.donor || clerkUserId
+    // If donor looks like a Mongo ObjectId, resolve it to Clerk ID
+    if (/^[a-fA-F0-9]{24}$/.test(donorClerkId)) {
+      try {
+        const UserModel = (await import('@/models/User')).default as any
+        const m = await UserModel.findById(donorClerkId).lean()
+        if (m?.clerkUserId) donorClerkId = m.clerkUserId
+      } catch (e) { /* ignore and keep original */ }
+    }
+
     const created = await createCollectionRequest({
-      donor: clerkUserId,
+      donor: donorClerkId,
       requestedPickupTime: parsed.data.requestedPickupTime ? new Date(parsed.data.requestedPickupTime) : undefined,
       address: parsed.data.address,
       phone: parsed.data.phone,
       notes: parsed.data.notes
     } as any)
-    return NextResponse.json({ success: true, request: created })
+
+    // Enrich with donorDetails in response for convenience
+    try {
+      const { getClerkUserWithSupplementaryData } = await import('@/lib/services/user.service')
+      const donorDetails = await getClerkUserWithSupplementaryData(donorClerkId)
+      return NextResponse.json({ success: true, request: { ...created, donorDetails } })
+    } catch {
+      return NextResponse.json({ success: true, request: created })
+    }
   } catch (e) {
     console.error('[COLLECTION_REQUESTS_POST_ERROR]', e)
     return NextResponse.json({ error: 'Server error' }, { status: 500 })

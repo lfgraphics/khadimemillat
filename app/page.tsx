@@ -1,39 +1,40 @@
-import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Headphones, Heart, Mail, Phone, ShoppingBag, Store, Truck, Users } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import SuspenseSection from "@/components/SuspenseSection";
 import Loading from "@/components/Loading";
+import { CountingNumber } from '@/components/ui/shadcn-io/counting-number';
 
 export default function Home() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
-        {/* <div className="absolute inset-0 bg-gradient-to-br from-[#0d89d7] to-[#001018]"></div> */}
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20" data-testid="hero-section">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6" data-testid="hero-title">
-              Transforming Communities
-            </h1>
-            <p className="text-xl md:text-2xl mb-8 text-primary-foreground/90 max-w-3xl mx-auto" data-testid="hero-description">
-              Established in 2021 in Gorakhpur, Uttar Pradesh. Through sustainable scrap collection and redistribution, we create opportunities and support those in need
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/donate" data-testid="donate-button">
-                <Button size="lg" variant="secondary" className="px-8 py-4">
-                  <Heart className="mr-2 h-5 w-5" />
-                  Donate Scrap
-                </Button>
-              </Link>
-              <Link href="/marketplace" data-testid="marketplace-button">
-                <Button size="lg" variant="outline" className="px-8 py-4 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10">
-                  <ShoppingBag className="mr-2 h-5 w-5" />
-                  Browse Marketplace
-                </Button>
-              </Link>
+      <section className="relative text-primary-foreground bg-[url('/assets/landing.png')] bg-cover bg-center">
+        <div className="bg-gradient-to-tl from-primary to-primary/40 w-full h-full">
+          {/* <div className="absolute inset-0 bg-gradient-to-br from-[#0d89d7] to-[#001018]"></div> */}
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20" data-testid="hero-section">
+            <div className="text-center">
+              <h1 className="text-4xl md:text-6xl font-bold mb-6" data-testid="hero-title">
+                Transforming Communities
+              </h1>
+              <p className="text-xl md:text-2xl mb-8 text-primary-foreground/90 max-w-3xl mx-auto" data-testid="hero-description">
+                Established in 2021 in Gorakhpur, Uttar Pradesh. Through sustainable scrap collection and redistribution, we create opportunities and support those in need
+              </p>
+              <div className="flex flex-row gap-4 justify-center">
+                <Link href="/donate" data-testid="donate-button">
+                  <Button size="lg" variant="secondary" className="px-8 py-4">
+                    <Heart className="mr-2 h-5 w-5" />
+                    Donate
+                  </Button>
+                </Link>
+                <Link href="/marketplace" data-testid="marketplace-button">
+                  <Button size="lg" variant="default" className="px-8 py-4 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10">
+                    <ShoppingBag className="mr-2 h-5 w-5" />
+                    Browse Marketplace
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -47,19 +48,27 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               <div className="text-center" data-testid="stat-items-collected">
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">25,847</div>
+                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
+                  <CountingNumber number={25847} />
+                </div>
                 <div className="text-muted-foreground">Items Collected</div>
               </div>
               <div className="text-center" data-testid="stat-families-helped">
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">1,250</div>
+                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
+                  <CountingNumber number={1250} />
+                </div>
                 <div className="text-muted-foreground">Families Helped</div>
               </div>
               <div className="text-center" data-testid="stat-volunteers">
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">187</div>
+                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
+                  <CountingNumber number={187} />
+                </div>
                 <div className="text-muted-foreground">Active Volunteers</div>
               </div>
               <div className="text-center" data-testid="stat-cities">
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">12</div>
+                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
+                  <CountingNumber number={12} />
+                </div>
                 <div className="text-muted-foreground">Cities Served</div>
               </div>
             </div>

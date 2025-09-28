@@ -9,6 +9,7 @@
  *  - Redirect to print page with persistent barcodes (Mongo IDs)
  */
 import React, { useEffect, useState, useCallback } from 'react';
+import { safeJson } from '@/lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import Barcode from 'react-barcode';
@@ -21,7 +22,8 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/component
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Loading from '@/app/loading';
-import { getCloudinaryUrl } from '@/lib/cloudinary-client';
+import { ClickableImage } from '@/components/ui/clickable-image';
+import { toast } from 'sonner'
 
 interface UserOption { id: string; name: string; email?: string; phone?: string; clerkUserId?: string; mongoUserId?: string }
 interface LocalItem { tempId: string; serverId?: string; name: string; description: string; donorId: string; donorName: string; condition: string; photos: { before: string[]; after: string[] }; marketplace: { listed: boolean; demandedPrice?: number } }
@@ -67,20 +69,31 @@ const DonationListManager: React.FC = () => {
       try {
         setAutoFillLoading(true);
         const res = await fetch(`/api/protected/collection-requests/${collectionRequestId}`, { cache: 'no-store' });
-        if(!res.ok) return;
-        const json = await res.json();
+        if (!res.ok) return;
+  const json = await safeJson<any>(res);
         const req = json.request;
-        if(!req || !req.donor) return;
-        // Fetch enriched donor via users search (or rely on upsert so we have a local doc)
-        const userRes = await fetch(`/api/protected/users?search=${encodeURIComponent(req.donor)}`, { cache: 'no-store' });
-        const userJson = await userRes.json();
-        const match = (userJson.users || []).find((u: any) => u.id === req.donor || u.clerkUserId === req.donor);
+        if (!req || !req.donor) return;
+        // Prefer enriched donorDetails from the request (already Clerk-first)
+        const dd = req.donorDetails || null;
         if (!cancelled) {
-          if (match) {
-            setDonor({ id: match._id || match.mongoUserId || match.id, mongoUserId: match._id || match.mongoUserId, name: match.name, email: match.email, phone: match.phone, clerkUserId: match.clerkUserId || match.id });
+          if (dd) {
+            setDonor({ id: dd.id, mongoUserId: req.donorMongoId || undefined, name: dd.name, email: dd.email, phone: dd.phone, clerkUserId: dd.id });
           } else {
-            // fallback minimal donor object
-            setDonor({ id: req.donor, name: 'Donor', clerkUserId: req.donor });
+            // Fallback fetch
+            const userRes = await fetch(`/api/protected/users?search=${encodeURIComponent(req.donor)}`, { cache: 'no-store' });
+            const userJson = await safeJson<any>(userRes);
+            const isMongoId = /^[a-fA-F0-9]{24}$/.test(req.donor);
+            const match = (userJson.users || []).find((u: any) => u.id === req.donor || u.clerkUserId === req.donor || u.mongoUserId === req.donor);
+            if (match) {
+              setDonor({ id: match.id, mongoUserId: match.mongoUserId, name: match.name, email: match.email, phone: match.phone, clerkUserId: match.id });
+            } else {
+              // If donor is a Mongo ObjectId, set mongoUserId and avoid setting clerkUserId incorrectly
+              if (isMongoId) {
+                setDonor({ id: req.donor, mongoUserId: req.donor, name: 'Donor' });
+              } else {
+                setDonor({ id: req.donor, name: 'Donor', clerkUserId: req.donor });
+              }
+            }
           }
         }
       } catch (e) { console.warn('[AUTO_FILL_DONOR_FAILED]', e); }
@@ -92,49 +105,78 @@ const DonationListManager: React.FC = () => {
   const pushItem = () => {
     const selectedUser = donor?.mongoUserId || donor?.id || '';
     if (!selectedUser || !currentItem.name.trim()) return;
-    setItems(prev => [{ ...currentItem, donorId: selectedUser, donorName: donor?.name || '' }, ...prev]);
+    // Ensure a fresh tempId for each push regardless of memoized emptyItem
+    const newItem: LocalItem = { ...currentItem, tempId: crypto.randomUUID(), donorId: selectedUser, donorName: donor?.name || '' }
+    setItems(prev => [newItem, ...prev]);
     setCurrentItem(emptyItem());
     setPreset('');
     setItemNameSearch('');
   };
 
-  const fileListToBase64 = async (files: FileList | null): Promise<string[]> => {
-    if (!files) return [];
-    return await Promise.all(Array.from(files).map(f => new Promise<string>((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(r.result as string); r.onerror = reject; r.readAsDataURL(f); })));
-  };
-  const handleBeforeImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    const base64 = await fileListToBase64(files);
-    setCurrentItem(ci => ({
-      ...ci,
-      photos: { ...ci.photos, before: [...ci.photos.before, ...base64] }
-    }));
-  };
-  const handleAfterImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    const base64 = await fileListToBase64(files);
-    setCurrentItem(ci => ({
-      ...ci,
-      photos: { ...ci.photos, after: [...ci.photos.after, ...base64] }
-    }));
-  };
+  // Image management now handled by ImageUploader (uploads to Cloudinary and stores public_ids)
   const removePhoto = (phase: 'before' | 'after', index: number) => setCurrentItem(ci => ({ ...ci, photos: { ...ci.photos, [phase]: ci.photos[phase].filter((_, i) => i !== index) } }));
 
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [finalizing, setFinalizing] = useState(false);
+  
+  // Single-file uploader used by "+" tiles — uploads image and returns Cloudinary public_id
+  const uploadFile = async (file: File): Promise<string | null> => {
+    try {
+      if (!file.type.startsWith('image/')) { toast.error(`${file.name}: not an image`); return null }
+      if (file.size > 8 * 1024 * 1024) { toast.error(`${file.name}: exceeds 8MB`); return null }
+      const base64 = await new Promise<string>((resolve, reject) => { const fr = new FileReader(); fr.onload = () => resolve(fr.result as string); fr.onerror = reject; fr.readAsDataURL(file) })
+      const res = await fetch('/api/protected/upload-image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ imageBase64: base64 }) })
+      if (!res.ok) {
+        const txt = await res.text().catch(()=> '')
+        toast.error(`Upload failed: ${txt || res.statusText}`)
+        return null
+      }
+      const json = await res.json()
+      return json?.raw?.public_id || null
+    } catch {
+      toast.error('Upload failed')
+      return null
+    }
+  }
+
+  // Local "+" tile with drag & drop and file picker
+  const AddTile: React.FC<{ onAdd: (id: string) => void; title?: string } > = ({ onAdd, title = 'Add image' }) => {
+    const inputRef = React.useRef<HTMLInputElement | null>(null)
+    const [dragOver, setDragOver] = React.useState(false)
+    const onPick = () => inputRef.current?.click()
+    const handleFiles = async (files: FileList | null) => {
+      if (!files || files.length === 0) return
+      for (const f of Array.from(files)) {
+        const id = await uploadFile(f)
+        if (id) onAdd(id)
+      }
+    }
+    const onDrop: React.DragEventHandler<HTMLDivElement> = (e) => { e.preventDefault(); e.stopPropagation(); setDragOver(false); handleFiles(e.dataTransfer.files) }
+    return (
+      <div
+        className={`w-16 h-16 rounded border border-dashed flex items-center justify-center text-muted-foreground bg-muted/40 cursor-pointer ${dragOver ? 'ring-2 ring-primary/40' : ''}`}
+        title={title}
+        onClick={onPick}
+        onDragOver={(e)=> { e.preventDefault(); setDragOver(true) }}
+        onDragLeave={(e)=> { e.preventDefault(); setDragOver(false) }}
+        onDrop={onDrop}
+      >
+        <span className="text-lg leading-none">+</span>
+        <input ref={inputRef} type="file" accept="image/*" hidden multiple onChange={(e)=> handleFiles(e.target.files)} />
+      </div>
+    )
+  }
 
   const isValidObjectId = (v: string) => /^[a-fA-F0-9]{24}$/.test(v);
   const resolveDonorMongoId = async (id: string): Promise<string | null> => {
     if (isValidObjectId(id)) return id; // already mongo id
     try {
-      const res = await fetch(`/api/protected/users?search=${encodeURIComponent(id)}`, { cache: 'no-store' });
+      // Use the dedicated mapping endpoint which upserts Mongo cache if missing
+      const res = await fetch(`/api/protected/users/by-clerk-id/${encodeURIComponent(id)}`, { cache: 'no-store' });
       if (!res.ok) return null;
-      const json = await res.json();
-      const match = (json.users || []).find((u: any) => u.clerkUserId === id || u.id === id);
-      if (match && match._id) return match._id;
-      if (match && match.mongoUserId) return match.mongoUserId;
-      return null;
+  const json = await safeJson<any>(res);
+      return json?.mongoUserId || null;
     } catch (e) { console.warn('[RESOLVE_DONOR_FAILED]', e); return null; }
   }
 
@@ -176,13 +218,13 @@ const DonationListManager: React.FC = () => {
       const res = await fetch('/api/protected/donation-entries/full', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
 
       if (!res.ok) {
-        const json = await res.json();
-        console.error('[DONATION_SUBMIT_FAILED]', json);
-        alert('Failed to save donation: ' + (json.error || 'Unknown error'));
+        const txt = await res.text().catch(() => '');
+        console.error('[DONATION_SUBMIT_FAILED]', txt);
+        alert('Failed to save donation: ' + (txt || 'Unknown error'));
         return;
       }
 
-      const json = await res.json();
+      const json = await safeJson<any>(res);
       if (json.success && json.donationId) {
         const mapIds = json.itemIds as string[];
         setItems(prev => prev.map((it, idx) => ({ ...it, serverId: mapIds[idx] })));
@@ -226,45 +268,32 @@ const DonationListManager: React.FC = () => {
 
       <section className="space-y-4">
         <h2 className="font-semibold text-lg">Donor</h2>
-        {isScrapper && !donor && (
+        {isScrapper && !donor && !collectionRequestId && (
           <Card className="p-4 border bg-muted/30 text-xs space-y-2">
             <p className="font-medium">Scrapper Mode</p>
-            <p>You cannot manually select or create donors. Open this page via a verified collection request link that includes <code>collectionRequest</code> (preferred) or legacy <code>collectionRequestId</code>. The donor will appear automatically.</p>
-            {!collectionRequestId && (
-              <p className="text-[11px] text-muted-foreground">No collection request id detected.</p>
-            )}
-            {collectionRequestLegacy && !collectionRequestPrimary && (
-              <p className="text-[11px] text-amber-600">Using legacy parameter <code>collectionRequestId</code>; consider updating links.</p>
-            )}
-            {autoFillLoading && (
-              <p className="text-[11px] text-muted-foreground flex items-center gap-2">
-                <span className='inline-block animate-spin border border-muted-foreground/40 border-t-transparent rounded-full h-3 w-3' /> Loading donor…
-              </p>
-            )}
+            <p>You can select an existing donor below. Creating new donors is disabled. If you opened this from a verified collection request link, the donor will auto-fill.</p>
           </Card>
         )}
-        {!isScrapper && (
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <Collapsible open={donorPanelOpen} onOpenChange={setDonorPanelOpen}>
-                <div className="flex justify-end mb-1">
-                  {!collectionRequestId && (
-                    <CollapsibleTrigger asChild>
-                      <Button variant="outline" size="sm" disabled={autoFillLoading}>
-                        {donor ? (donorPanelOpen ? 'Hide Donor Panel' : 'Change Donor') : (autoFillLoading ? 'Loading Donor...' : 'Select / Create Donor')}
-                      </Button>
-                    </CollapsibleTrigger>
-                  )}
-                </div>
-                <CollapsibleContent className="space-y-4 pt-1">
-                  {!collectionRequestId && (
-                    <UserSearchAndCreate onSelect={(d)=> { setDonor(d); if(d) setDonorPanelOpen(false); }} />
-                  )}
-                </CollapsibleContent>
-              </Collapsible>
-            </div>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <Collapsible open={donorPanelOpen} onOpenChange={setDonorPanelOpen}>
+              <div className="flex justify-end mb-1">
+                {!collectionRequestId && (
+                  <CollapsibleTrigger asChild>
+                    <Button variant="outline" size="sm" disabled={autoFillLoading}>
+                      {donor ? (donorPanelOpen ? 'Hide Donor Panel' : 'Change Donor') : (autoFillLoading ? 'Loading Donor...' : 'Select Donor')}
+                    </Button>
+                  </CollapsibleTrigger>
+                )}
+              </div>
+              <CollapsibleContent className="space-y-4 pt-1">
+                {!collectionRequestId && (
+                  <UserSearchAndCreate onSelect={(d)=> { setDonor(d); if(d) setDonorPanelOpen(false); }} enableCreate={false} />
+                )}
+              </CollapsibleContent>
+            </Collapsible>
           </div>
-        )}
+        </div>
         {donor && (
           <Card className="p-4 border shadow-sm flex flex-col gap-2">
             <div className="flex items-center justify-between">
@@ -332,32 +361,36 @@ const DonationListManager: React.FC = () => {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium">Before Images</label>
-              <Input type="file" multiple accept="image/*" onChange={handleBeforeImages} className="mt-1" />
               <div className="flex flex-wrap gap-2 mt-2">
                 {currentItem.photos.before.map((b, i) => (
                   <div key={i} className="relative group">
-                    <img src={getCloudinaryUrl(b)} alt="before" className="w-16 h-16 object-cover rounded" />
+                    <ClickableImage src={b} alt="before" className="w-16 h-16 object-cover rounded" caption={`${currentItem.name || 'Item'} - Before photo`} transform={{ width: 128, height: 128, crop: 'fill' }} />
                     <button type="button" onClick={() => removePhoto('before', i)} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-5 h-5 text-[10px] hidden group-hover:flex items-center justify-center">×</button>
                   </div>
                 ))}
+                <AddTile title="Add before photo" onAdd={(id)=> setCurrentItem(ci => ({ ...ci, photos: { ...ci.photos, before: [...ci.photos.before, id] } }))} />
               </div>
             </div>
             <div>
               <label className="text-sm font-medium">After Images</label>
-              <Input type="file" multiple accept="image/*" onChange={handleAfterImages} className="mt-1" />
               <div className="flex flex-wrap gap-2 mt-2">
                 {currentItem.photos.after.map((a, i) => (
                   <div key={i} className="relative group">
-                    <img src={getCloudinaryUrl(a)} alt="after" className="w-16 h-16 object-cover rounded" />
+                    <ClickableImage src={a} alt="after" className="w-16 h-16 object-cover rounded" caption={`${currentItem.name || 'Item'} - After photo`} transform={{ width: 128, height: 128, crop: 'fill' }} />
                     <button type="button" onClick={() => removePhoto('after', i)} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-5 h-5 text-[10px] hidden group-hover:flex items-center justify-center">×</button>
                   </div>
                 ))}
+                <AddTile title="Add after photo" onAdd={(id)=> setCurrentItem(ci => ({ ...ci, photos: { ...ci.photos, after: [...ci.photos.after, id] } }))} />
               </div>
             </div>
           </div>
         </div>
-  <Button type="button" onClick={pushItem} disabled={!selectedUser || !currentItem.name || (isScrapper && !donor)}>
-    {(!selectedUser || (isScrapper && !donor)) ? 'Waiting for Donor' : 'Add Item to List'}
+  <Button
+    type="button"
+    onClick={pushItem}
+    disabled={!selectedUser || !currentItem.name}
+  >
+    {!selectedUser ? 'Select a donor to add items' : (!currentItem.name ? 'Enter a name' : 'Add Item to List')}
   </Button>
       </section>
 
@@ -377,8 +410,12 @@ const DonationListManager: React.FC = () => {
                 {item.serverId && <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded">Saved</span>}
               </div>
               <div className="flex gap-1 flex-wrap">
-                {item.photos.before.slice(0,3).map((b,i)=>(<img key={i} src={getCloudinaryUrl(b)} className="w-10 h-10 object-cover rounded" alt="before" />))}
-                {item.photos.after.slice(0,3).map((a,i)=>(<img key={i} src={getCloudinaryUrl(a)} className="w-10 h-10 object-cover rounded" alt="after" />))}
+                {item.photos.before.slice(0,3).map((b,i)=>(
+                  <ClickableImage key={`b-${i}`} src={b} className="w-10 h-10 object-cover rounded" alt="before" caption={`${item.name} - Before photo`} transform={{ width: 80, height: 80, crop: 'fill' }} />
+                ))}
+                {item.photos.after.slice(0,3).map((a,i)=>(
+                  <ClickableImage key={`a-${i}`} src={a} className="w-10 h-10 object-cover rounded" alt="after" caption={`${item.name} - After photo`} transform={{ width: 80, height: 80, crop: 'fill' }} />
+                ))}
               </div>
               <div className="pt-2 flex flex-col items-center gap-1">
                 <Barcode value={item.serverId || item.tempId} format="CODE128" width={0.8} height={50} fontSize={11} />
@@ -387,8 +424,17 @@ const DonationListManager: React.FC = () => {
             </div>
           ))}
         </div>
-  <Button type="button" onClick={openConfirm} disabled={finalizing || items.length === 0 || !selectedUser || (isScrapper && !donor)}>
-    {finalizing ? 'Submitting...' : (!selectedUser || (isScrapper && !donor) ? 'Donor Required' : 'Finalize & Print')}
+  <Button
+    type="button"
+    onClick={openConfirm}
+    disabled={finalizing || items.length === 0 || !selectedUser}
+  >
+    {finalizing ? (
+      <span className="inline-flex items-center gap-2">
+        <span className='inline-block animate-spin border border-muted-foreground/40 border-t-transparent rounded-full h-3 w-3' />
+        Submitting…
+      </span>
+    ) : (!selectedUser ? 'Select a donor to continue' : (items.length === 0 ? 'Add at least 1 item' : 'Finalize & Print'))}
   </Button>
         {confirmOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">

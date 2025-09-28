@@ -1,5 +1,7 @@
 import connectDB from "../db";
 import ScrapItem from "../../models/ScrapItem";
+// Ensure DonationEntry schema is registered for populate('scrapEntry')
+import "../../models/DonationEntry";
 import { Types } from "mongoose";
 
 export type PaginateOpts = { page?: number, limit?: number, search?: string, condition?: string };
@@ -20,8 +22,8 @@ export async function listPublicItems(opts: PaginateOpts = {}) {
 
     const [items, total] = await Promise.all([
         ScrapItem.find(query)
-            .select("name _id images marketplaceListing condition createdAt")
-            .populate('scrapEntry')
+            .select("name _id photos marketplaceListing condition createdAt")
+            .populate('scrapEntry', 'donor status createdAt')
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)

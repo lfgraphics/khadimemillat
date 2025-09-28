@@ -2,15 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { createDonationEntry, listDonationEntries } from "@/lib/services/donationEntry.service";
 import { donationEntryCreateSchema } from "@/lib/validators/donationEntry.validator";
+import { getAuth } from "@clerk/nextjs/server";
 
 export async function GET(req: NextRequest) {
     try {
         const userId = requireUser(req); // throws if not auth
+        const { sessionClaims }: any = getAuth(req)
+        const role = sessionClaims?.metadata?.role as string | undefined
+
         const url = new URL(req.url);
         const page = Number(url.searchParams.get("page") || "1");
         const limit = Number(url.searchParams.get("limit") || "20");
-        // optionally restrict to donor= userId unless admin
-        const result = await listDonationEntries({ page, limit, donorId: userId });
+        const status = url.searchParams.get("status") || undefined
+        const q = url.searchParams.get("q") || undefined
+        const itemStatus = url.searchParams.get("itemStatus") || undefined
+        const from = url.searchParams.get("from") || undefined
+        const to = url.searchParams.get("to") || undefined
+        const sort = url.searchParams.get("sort") || undefined
+
+        const adminMode = role === 'admin' || role === 'moderator'
+        const result = await listDonationEntries({ page, limit, donorId: adminMode ? undefined : userId, status, q, itemStatus, from, to, sort, includeCounts: true, enrichDonor: true })
         return NextResponse.json(result);
     } catch (err: any) {
         return NextResponse.json({ error: err.message }, { status: 401 });

@@ -1,5 +1,6 @@
 "use client"
 import React, { useEffect, useState } from 'react'
+import { safeJson } from '@/lib/utils'
 import { useUser } from '@clerk/nextjs'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,17 +22,15 @@ export default function AccountPage() {
 
   useEffect(() => {
     if (!isLoaded || !user) return
-    // Fetch mongo user via protected users endpoint search by clerk id (assuming existing endpoint)
     const load = async () => {
       setLoading(true)
       try {
-        const res = await fetch('/api/protected/users?self=1')
-        const json = await res.json()
+  // Server now sources phone/address from Clerk privateMetadata; this endpoint only runs server-side
+  const res = await fetch('/api/protected/users?self=1')
+        const json = await safeJson<any>(res)
         if (json.users && json.users.length) {
           const u = json.users[0]
-          setState({ phone: u.phone || '', address: u.address || '', id: u._id || u.id })
-        } else {
-          setState(s => ({ ...s }))
+          setState({ phone: u.phone || '', address: u.address || '', id: u.mongoUserId || u._id || u.id })
         }
       } catch (e) { console.error(e) } finally { setLoading(false) }
     }

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { cn, safeJson } from "@/lib/utils";
 
 export interface CollectionRequestFormValues {
   address: string;
@@ -63,7 +63,7 @@ export const CollectionRequestForm: React.FC<CollectionRequestFormProps> = ({
         const txt = await res.text();
         throw new Error(txt || "Failed to submit");
       }
-      const data = await res.json();
+      const data = await safeJson<any>(res);
       setSuccess(true);
       if (onSuccess) onSuccess(data?.data || data);
       setForm(prev => ({ ...prev, notes: "" }));

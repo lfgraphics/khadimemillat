@@ -1,6 +1,7 @@
 "use client";
 
 import { IScrapItem } from "@/models/ScrapItem";
+import { ClickableImage } from '@/components/ui/clickable-image'
 import React, { useEffect, useState } from "react";
 
 export default function ItemList() {
@@ -20,7 +21,7 @@ export default function ItemList() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {items.map(item => (
                     <div key={String(item._id)} className="p-4 border rounded">
-                        <img src={item.photos?.after?.[0] || "/placeholder.png"} className="w-full h-48 object-cover" alt={item.name} />
+                        <ClickableImage src={item.photos?.after?.[0] || "/placeholder.png"} className="w-full h-48 object-cover" alt={item.name} caption={item.name} transform={{ width: 768, height: 384, crop: 'fill' }} />
                         <h3 className="font-medium mt-2">{item.name}</h3>
                         <p className="text-sm text-muted-foreground">{item.condition}</p>
                         <a href={`/market-place/${encodeURIComponent(item.name.replace(/\s+/g, '-').toLowerCase())}/${item._id}`} className="text-indigo-600">View</a>

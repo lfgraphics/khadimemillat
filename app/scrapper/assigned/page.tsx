@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { safeJson } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Loader2, Phone, MapPin, Calendar, User } from 'lucide-react'
@@ -20,7 +21,7 @@ export default function ScrapperAssignedPage() {
       const res = await fetch('/api/protected/collection-requests?status=verified&assignedTo=self', { cache: 'no-store' })
       let data: any = null
       if (res.headers.get('content-type')?.includes('application/json')) {
-        data = await res.json().catch(()=> null)
+        data = await safeJson<any>(res).catch(() => null)
       } else {
         const text = await res.text()
         data = { error: text }
@@ -31,9 +32,9 @@ export default function ScrapperAssignedPage() {
         return
       }
       setItems(data.items || [])
-    } catch(e){ console.error(e) } finally { setLoading(false) }
+    } catch (e) { console.error(e) } finally { setLoading(false) }
   }
-  useEffect(()=>{ load() },[])
+  useEffect(() => { load() }, [])
 
   const markCollected = async (id: string) => {
     setProcessing(true)
@@ -41,7 +42,7 @@ export default function ScrapperAssignedPage() {
       const res = await fetch(`/api/protected/collection-requests/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'collect' }) })
       let data: any = null
       if (res.headers.get('content-type')?.includes('application/json')) {
-        data = await res.json().catch(()=> null)
+        data = await safeJson<any>(res).catch(() => null)
       } else {
         const text = await res.text()
         data = { error: text }
@@ -54,7 +55,7 @@ export default function ScrapperAssignedPage() {
         console.warn('[COLLECT_ERROR]', data?.error)
       }
       load()
-    } catch(e){ console.error(e) } finally { setProcessing(false); setCollectingId(null) }
+    } catch (e) { console.error(e) } finally { setProcessing(false); setCollectingId(null) }
   }
 
   return (
@@ -65,7 +66,7 @@ export default function ScrapperAssignedPage() {
       </div>
       {loading && items.length === 0 && (
         <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
-          {Array.from({ length: 6 }).map((_,i)=>(<Card key={i} className='p-4 animate-pulse h-48' />))}
+          {Array.from({ length: 6 }).map((_, i) => (<Card key={i} className='p-4 animate-pulse h-48' />))}
         </div>
       )}
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
@@ -82,7 +83,7 @@ export default function ScrapperAssignedPage() {
               <p className='flex items-center gap-1'><Calendar className='h-3 w-3' /> {new Date(r.requestedPickupTime).toLocaleString()}</p>
             </div>
             <div className='mt-auto pt-2'>
-              <Dialog open={collectingId === r._id} onOpenChange={(o)=> setCollectingId(o ? r._id : null)}>
+              <Dialog open={collectingId === r._id} onOpenChange={(o) => setCollectingId(o ? r._id : null)}>
                 <DialogTrigger asChild>
                   <Button size='sm' className='w-full' variant='default'>Mark Collected</Button>
                 </DialogTrigger>
@@ -92,8 +93,8 @@ export default function ScrapperAssignedPage() {
                   </DialogHeader>
                   <p className='text-xs text-muted-foreground'>Confirm you have collected items from <span className='font-medium'>{r.donorDetails?.name || '—'}</span>. A donation entry will be created and you will proceed to item listing.</p>
                   <DialogFooter className='pt-2'>
-                    <Button variant='outline' size='sm' onClick={()=> setCollectingId(null)} disabled={processing}>Cancel</Button>
-                    <Button size='sm' onClick={()=> markCollected(r._id)} disabled={processing}>{processing ? <Loader2 className='h-3 w-3 animate-spin' /> : 'Confirm & Continue'}</Button>
+                    <Button variant='outline' size='sm' onClick={() => setCollectingId(null)} disabled={processing}>Cancel</Button>
+                    <Button size='sm' onClick={() => markCollected(r._id)} disabled={processing}>{processing ? <Loader2 className='h-3 w-3 animate-spin' /> : 'Confirm & Continue'}</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -101,7 +102,7 @@ export default function ScrapperAssignedPage() {
           </Card>
         ))}
       </div>
-      {!loading && items.length===0 && (
+      {!loading && items.length === 0 && (
         <p className='text-sm text-muted-foreground'>No assignments.</p>
       )}
     </div>

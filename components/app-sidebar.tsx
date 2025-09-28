@@ -12,6 +12,7 @@ import {
     List as ListIcon,
     Heart,
     ChevronRight,
+    LayoutDashboard,
 } from 'lucide-react'
 
 import {
@@ -50,16 +51,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarContent>
                 {/* Global quick action row */}
                 <SidebarMenu>
-                    <SidebarMenuItem>
-                        <NotificationBell intervalMs={20000} limit={8} />
+                    <SidebarMenuItem className="mt-1">
+                        <NotificationBell limit={8} />
                     </SidebarMenuItem>
                 </SidebarMenu>
 
                 {/* Admin Section */}
-                <RoleGuard allowedRoles={["admin"]}>
+                <RoleGuard allowedRoles={["admin", "moderator"]}>
                     <SidebarGroup>
                         <SidebarGroupLabel>Admin</SidebarGroupLabel>
                         <SidebarMenu>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild tooltip="Admin Dashboard">
+                                    <Link href="/admin">
+                                        <LayoutDashboard className="h-4 w-4" />
+                                        <span>Dashboard</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
                             <SidebarMenuItem>
                                 <SidebarMenuButton asChild tooltip="Verify Requests">
                                     <Link href="/admin/verify-requests">
@@ -89,7 +98,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </RoleGuard>
 
                 {/* Scrapper Section */}
-                <RoleGuard allowedRoles={["scrapper","admin"]}>
+                <RoleGuard allowedRoles={["scrapper", "admin"]}>
                     <SidebarGroup>
                         <SidebarGroupLabel>Scrapper</SidebarGroupLabel>
                         <SidebarMenu>
@@ -114,7 +123,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </RoleGuard>
 
                 {/* Moderator Section */}
-                <RoleGuard allowedRoles={["moderator","admin"]}>
+                <RoleGuard allowedRoles={["moderator", "admin"]}>
                     <SidebarGroup>
                         <SidebarGroupLabel>Moderator</SidebarGroupLabel>
                         <SidebarMenu>
@@ -135,10 +144,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <SidebarGroupLabel>General</SidebarGroupLabel>
                     <SidebarMenu>
                         <SidebarMenuItem>
-                            <SidebarMenuButton asChild tooltip="Donate Scrap">
+                            <SidebarMenuButton asChild tooltip="Donate">
                                 <Link href="/donate">
                                     <Heart className="h-4 w-4" />
-                                    <span>Donate Scrap</span>
+                                    <span>Donate</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
@@ -160,7 +169,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         </SidebarMenuItem>
                     </SidebarMenu>
                 </SidebarGroup>
-
+            </SidebarContent>
+            <SidebarFooter>
                 <SignedOut>
                     <SidebarMenu>
                         <SidebarMenuItem>
@@ -175,8 +185,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         </SidebarMenuItem>
                     </SidebarMenu>
                 </SignedOut>
-            </SidebarContent>
-            <SidebarFooter>
                 <SignedIn>
                     <ProfilePopover />
                 </SignedIn>

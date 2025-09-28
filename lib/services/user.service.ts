@@ -1,6 +1,7 @@
 import connectDB from '@/lib/db'
 import User from '@/models/User'
 import { clerkClient } from '@clerk/nextjs/server'
+import { normalizePhoneNumber, getDefaultCountryCode } from '@/lib/utils/phone'
 
 async function getClerkClient() {
   return typeof clerkClient === 'function' ? await (clerkClient as any)() : clerkClient
@@ -29,35 +30,31 @@ export async function getClerkUserWithSupplementaryData(clerkUserId: string) {
     throw e
   }
 
-  await connectDB()
-  // Upsert local Mongo user to keep in sync with Clerk authoritative data (name, email, role)
+  // Authoritative user properties
   const baseName = `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || clerkUser.username || clerkUser.id
   const role = clerkUser.publicMetadata?.role || 'user'
   const email = clerkUser.primaryEmailAddress?.emailAddress
-  const existing = await User.findOne({ clerkUserId })
-  if (!existing) {
-    try {
-      await User.create({ clerkUserId, name: baseName, email, role })
-    } catch (e) {
-      console.warn('[USER_SERVICE_UPSERT_CREATE_FAILED]', clerkUserId, e)
-    }
-  } else {
-    // Only update if changed to minimize writes
-    const needsUpdate = existing.name !== baseName || existing.email !== email || existing.role !== role
-    if (needsUpdate) {
-      try { await User.updateOne({ _id: existing._id }, { $set: { name: baseName, email, role } }) } catch(e){ console.warn('[USER_SERVICE_UPSERT_UPDATE_FAILED]', clerkUserId, e) }
-    }
-  }
-  const mongoData: any = await User.findOne({ clerkUserId }).select('phone address name email role').lean()
+  // Move PII to privateMetadata (server-side only)
+  const phone = (clerkUser.privateMetadata as any)?.phone as string | undefined
+  const address = (clerkUser.privateMetadata as any)?.address as string | undefined
 
-  return {
-    id: clerkUser.id,
-    name: mongoData?.name || baseName,
-    email: mongoData?.email || email,
-    role: mongoData?.role || role,
-    phone: mongoData?.phone,
-    address: mongoData?.address
+  // Opportunistic cache/upsert of basic fields in Mongo (do not rely on it for phone/address)
+  try {
+    await connectDB()
+    const existing: any = await User.findOne({ clerkUserId }).select('_id name email role').lean()
+    if (!existing) {
+      await User.create({ clerkUserId, name: baseName, email, role, /* phone/address intentionally omitted as Clerk-first */ })
+    } else {
+      const needsUpdate = existing.name !== baseName || existing.email !== email || existing.role !== role
+      if (needsUpdate) {
+        await User.updateOne({ _id: existing._id }, { $set: { name: baseName, email, role } })
+      }
+    }
+  } catch (e) {
+    console.warn('[USER_SERVICE_CACHE_UPSERT_FAILED]', clerkUserId, e)
   }
+
+  return { id: clerkUser.id, name: baseName, email, role, phone, address }
 }
 
 export async function getUsersByRole(role: string) {
@@ -66,25 +63,33 @@ export async function getUsersByRole(role: string) {
   return users.data.filter((u: any) => u.publicMetadata?.role === role)
 }
 
-export async function enrichClerkUsersWithMongoData(clerkUsers: any[]) {
-  await connectDB()
-  const clerkUserIds = clerkUsers.map(u => u.id)
-  const mongoData = await User.find({ clerkUserId: { $in: clerkUserIds } })
-    .select('clerkUserId phone address')
-    .lean()
-  const mongoMap = new Map(mongoData.map((u: any) => [u.clerkUserId, u]))
-  return clerkUsers.map(cu => ({
-    id: cu.id,
-    name: `${cu.firstName || ''} ${cu.lastName || ''}`.trim() || cu.username || cu.id,
-    email: cu.primaryEmailAddress?.emailAddress,
-    role: cu.publicMetadata?.role || 'user',
-    phone: mongoMap.get(cu.id)?.phone,
-    address: mongoMap.get(cu.id)?.address
-  }))
+export async function enrichClerkUsersWithMongoData(clerkUsers: any[], options?: { includePII?: boolean }) {
+  const includePII = options?.includePII === true
+  // Clerk-first: read phone/address from privateMetadata; Mongo used only to lookup _id mapping elsewhere
+  return clerkUsers.map((cu: any) => {
+    const name = `${cu.firstName || ''} ${cu.lastName || ''}`.trim() || cu.username || cu.id
+    const email = cu.primaryEmailAddress?.emailAddress
+    const role = cu.publicMetadata?.role || 'user'
+    const phone = includePII ? (cu.privateMetadata as any)?.phone as string | undefined : undefined
+    const address = includePII ? (cu.privateMetadata as any)?.address as string | undefined : undefined
+    return { id: cu.id, name, email, role, phone, address }
+  })
+}
+
+export async function updateClerkUserMetadata(clerkUserId: string, data: { phone?: string; address?: string }) {
+  const client: any = await getClerkClient()
+  const user = await client.users.getUser(clerkUserId)
+  const currentPrivate = (user.privateMetadata || {}) as Record<string, any>
+  const patch: Record<string, any> = { ...currentPrivate }
+  if (data.phone !== undefined) patch.phone = data.phone ? normalizePhoneNumber(String(data.phone), getDefaultCountryCode()) : undefined
+  if (data.address !== undefined) patch.address = data.address
+  const updated = await client.users.updateUser(clerkUserId, { privateMetadata: patch })
+  return updated
 }
 
 export const userService = {
   getClerkUserWithSupplementaryData,
   getUsersByRole,
-  enrichClerkUsersWithMongoData
+  enrichClerkUsersWithMongoData,
+  updateClerkUserMetadata
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import { safeJson } from '@/lib/utils';
 import SearchableDropDownSelect, { ComboboxOption } from '@/components/searchable-dropdown-select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -25,7 +26,7 @@ export const UserSearchAndCreate: React.FC<UserSearchAndCreateProps> = ({
   onSelect,
   initialDonorId,
   className,
-  enableCreate = true,
+  enableCreate = false,
 }) => {
   const [users, setUsers] = useState<Donor[]>([]);
   const [search, setSearch] = useState('');
@@ -43,16 +44,23 @@ export const UserSearchAndCreate: React.FC<UserSearchAndCreateProps> = ({
       try {
         const url = new URL('/api/protected/users', window.location.origin);
         if (search.trim()) url.searchParams.set('search', search.trim());
-        const res = await fetch(url.toString(), { signal: controller.signal });
-        const json = await res.json();
+  const res = await fetch(url.toString(), { signal: controller.signal });
+        if (!res.ok) {
+          if (res.status === 403) {
+            setUsers([]);
+            return;
+          }
+          throw new Error('Failed to fetch users');
+        }
+  const json = await safeJson<any>(res);
         if (json.users) {
           const mapped: Donor[] = json.users.map((u: any) => ({
-            id: u.mongoUserId || u._id || u.clerkUserId,
+            id: u.id, // Clerk ID primary
             mongoUserId: u.mongoUserId || u._id,
             name: u.name,
             email: u.email,
             phone: u.phone,
-            clerkUserId: u.clerkUserId,
+            clerkUserId: u.id,
           }));
           setUsers(mapped);
         }
@@ -67,18 +75,28 @@ export const UserSearchAndCreate: React.FC<UserSearchAndCreateProps> = ({
     (async () => {
       setLoadingInitial(true);
       try {
-        const res = await fetch('/api/protected/users');
-        const json = await res.json();
-        if (json.users) {
-          const mapped: Donor[] = json.users.map((u: any) => ({
-            id: u._id,
-            mongoUserId: u._id,
-            name: u.name,
-            email: u.email,
-            phone: u.phone,
-            clerkUserId: u.clerkUserId,
-          }));
-          setUsers(mapped);
+        // Upsert current user mapping silently to help donor resolution later
+        try { await fetch('/api/protected/users?self=1'); } catch {}
+  const res = await fetch('/api/protected/users');
+        if (!res.ok) {
+          if (res.status === 403) {
+            setUsers([]);
+          } else {
+            throw new Error('Failed to fetch users');
+          }
+        } else {
+          const json = await safeJson<any>(res);
+          if (json.users) {
+            const mapped: Donor[] = json.users.map((u: any) => ({
+              id: u.id, // Clerk ID
+              mongoUserId: u.mongoUserId || u._id,
+              name: u.name,
+              email: u.email,
+              phone: u.phone,
+              clerkUserId: u.id,
+            }));
+            setUsers(mapped);
+          }
         }
       } catch (e) { console.error(e); } finally { setLoadingInitial(false); }
     })();
@@ -86,36 +104,15 @@ export const UserSearchAndCreate: React.FC<UserSearchAndCreateProps> = ({
 
   // Emit selection when selectedUserId changes
   useEffect(() => {
-    const donor = users.find(u => u.mongoUserId === selectedUserId || u.id === selectedUserId) || null;
+    const donor = users.find(u => u.id === selectedUserId || u.mongoUserId === selectedUserId) || null;
     onSelect(donor);
   }, [selectedUserId, users, onSelect]);
 
-  const userOptions: ComboboxOption[] = users.map(u => ({ value: u.mongoUserId || u.id, label: u.name }));
+  const userOptions: ComboboxOption[] = users.map(u => ({ value: u.id, label: u.name }));
 
   const handleCreateUser = async () => {
-    if (!userForm.name.trim() || !userForm.mobile.trim()) return;
-    setCreatingUser(true);
-    try {
-      const res = await fetch('/api/protected/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: userForm.name, mobile: userForm.mobile })
-      });
-      const json = await res.json();
-      if (json.user) {
-        const newDonor: Donor = {
-          id: json.user.id,
-            mongoUserId: json.user.id,
-            name: json.user.name,
-            email: json.user.email,
-            phone: json.user.phone,
-            clerkUserId: json.user.clerkUserId,
-        };
-        setUsers(prev => [newDonor, ...prev]);
-        setSelectedUserId(newDonor.id);
-        setUserForm({ name: '', mobile: '' });
-      }
-    } catch (e) { console.error(e); } finally { setCreatingUser(false); }
+    // Direct creation disabled per Clerk-first. Consider building a Clerk invite flow.
+    return;
   };
 
   const selected = users.find(u => u.mongoUserId === selectedUserId || u.id === selectedUserId);
@@ -133,6 +130,9 @@ export const UserSearchAndCreate: React.FC<UserSearchAndCreateProps> = ({
           placeholder="Search donor..."
           width="w-full"
         />
+        {(!loadingSearch && users.length === 0) && (
+          <p className="text-[11px] text-muted-foreground">Type to search for users.</p>
+        )}
         {selected && (
           <div className="mt-2 text-xs border rounded p-2 space-y-1 bg-muted/30">
             <div><span className="font-medium">Name:</span> {selected.name}</div>
@@ -149,9 +149,9 @@ export const UserSearchAndCreate: React.FC<UserSearchAndCreateProps> = ({
           <div className="grid md:grid-cols-3 gap-3">
             <Input placeholder="Full Name" value={userForm.name} onChange={e => setUserForm(f => ({ ...f, name: e.target.value }))} />
             <Input placeholder="Mobile Number" value={userForm.mobile} onChange={e => setUserForm(f => ({ ...f, mobile: e.target.value }))} />
-            <Button type="button" onClick={handleCreateUser} disabled={creatingUser}>{creatingUser ? 'Creating...' : 'Add Donor'}</Button>
+            <Button type="button" onClick={handleCreateUser} disabled>{'Disabled'}</Button>
           </div>
-          <p className="text-[11px] text-muted-foreground">Email/username/password auto-generated. Phone stored only in Mongo. Clerk linkage established.</p>
+          <p className="text-[11px] text-muted-foreground">Direct user creation is disabled. Please invite users via Clerk. Contact admin if needed.</p>
         </div>
       )}
     </div>

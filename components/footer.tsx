@@ -70,19 +70,19 @@ export function Footer() {
                     <div data-testid="footer-contact-info">
                         <h4 className="font-semibold text-foreground mb-4">Contact Us</h4>
                         <ul className="space-y-2 text-muted-foreground">
-                            <li className="flex items-center" data-testid="contact-phone">
+                            <li className="flex items-center text-sm" data-testid="contact-phone">
                                 <Phone className="h-4 w-4 mr-2" />
                                 <Link href="tel:+918081747259" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
                                     +91 80817 47259
                                 </Link>
                             </li>
-                            <li className="flex items-center" data-testid="contact-email">
+                            <li className="flex items-center text-sm" data-testid="contact-email">
                                 <Mail className="h-4 w-4 mr-2" />
                                 <Link href="mailto:support@khadimemillat.org" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
                                     support@khadimemillat.org
                                 </Link>
                             </li>
-                            <li className="flex items-center" data-testid="contact-website">
+                            <li className="flex items-center text-sm" data-testid="contact-website">
                                 <Globe className="h-4 w-4 mr-2" />
                                 <Link href="https://khadimemillat.org" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
                                     khadimemillat.org

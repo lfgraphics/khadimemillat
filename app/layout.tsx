@@ -8,6 +8,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { ClerkProvider, SignedIn } from '@clerk/nextjs';
 import { Footer } from "@/components/footer";
 import WebPushManager from "@/components/WebPushManager";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 
 export const metadata: Metadata = {
   title: "Khadim-Millat Welfare Foundation",
@@ -29,21 +30,21 @@ export default function RootLayout({
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
-          > <SidebarProvider>
-              <AppSidebar />
-              <SidebarInset>
-                <main className="min-h-screen">
-                  {/* Sidebar trigger placed in document flow near top-left with minor margin */}
-                  <div className="p-2">
+          >
+            <NotificationProvider>
+              <SidebarProvider>
+                <AppSidebar />
+                <SidebarInset>
+                  <main className="min-h-screen">
                     <SidebarTrigger className="fixed top-0 z-50" />
-                  </div>
-                  <WebPushManager />
-                  <div className="pt-2">{children}</div>
-                  <Toaster richColors closeButton />
-                </main>
-                <Footer />
-              </SidebarInset>
-            </SidebarProvider>
+                    <WebPushManager />
+                    {children}
+                    <Toaster richColors closeButton />
+                  </main>
+                  <Footer />
+                </SidebarInset>
+              </SidebarProvider>
+            </NotificationProvider>
           </ThemeProvider>
         </body>
       </html>

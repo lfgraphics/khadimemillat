@@ -19,6 +19,32 @@ interface ListOptions {
   type?: string
 }
 
+// Lightweight client-side helpers (no-ops on server)
+const CACHE_TS_KEY = 'kmwf.notifications.cache.ts'
+let pendingRequest: Promise<any> | null = null
+
+export function setCacheTimestamp(ts: number = Date.now()) {
+  try { sessionStorage.setItem(CACHE_TS_KEY, String(ts)) } catch { /* ignore */ }
+}
+
+export function isCacheStale(maxAgeMs = 60_000) {
+  try {
+    const raw = sessionStorage.getItem(CACHE_TS_KEY)
+    if (!raw) return true
+    const ts = Number(raw)
+    return Number.isFinite(ts) ? (Date.now() - ts) > maxAgeMs : true
+  } catch {
+    return true
+  }
+}
+
+export function deduplicateRequest<T>(factory: () => Promise<T>): Promise<T> {
+  if (pendingRequest) return pendingRequest as Promise<T>
+  const p = factory().finally(() => { pendingRequest = null })
+  pendingRequest = p as unknown as Promise<any>
+  return p
+}
+
 async function createNotification(clerkUserId: string, data: NotificationData) {
   await connectDB()
   const doc = await Notification.create({ recipient: clerkUserId, ...data })
@@ -80,6 +106,12 @@ export async function markAsRead(notificationId: string, clerkUserId: string) {
   return doc
 }
 
+export async function markAllAsRead(clerkUserId: string) {
+  await connectDB()
+  await Notification.updateMany({ recipient: clerkUserId, read: false }, { $set: { read: true } })
+  return { success: true }
+}
+
 async function subscribeToWebPush(clerkUserId: string, subscription: any) {
   await connectDB()
   const payload = {
@@ -105,6 +137,7 @@ export const notificationService = {
   notifyUsers,
   listNotifications,
   markAsRead,
+  markAllAsRead,
   subscribeToWebPush,
   unsubscribeFromWebPush
 }

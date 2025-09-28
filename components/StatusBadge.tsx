@@ -14,7 +14,7 @@ const COLORS: Record<string, string> = {
 export const StatusBadge: React.FC<{ status: WorkflowStatus; className?: string }> = ({ status, className }) => {
   return (
     <Badge className={cn('capitalize', COLORS[status] || 'bg-gray-100 text-gray-800', className)}>
-      {status}
+      {status === 'collected' ? 'Fulfilled (collected)' : status}
     </Badge>
   );
 };

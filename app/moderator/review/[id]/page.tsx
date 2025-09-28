@@ -16,7 +16,10 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { generateWhatsAppUrl } from '@/lib/utils/phone';
 import { getCloudinaryUrl } from '@/lib/cloudinary-client';
+import { ClickableImage } from '@/components/ui/clickable-image'
+import { safeJson } from '@/lib/utils';
 
 type CollectionRequest = {
   _id: string;
@@ -90,10 +93,10 @@ export default function ModeratorReviewDetailPage() {
         };
       }
       if (Array.isArray(edit.afterPhotos)) payload.afterPhotos = edit.afterPhotos;
-      const res = await fetch(`/api/protected/scrap-items/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      if (!res.ok) throw new Error('Save failed');
-      const json = await res.json();
-      setDonation(d => d ? { ...d, items: d.items.map(it => it.id === id ? { ...it, ...json.item, marketplaceListing: json.item.marketplaceListing || it.marketplaceListing } : it) } : d);
+  const res = await fetch(`/api/protected/scrap-items/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  if (!res.ok) throw new Error(`Save failed ${await res.text().catch(()=> '')}`);
+  const json = await safeJson<any>(res);
+  setDonation(d => d ? { ...d, items: d.items.map(it => it.id === id ? { ...it, ...json.item, marketplaceListing: json.item?.marketplaceListing || it.marketplaceListing } : it) } : d);
       setItemEdits(prev => ({ ...prev, [id]: {} }));
     } catch (e: any) {
       setItemErrors(p => ({ ...p, [id]: e.message || 'Error' }));
@@ -133,23 +136,14 @@ export default function ModeratorReviewDetailPage() {
     setSendingWhatsapp(true);
     try {
       const name = request?.donorDetails?.name || 'Donor';
-      const DEFAULT_COUNTRY_CODE = process.env.NEXT_PUBLIC_DEFAULT_COUNTRY_CODE || '91'; // fallback to India '91'
-      let normalized = rawPhone.replace(/[^0-9]/g, '');
-      // If number length seems local (e.g., 10 digits) and doesn't start with country code, prefix default
-      if (!normalized.startsWith(DEFAULT_COUNTRY_CODE)) {
-        if (normalized.length <= 10) {
-          toast.warning('Phone normalized with default country code prefix');
-          normalized = DEFAULT_COUNTRY_CODE + normalized;
-        }
-      }
       const message = `Hello ${name}, your donation has been processed and completed. Thank you for your contribution to Khadim-e-Millat Welfare Foundation!`;
-      const whatsappUrl = `https://wa.me/${normalized}?text=${encodeURIComponent(message)}`;
+      const whatsappUrl = generateWhatsAppUrl(rawPhone, message, process.env.NEXT_PUBLIC_DEFAULT_COUNTRY_CODE as string | undefined || '91');
       window.open(whatsappUrl, '_blank');
       try {
         await fetch('/api/protected/whatsapp/send-confirmation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: rawPhone, normalizedPhone: normalized, message, collectionRequestId: id })
+          body: JSON.stringify({ phone: rawPhone, whatsappUrl, message, collectionRequestId: id })
         });
       } catch {}
       toast.success('WhatsApp opened with confirmation message');
@@ -166,9 +160,9 @@ export default function ModeratorReviewDetailPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/protected/collection-requests/${id}`, { cache: 'no-store' });
-      if (!res.ok) throw new Error(`Failed to load request (${res.status})`);
-      const data = await res.json();
+  const res = await fetch(`/api/protected/collection-requests/${id}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Failed to load request (${res.status}) ${await res.text().catch(()=> '')}`);
+  const data = await safeJson<any>(res);
       const req = data.request;
       setRequest(req);
       setModeratorNotes(req.moderatorNotes || "");
@@ -177,7 +171,7 @@ export default function ModeratorReviewDetailPage() {
         try {
           const dRes = await fetch(`/api/protected/donation-entries/${req.donationEntryId}`, { cache: 'no-store' });
           if (dRes.ok) {
-            const dj = await dRes.json();
+            const dj = await safeJson<any>(dRes);
             setDonation(dj.donation);
           }
         } catch (e) {
@@ -248,7 +242,7 @@ export default function ModeratorReviewDetailPage() {
                 )}
                 <div>
                   <p className="text-muted-foreground">Status</p>
-                  <p><Badge>{request.status}</Badge></p>
+                  <p><Badge>{request.status === 'collected' ? 'Fulfilled (collected)' : request.status}</Badge></p>
                 </div>
                 {request.address && (
                   <div className="col-span-2">
@@ -398,8 +392,24 @@ export default function ModeratorReviewDetailPage() {
                             </div>
                           </div>
                           <div className='flex flex-wrap gap-2'>
-                            {(it.photos?.before || []).slice(0,4).map((p,i)=>(<img key={i} src={getCloudinaryUrl(p)} alt='before' className='h-14 w-14 object-cover rounded border' />))}
-                            {combinedAfter.slice(0,4).map((p,i)=>(<img key={i} src={getCloudinaryUrl(p)} alt='after' className='h-14 w-14 object-cover rounded border ring-2 ring-green-400' />))}
+                            {(it.photos?.before || []).slice(0,4).map((p,i)=>(
+                              <ClickableImage
+                                key={i}
+                                src={p}
+                                alt='Before photo'
+                                className='h-14 w-14 object-cover rounded border'
+                                caption={`${it.name} - Before photo ${i+1}`}
+                              />
+                            ))}
+                            {combinedAfter.slice(0,4).map((p,i)=>(
+                              <ClickableImage
+                                key={i}
+                                src={p}
+                                alt='After photo'
+                                className='h-14 w-14 object-cover rounded border ring-2 ring-green-400'
+                                caption={`${it.name} - After photo ${i+1}`}
+                              />
+                            ))}
                           </div>
                           <div className='flex flex-wrap gap-4 items-center'>
                             <div className='flex items-center gap-1'>

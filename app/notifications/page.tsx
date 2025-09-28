@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect } from 'react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,59 +7,28 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useNotifications } from '@/hooks/useNotifications'
 
 interface NotificationItem { _id: string; title: string; body?: string; createdAt: string; read: boolean; type?: string; url?: string }
 
-type FilterTab = 'all' | 'unread' | 'read'
-
 export default function NotificationsPage() {
-  const [items, setItems] = useState<NotificationItem[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [tab, setTab] = useState<FilterTab>('all')
-  const [page, setPage] = useState(1)
-  const [total, setTotal] = useState(0)
-  const limit = 12
+  const { items, loading, error, page, limit, total, filter, fetchNotifications, markAsRead, refreshNotifications } = useNotifications()
 
-  const load = useCallback(async () => {
-    setLoading(true); setError(null)
-    try {
-      const params = new URLSearchParams({ page: String(page), limit: String(limit) })
-      if (tab === 'unread') params.set('unread','true')
-      if (tab === 'read') params.set('read','true')
-      const res = await fetch(`/api/protected/notifications?${params.toString()}`, { cache: 'no-store' })
-      if (!res.ok) throw new Error('Failed to load')
-      const json = await res.json()
-      setItems(json.items || [])
-      setTotal(json.total || (json.items?.length || 0))
-    } catch(e:any) { setError(e.message || 'Error'); } finally { setLoading(false) }
-  }, [page, tab])
+  // Initialize the notifications page with a page size of 12 for grid layout
+  useEffect(() => { fetchNotifications({ force: true, page: 1, limit: 12, filter }) }, [])
 
-  useEffect(()=> { load() }, [load])
-
-  const markRead = async (id: string) => {
-    try { await fetch(`/api/protected/notifications/${id}`, { method: 'PATCH', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ read: true }) }); load() } catch(e){ console.error(e) }
-  }
-
-  const markAllCurrentPage = async () => {
-    const unread = items.filter(i=> !i.read)
-    if (unread.length === 0) return
-    await Promise.all(unread.map(u => fetch(`/api/protected/notifications/${u._id}`, { method: 'PATCH', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ read: true }) })))
-    load()
-  }
-
-  const totalPages = Math.max(1, Math.ceil(total / limit))
+  const totalPages = Math.max(1, Math.ceil(total / (limit || 12)))
 
   return (
     <div className='p-6 space-y-6'>
       <div className='flex items-center justify-between'>
         <h1 className='text-2xl font-semibold'>Notifications</h1>
         <div className='flex items-center gap-2'>
-          <Button variant='outline' size='sm' onClick={()=> load()} disabled={loading}>{loading ? <Loader2 className='h-4 w-4 animate-spin' /> : 'Refresh'}</Button>
-          <Button variant='secondary' size='sm' onClick={markAllCurrentPage} disabled={items.every(i=> i.read)}>Mark Page Read</Button>
+          <Button variant='outline' size='sm' onClick={()=> refreshNotifications()} disabled={loading}>{loading ? <Loader2 className='h-4 w-4 animate-spin' /> : 'Refresh'}</Button>
+          <Button variant='secondary' size='sm' onClick={async ()=>{ const unread = items.filter(i=> !i.read); if (unread.length===0) return; for (const n of unread) await markAsRead(n._id); await refreshNotifications() }} disabled={items.every(i=> i.read)}>Mark Page Read</Button>
         </div>
       </div>
-      <Tabs value={tab} onValueChange={(v)=> { setTab(v as FilterTab); setPage(1); }}>
+  <Tabs value={filter} onValueChange={(v)=> { fetchNotifications({ force: true, page: 1, limit: limit || 12, filter: v as any }) }}>
         <TabsList>
           <TabsTrigger value='all'>All</TabsTrigger>
           <TabsTrigger value='unread'>Unread</TabsTrigger>
@@ -99,7 +68,7 @@ export default function NotificationsPage() {
               <div className='mt-auto flex items-center justify-between pt-1'>
                 <span className='text-[10px] text-muted-foreground'>{new Date(n.createdAt).toLocaleString()}</span>
                 <div className='flex items-center gap-2'>
-                  {!n.read && <Button size='sm' variant='ghost' className='h-6 px-2 text-[10px]' onClick={()=> markRead(n._id)}>Mark</Button>}
+                  {!n.read && <Button size='sm' variant='ghost' className='h-6 px-2 text-[10px]' onClick={()=> markAsRead(n._id)}>Mark</Button>}
                   {n.url && <Button asChild size='sm' variant='link' className='h-6 px-0 text-[10px]'><Link href={n.url}>Open →</Link></Button>}
                 </div>
               </div>
@@ -111,8 +80,8 @@ export default function NotificationsPage() {
         <div className='flex items-center justify-between pt-2'>
           <p className='text-[11px] text-muted-foreground'>Page {page} of {totalPages}</p>
           <div className='flex items-center gap-2'>
-            <Button size='sm' variant='outline' disabled={page===1} onClick={()=> setPage(p=> Math.max(1,p-1))}>Prev</Button>
-            <Button size='sm' variant='outline' disabled={page===totalPages} onClick={()=> setPage(p=> Math.min(totalPages,p+1))}>Next</Button>
+            <Button size='sm' variant='outline' disabled={page===1} onClick={()=> fetchNotifications({ force: true, page: Math.max(1, page-1), limit: limit || 12, filter })}>Prev</Button>
+            <Button size='sm' variant='outline' disabled={page===totalPages} onClick={()=> fetchNotifications({ force: true, page: Math.min(totalPages, page+1), limit: limit || 12, filter })}>Next</Button>
           </div>
         </div>
       )}

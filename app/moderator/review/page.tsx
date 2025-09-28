@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, safeJson } from "@/lib/utils";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
@@ -58,8 +58,8 @@ export default function ModeratorReviewPage() {
       const res = await fetch(`/api/protected/collection-requests?${params.toString()}`, {
         cache: "no-store",
       });
-      if (!res.ok) throw new Error(`Failed to load: ${res.status}`);
-  const data = await res.json();
+    if (!res.ok) throw new Error(`Failed to load: ${res.status} ${await res.text().catch(()=> '')}`);
+  const data = await safeJson<any>(res);
   setRequests(data.items || []);
     } catch (e: any) {
       setError(e.message || "Failed to fetch");
@@ -132,7 +132,7 @@ export default function ModeratorReviewPage() {
                 <CardTitle className="text-base flex items-center justify-between">
                   <span className="truncate" title={donorName}>{donorName}</span>
                   <Badge className={cn("ml-2", STATUS_COLOR[r.status] || "bg-gray-100 text-gray-800")}>
-                    {r.status}
+                    {r.status === 'collected' ? 'Fulfilled (collected)' : r.status}
                   </Badge>
                 </CardTitle>
                 <div className="text-xs text-muted-foreground flex flex-col gap-1">

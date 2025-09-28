@@ -7,7 +7,7 @@ export interface INotification extends Document {
   body: string
   url?: string
   read: boolean
-  type: 'collection_request' | 'verification_needed' | 'collection_assigned' | 'review_needed'
+  type: 'collection_request' | 'verification_needed' | 'collection_assigned' | 'review_needed' | 'collection_completed'
   webPushSubscription?: string // optional serialized subscription identifier
   createdAt: Date
   updatedAt: Date
@@ -19,7 +19,7 @@ const notificationSchema = new Schema<INotification>({
   body: { type: String, required: true },
   url: { type: String },
   read: { type: Boolean, default: false },
-  type: { type: String, enum: ['collection_request', 'verification_needed', 'collection_assigned', 'review_needed'], required: true },
+  type: { type: String, enum: ['collection_request', 'verification_needed', 'collection_assigned', 'review_needed', 'collection_completed'], required: true },
   webPushSubscription: { type: String }
 }, { timestamps: true })
 

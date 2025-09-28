@@ -4,6 +4,8 @@ import { assignScrappers, getCollectionRequestById, markAsCollected, updateColle
 import { notificationService } from '../../../../../lib/services/notification.service'
 import { getClerkUserWithSupplementaryData } from '../../../../../lib/services/user.service'
 import { assignScrappersSchema, updateCollectionRequestSchema } from '../../../../../lib/validators/collectionRequest.validator'
+import connectDB from '@/lib/db'
+import User from '@/models/User'
 
 // Next.js 15 route handlers now provide context.params as a Promise in some edge/runtime configurations.
 // Adjust signature to accept promised params for type compatibility, then await it internally.
@@ -20,10 +22,19 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     let assignedDetails: any[] = []
     let collectedByDetails = null
     let donationEntryId: string | undefined
+    let donorMongoId: string | undefined
     try {
       donorDetails = await getClerkUserWithSupplementaryData(doc.donor)
     } catch (e) {
       console.warn('[ENRICH_SINGLE_DONOR_FAIL]', e)
+    }
+    // Resolve donor's Mongo _id mapping if available (help client-side auto-fill)
+    try {
+      await connectDB()
+      const donorDoc: any = await User.findOne({ clerkUserId: doc.donor }).select('_id').lean()
+      if (donorDoc?._id) donorMongoId = donorDoc._id.toString()
+    } catch (e) {
+      console.warn('[ENRICH_SINGLE_DONOR_MONGO_LOOKUP_FAIL]', e)
     }
     if (Array.isArray(doc.assignedScrappers) && doc.assignedScrappers.length > 0) {
       assignedDetails = await Promise.all(doc.assignedScrappers.map((sid: string) => getClerkUserWithSupplementaryData(sid).catch(()=>null)))
@@ -48,7 +59,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         console.warn('[ENRICH_SINGLE_DONATION_LOOKUP_FAIL]', e)
       }
     }
-    return NextResponse.json({ request: { ...doc, donorDetails, assignedDetails, collectedByDetails, donationEntryId } })
+    return NextResponse.json({ request: { ...doc, donorDetails, donorMongoId, assignedDetails, collectedByDetails, donationEntryId } })
   } catch (e) {
     console.error(e)
     return new NextResponse('Server error', { status: 500 })

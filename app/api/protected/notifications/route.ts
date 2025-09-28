@@ -10,10 +10,12 @@ export async function GET(req: Request) {
     const url = new URL(req.url)
     const page = parseInt(url.searchParams.get('page') || '1', 10)
     const limit = parseInt(url.searchParams.get('limit') || '20', 10)
-    const unreadOnly = url.searchParams.get('unread') === 'true'
+    const unreadOnly = (url.searchParams.get('unreadOnly') || url.searchParams.get('unread')) === 'true'
     const type = url.searchParams.get('type') || undefined
     const { items, total } = await notificationService.listNotifications(userId, { page, limit, unreadOnly, type })
-    return NextResponse.json({ items, total, page, limit })
+    // Always include unread count for bell badge UX
+    const { total: unreadCount } = await notificationService.listNotifications(userId, { page: 1, limit: 1, unreadOnly: true })
+    return NextResponse.json({ items, total, page, limit, unreadCount })
   } catch (e) {
     console.error('[NOTIFICATIONS_GET_ERROR]', e)
     return new NextResponse('Server error', { status: 500 })

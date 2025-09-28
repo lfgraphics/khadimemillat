@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { safeJson } from '@/lib/utils';
 import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,64 +15,141 @@ import { toast } from 'sonner';
 type Tab = 'money' | 'scrap'
 
 export default function DonationPage() {
-  const [tab, setTab] = useState<Tab>('scrap')
-  // Money donation legacy states omitted for brevity (can be re-added)
-  const { user } = useUser()
+  const [tab, setTab] = useState<Tab>('money')
+  const { user, isSignedIn } = useUser()
+  const router = useRouter()
   const [profile, setProfile] = useState<{ phone: string; address: string; donorId?: string }>({ phone: '', address: '' })
   const [pickupTime, setPickupTime] = useState('')
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  
+  // Money donation states
+  const [donationAmount, setDonationAmount] = useState('')
+  const [donorName, setDonorName] = useState('')
+  const [donorEmail, setDonorEmail] = useState('')
+  const [selectedCause, setSelectedCause] = useState('education')
+  const [moneySubmitting, setMoneySubmitting] = useState(false)
+  const [moneySuccess, setMoneySuccess] = useState(false)
 
   useEffect(() => {
-    // Load current user mongo profile (simplified assumption existing endpoint self)
+    // Load current user profile; server reads phone/address from Clerk privateMetadata
+    // Guard: only attempt when signed in, and only parse JSON when content-type is JSON.
     const load = async () => {
+      if (!isSignedIn) {
+        // Not signed in; skip profile fetch to avoid HTML redirects masquerading as JSON
+        return;
+      }
       try {
-        const res = await fetch('/api/protected/users?self=1')
-        const json = await res.json()
+        const res = await fetch('/api/protected/users?self=1', { cache: 'no-store' })
+        const ct = res.headers.get('content-type') || ''
+        if (!res.ok || !ct.includes('application/json')) {
+          // Likely an auth redirect (HTML) or server error; do not attempt to parse JSON
+          if (res.status === 401 || res.status === 403) {
+            console.warn('[DONATE_PROFILE_FETCH_AUTH]', res.status)
+          } else {
+            const text = await res.text().catch(()=>'')
+            console.warn('[DONATE_PROFILE_FETCH_NON_JSON]', res.status, ct, text?.slice(0,120))
+          }
+          return
+        }
+  const json = await safeJson<any>(res)
         if (json.users && json.users.length) {
           const u = json.users[0]
-          setProfile({ phone: u.phone || '', address: u.address || '', donorId: u._id || u.id })
+          // Prioritize Clerk user ID; fallback to mongo mapping only if needed
+          setProfile({ phone: u.phone || '', address: u.address || '', donorId: u.id || u.mongoUserId || u._id })
         }
       } catch (e) { console.error(e) }
     }
     load()
-  }, [])
+  }, [isSignedIn])
 
   const missingInfo = !profile.phone || !profile.address
 
   const updateProfileIfMissing = async () => {
-    if (!profile.donorId) return
     if (!missingInfo) return
+    // PATCH endpoint accepts Clerk ID or Mongo ID; when missing, prefer skipping instead of failing
+    if (!profile.donorId) return
     try {
-      await fetch(`/api/protected/users/${profile.donorId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: profile.phone, address: profile.address }) })
+      await fetch(`/api/protected/users/${encodeURIComponent(profile.donorId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: profile.phone, address: profile.address }) })
     } catch (e) { console.error(e) }
   }
 
   const submitScrapRequest = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!profile.donorId) { setError('Profile not loaded'); return }
+    if (!isSignedIn) { setError('Please sign in to submit a collection request.'); return }
     if (!pickupTime) { setError('Pickup time required'); return }
     setSubmitting(true); setError(null); setSuccess(false)
     try {
       await updateProfileIfMissing()
-      const res = await fetch('/api/protected/collection-requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ donor: profile.donorId, requestedPickupTime: pickupTime, address: profile.address, phone: profile.phone, notes }) })
+      // Omit donor to default to current Clerk user on server; aligns with Clerk-first priority
+      const res = await fetch('/api/protected/collection-requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ requestedPickupTime: pickupTime, address: profile.address, phone: profile.phone, notes }) })
       if (!res.ok) throw new Error(await res.text())
       setSuccess(true); setNotes('');
     } catch (e: any) { setError(e.message || 'Failed'); } finally { setSubmitting(false) }
   }
 
+  const submitMoneyDonation = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!donationAmount || parseFloat(donationAmount) <= 0) {
+      toast.error('Please enter a valid donation amount')
+      return
+    }
+    if (!donorName.trim()) {
+      toast.error('Please enter your name')
+      return
+    }
+    if (!donorEmail.trim() || !donorEmail.includes('@')) {
+      toast.error('Please enter a valid email address')
+      return
+    }
+
+    setMoneySubmitting(true)
+    setMoneySuccess(false)
+    
+    try {
+      // Simulate API call with dummy data
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
+      // Create dummy cause data for navigation
+      const dummyCause = {
+        cause: selectedCause,
+        slug: 'dummy-campaign',
+        id: 'dummy-' + Date.now()
+      }
+      
+      // Navigate to the dynamic donation page
+      router.push(`/donate/${dummyCause.cause}/${dummyCause.slug}/${dummyCause.id}?amount=${donationAmount}&donor=${encodeURIComponent(donorName)}&email=${encodeURIComponent(donorEmail)}`)
+      
+      setMoneySuccess(true)
+      toast.success('Redirecting to donation page...')
+    } catch (error) {
+      toast.error('Failed to process donation. Please try again.')
+    } finally {
+      setMoneySubmitting(false)
+    }
+  }
+
+  const dummyCauses = [
+    { value: 'sadqa', label: 'Sadqa' },
+    { value: 'education', label: 'Education Support' },
+    { value: 'healthcare', label: 'Healthcare Initiatives' },
+    { value: 'environment', label: 'Environmental Projects' },
+    { value: 'community', label: 'Community Development' },
+    { value: 'emergency', label: 'Emergency Relief' }
+  ]
+
   return (
     <div className='p-6 max-w-3xl mx-auto space-y-8'>
       <div className='flex items-center justify-between'>
         <h1 className='text-2xl font-semibold'>Donate</h1>
-        <p className='text-xs text-muted-foreground'>Contribute via scrap pickup or (soon) monetary support.</p>
+        <p className='text-xs text-muted-foreground'>Contribute via scrap pickup or monetary support.</p>
       </div>
       <Tabs value={tab} onValueChange={(v)=> setTab(v as Tab)}>
         <TabsList>
-          <TabsTrigger value='scrap'>Scrap</TabsTrigger>
           <TabsTrigger value='money'>Money</TabsTrigger>
+          <TabsTrigger value='scrap'>Scrap</TabsTrigger>
         </TabsList>
         <TabsContent value='scrap'>
           <Card>
@@ -118,10 +197,74 @@ export default function DonationPage() {
         <TabsContent value='money'>
           <Card>
             <CardHeader className='pb-3'>
-              <CardTitle className='text-base'>Monetary Donation (Coming Soon)</CardTitle>
+              <CardTitle className='text-base'>Monetary Donation</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className='text-sm text-muted-foreground'>We are preparing secure payment integration for monetary contributions. Stay tuned!</p>
+              <form onSubmit={submitMoneyDonation} className='space-y-5'>
+                <div className='grid md:grid-cols-2 gap-4'>
+                  <div className='space-y-1'>
+                    <label className='text-xs font-semibold'>Donation Amount ()</label>
+                    <Input 
+                      type='number' 
+                      value={donationAmount} 
+                      onChange={e=>setDonationAmount(e.target.value)} 
+                      placeholder='25' 
+                      min='1'
+                      step='0.01'
+                    />
+                  </div>
+                  <div className='space-y-1'>
+                    <label className='text-xs font-semibold'>Select Cause</label>
+                    <select 
+                      value={selectedCause} 
+                      onChange={e=>setSelectedCause(e.target.value)}
+                      className='w-full px-3 py-2 border border-input bg-background rounded-md text-sm'
+                    >
+                      {dummyCauses.map(cause => (
+                        <option key={cause.value} value={cause.value}>{cause.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className='space-y-1'>
+                    <label className='text-xs font-semibold'>Your Name</label>
+                    <Input 
+                      value={donorName} 
+                      onChange={e=>setDonorName(e.target.value)} 
+                      placeholder='John Doe' 
+                    />
+                  </div>
+                  <div className='space-y-1'>
+                    <label className='text-xs font-semibold'>Email Address</label>
+                    <Input 
+                      type='email'
+                      value={donorEmail} 
+                      onChange={e=>setDonorEmail(e.target.value)} 
+                      placeholder='john@example.com' 
+                    />
+                  </div>
+                  <div className='md:col-span-2 space-y-1'>
+                    <label className='text-xs font-semibold'>Message (Optional)</label>
+                    <Textarea 
+                      value={notes} 
+                      onChange={e=>setNotes(e.target.value)} 
+                      placeholder='Any special message or dedication...' 
+                      className='min-h-20' 
+                    />
+                  </div>
+                </div>
+                <div className='flex items-center gap-3 pt-2'>
+                  <Button type='submit' disabled={moneySubmitting}>
+                    {moneySubmitting ? 
+                      <><Loader2 className='h-4 w-4 animate-spin mr-2' /> Processing</> : 
+                      'Continue to Payment'
+                    }
+                  </Button>
+                </div>
+                {moneySuccess && <p className='text-xs text-green-600'>Redirecting to donation page...</p>}
+                <div className='text-xs text-muted-foreground mt-4'>
+                  <p>This is a demo form. In production, this would integrate with a payment processor like Stripe or PayPal.</p>
+                </div>
+              </form>
             </CardContent>
           </Card>
         </TabsContent>

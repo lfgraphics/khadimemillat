@@ -1,5 +1,6 @@
 "use client"
 import { useEffect, useState } from 'react'
+import { safeJson } from '@/lib/utils'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -26,9 +27,19 @@ export function ScrapperAssignmentModal({ open, onOpenChange, requestId, onAssig
       setLoading(true); setError(null)
       try {
   const res = await fetch('/api/protected/users?role=scrapper', { cache: 'no-store' })
-  const json = await res.json()
-  const list = json.users || json.items || []
-  setScrappers(list)
+  if (!res.ok) {
+    if (res.status === 403) {
+      // Broad listing gated; caller likely not privileged. Show friendly message and keep list empty.
+      setScrappers([])
+      setError('Not authorized to list users. Try searching in contexts that support it or contact an admin.')
+    } else {
+      throw new Error(`Failed to load scrappers (${res.status})`)
+    }
+  } else {
+    const json = await safeJson<any>(res)
+    const list = json.users || json.items || []
+    setScrappers(list)
+  }
       } catch (e:any) {
         setError(e.message || 'Failed to load scrappers')
       } finally { setLoading(false) }

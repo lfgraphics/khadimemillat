@@ -19,6 +19,12 @@ const protectedRoutes = [
         allowedRoles: ['admin', 'moderator'],
         routeName: 'Verify Requests'
     },
+    // Main Admin Dashboard accessible to admin and moderator
+    {
+        matcher: createRouteMatcher(['/admin']),
+        allowedRoles: ['admin', 'moderator'],
+        routeName: 'Admin Dashboard'
+    },
     // All other admin routes (catch-all). We removed the unsupported negative lookahead pattern.
     {
         matcher: createRouteMatcher(['/admin(.*)']),
@@ -27,7 +33,7 @@ const protectedRoutes = [
     },
     {
         matcher: createRouteMatcher(['/api/protected/users(.*)']),
-        allowedRoles: ['admin', 'moderator', ],
+        allowedRoles: ['admin', 'moderator', 'user', 'scrapper'],
         routeName: 'User Management'
     },
     {
@@ -54,15 +60,23 @@ const protectedRoutes = [
 
 export default clerkMiddleware(async (auth, req) => {
     const { userId } = await auth()
-    
+
     if (!isPublicRoute(req) && !userId) {
         console.log('User not authenticated, redirecting to sign-in')
         console.log('userId:', userId)
         console.log('Request URL:', req.url)
 
-        const signInUrl = new URL('/sign-in', req.url)
+        if (req.nextUrl.pathname.startsWith('/api/')) {
+            // Return JSON error for API routes instead of redirecting
+            return NextResponse.json(
+                { error: 'Unauthorized', message: 'Authentication required' },
+                { status: 401 }
+            )
+        }
 
-        // Store last attempted URL in a cookie
+        // Only redirect non-API routes to sign-in
+        console.log('User not authenticated, redirecting to sign-in')
+        const signInUrl = new URL('/sign-in', req.url)
         const res = NextResponse.redirect(signInUrl)
         res.cookies.set('redirectTo', req.nextUrl.pathname + req.nextUrl.search, {
             path: '/',

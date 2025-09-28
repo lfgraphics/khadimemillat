@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { Bell, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useSidebar } from '@/components/ui/sidebar';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useNotifications } from '@/hooks/useNotifications';
 
 type Notification = {
     _id: string;
@@ -21,17 +22,14 @@ type Notification = {
 };
 
 interface NotificationBellProps {
+    // intervalMs is deprecated and ignored to reduce load
     intervalMs?: number;
     limit?: number;
 }
 
-export const NotificationBell: React.FC<NotificationBellProps> = ({ intervalMs = 15000, limit = 10 }) => {
+export const NotificationBell: React.FC<NotificationBellProps> = ({ intervalMs, limit = 10 }) => {
     const [open, setOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [items, setItems] = useState<Notification[]>([]);
-    const [unreadCount, setUnreadCount] = useState(0);
-    const [error, setError] = useState<string | null>(null);
-    const pollRef = useRef<NodeJS.Timeout | null>(null);
+    const { items, unreadCount, loading, error, fetchNotifications, markAsRead, markAllAsRead } = useNotifications();
     const router = useRouter();
     // Access sidebar state to conditionally show label
     let sidebarState: 'expanded' | 'collapsed' | null = null;
@@ -39,95 +37,43 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ intervalMs =
         // useSidebar will throw if used outside provider; guard with try/catch
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         sidebarState = (useSidebar() as any)?.state || null;
-    } catch {}
+    } catch { }
     const isCollapsed = sidebarState === 'collapsed';
 
-    const fetchNotifications = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            // Fetch only unread first to compute count efficiently, then fetch recent list (could be combined later)
-            const unreadRes = await fetch(`/api/protected/notifications?unread=true&limit=1`, { cache: 'no-store' });
-            let unreadTotal = 0;
-            if (unreadRes.ok) {
-                const unreadJson = await unreadRes.json();
-                unreadTotal = typeof unreadJson.total === 'number' ? unreadJson.total : (unreadJson.items?.length || 0);
-            }
-
-            const listQs = new URLSearchParams({ limit: String(limit) });
-            const res = await fetch(`/api/protected/notifications?${listQs.toString()}`, { cache: 'no-store' });
-            if (!res.ok) throw new Error('Failed to load notifications');
-            const data = await res.json();
-            const notifs: Notification[] = data.items || [];
-            setItems(notifs);
-            setUnreadCount(unreadTotal);
-        } catch (e: any) {
-            setError(e.message || 'Failed to fetch');
-        } finally {
-            setLoading(false);
-        }
-    }, [limit]);
-
-        useEffect(() => {
-                fetchNotifications();
-                // Opportunistically ensure push subscription (in case WebPushManager missed due to hydration ordering)
-                (async () => {
-                    try {
-                        if ('serviceWorker' in navigator) {
-                            const reg = await navigator.serviceWorker.ready;
-                            const sub = await reg.pushManager.getSubscription();
-                            if (sub) {
-                                fetch('/api/protected/web-push/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: sub }) });
-                            }
-                        }
-                    } catch(e) { /* ignore */ }
-                })();
-                if (intervalMs > 0) {
-                        pollRef.current = setInterval(fetchNotifications, intervalMs);
-                        return () => { if (pollRef.current) clearInterval(pollRef.current); };
+    useEffect(() => {
+        // Opportunistically ensure push subscription (in case WebPushManager missed due to hydration ordering)
+        (async () => {
+            try {
+                if ('serviceWorker' in navigator) {
+                    const reg = await navigator.serviceWorker.ready;
+                    const sub = await reg.pushManager.getSubscription();
+                    if (sub) {
+                        fetch('/api/protected/web-push/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: sub }) });
+                    }
                 }
-        }, [fetchNotifications, intervalMs]);
+            } catch (e) { /* ignore */ }
+        })();
+        // No interval polling to reduce load
+    }, []);
 
-    const markAsRead = async (id: string) => {
-        try {
-            const res = await fetch(`/api/protected/notifications/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ read: true }),
-            });
-            if (!res.ok) throw new Error('Failed to mark read');
-            setItems(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
-            setUnreadCount(prev => Math.max(0, prev - 1));
-        } catch (e) {
-            console.error(e);
-        }
-    };
-
-    const markAllAsRead = async () => {
-        const unread = items.filter(i => !i.read);
-        if (unread.length === 0 && unreadCount === 0) return;
-        // Optimistic UI: mark all local items as read
-        setItems(prev => prev.map(n => ({ ...n, read: true })));
-        setUnreadCount(0);
-        // Fire off sequential marks; if many, could add batch endpoint later
-        await Promise.all(unread.map(u => markAsRead(u._id)));
-        // Refetch to ensure consistency (especially for pages > first page unseen unread items)
-        fetchNotifications();
+    const onMarkAll = async () => {
+        if (unreadCount === 0 && items.every(i => i.read)) return;
+        await markAllAsRead();
     };
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={(v) => { setOpen(v); if (v) fetchNotifications({ force: !!error }); }}>
             <PopoverTrigger asChild>
                 <Button
                     variant={unreadCount > 0 ? "default" : "ghost"}
                     aria-label="Notifications"
-                    className={cn("relative flex items-center gap-2 h-8 px-2", isCollapsed && "justify-center")}
+                    className={cn("relative flex items-center gap-2 h-8 px-2 ml-1", isCollapsed && "justify-center")}
                 >
                     <Bell className="h-5 w-5 shrink-0" />
                     {!isCollapsed && <span className="text-xs font-medium">Notifications</span>}
                     {unreadCount > 0 && (
                         <span className={cn("absolute bg-red-600 text-white rounded-full w-5 h-5 text-[10px] flex items-center justify-center font-medium",
-                            isCollapsed ? "-top-1 -right-1" : "-top-1 -right-1") }>
+                            isCollapsed ? "-top-1 -right-1" : "-top-1 -right-1")}>
                             {unreadCount > 9 ? '9+' : unreadCount}
                         </span>
                     )}
@@ -137,10 +83,10 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ intervalMs =
                 <div className="flex items-center justify-between px-3 py-2 border-b">
                     <p className="text-sm font-medium">Notifications</p>
                     <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={fetchNotifications} disabled={loading} aria-label="Refresh notifications">
+                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => fetchNotifications({ force: true })} disabled={loading} aria-label="Refresh notifications">
                             {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : '↻'}
                         </Button>
-                        <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={markAllAsRead} disabled={unreadCount === 0}>Mark all</Button>
+                        <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={onMarkAll} disabled={unreadCount === 0}>Mark all</Button>
                     </div>
                 </div>
                 <div className="max-h-96 overflow-y-auto">
