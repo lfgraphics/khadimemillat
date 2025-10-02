@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { EnhancedFileSelector } from '@/components/file-selector';
+import { FileUploadError, UploadResult } from '@/components/file-selector/types';
 
 type Tab = 'money' | 'scrap'
 
@@ -24,6 +26,10 @@ export default function DonationPage() {
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  
+  // File upload states for scrap collection
+  const [uploadedImages, setUploadedImages] = useState<UploadResult[]>([])
+  const [fileUploadError, setFileUploadError] = useState<string | null>(null)
   
   // Money donation states
   const [donationAmount, setDonationAmount] = useState('')
@@ -76,6 +82,29 @@ export default function DonationPage() {
     } catch (e) { console.error(e) }
   }
 
+  // File upload handlers
+  const handleFileSelect = (file: File, previewUrl: string) => {
+    console.log('File selected:', file.name, 'Preview URL:', previewUrl)
+    setFileUploadError(null)
+  }
+
+  const handleUploadComplete = (uploadResult: UploadResult) => {
+    console.log('Upload completed:', uploadResult)
+    setUploadedImages(prev => [...prev, uploadResult])
+    toast.success(`Image uploaded successfully: ${uploadResult.publicId}`)
+  }
+
+  const handleUploadError = (error: FileUploadError) => {
+    console.error('Upload error:', error)
+    setFileUploadError(error.message)
+    toast.error(`Upload failed: ${error.message}`)
+  }
+
+  const removeUploadedImage = (publicId: string) => {
+    setUploadedImages(prev => prev.filter(img => img.publicId !== publicId))
+    toast.success('Image removed')
+  }
+
   const submitScrapRequest = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!isSignedIn) { setError('Please sign in to submit a collection request.'); return }
@@ -83,10 +112,35 @@ export default function DonationPage() {
     setSubmitting(true); setError(null); setSuccess(false)
     try {
       await updateProfileIfMissing()
+      
+      // Prepare request data with uploaded images
+      const requestData = {
+        requestedPickupTime: pickupTime,
+        address: profile.address,
+        phone: profile.phone,
+        notes: notes,
+        // Include uploaded image URLs and metadata
+        images: uploadedImages.map(img => ({
+          url: img.secureUrl,
+          publicId: img.publicId,
+          width: img.width,
+          height: img.height,
+          format: img.format,
+          bytes: img.bytes
+        }))
+      }
+      
       // Omit donor to default to current Clerk user on server; aligns with Clerk-first priority
-      const res = await fetch('/api/protected/collection-requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ requestedPickupTime: pickupTime, address: profile.address, phone: profile.phone, notes }) })
+      const res = await fetch('/api/protected/collection-requests', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(requestData) 
+      })
       if (!res.ok) throw new Error(await res.text())
-      setSuccess(true); setNotes('');
+      setSuccess(true); 
+      setNotes('');
+      setUploadedImages([]);
+      toast.success('Collection request submitted successfully!')
     } catch (e: any) { setError(e.message || 'Failed'); } finally { setSubmitting(false) }
   }
 
@@ -133,6 +187,7 @@ export default function DonationPage() {
 
   const dummyCauses = [
     { value: 'sadqa', label: 'Sadqa' },
+    { value: 'zakat', label: 'Zakat' },
     { value: 'education', label: 'Education Support' },
     { value: 'healthcare', label: 'Healthcare Initiatives' },
     { value: 'environment', label: 'Environmental Projects' },
@@ -178,6 +233,65 @@ export default function DonationPage() {
                   <div className='md:col-span-2 space-y-1'>
                     <label className='text-xs font-semibold'>Notes</label>
                     <Textarea value={notes} onChange={e=>setNotes(e.target.value)} placeholder='Any additional info...' className='min-h-20' />
+                  </div>
+                  
+                  {/* Enhanced File Selector for Item Images */}
+                  <div className='md:col-span-2 space-y-1'>
+                    <label className='text-xs font-semibold'>Item Images (Optional)</label>
+                    <p className='text-xs text-muted-foreground mb-2'>
+                      Upload photos of the items you want to donate. This helps our team prepare for collection.
+                    </p>
+                    <EnhancedFileSelector
+                      onFileSelect={handleFileSelect}
+                      onUploadComplete={handleUploadComplete}
+                      onError={handleUploadError}
+                      maxFileSize={10 * 1024 * 1024} // 10MB
+                      acceptedTypes={['image/jpeg', 'image/png', 'image/webp']}
+                      placeholder="Drag and drop item photos here or click to select"
+                      showPreview={true}
+                      uploadToCloudinary={true}
+                      cloudinaryOptions={{
+                        folder: 'kmwf/collection-requests',
+                        tags: ['collection-request', 'donation-items']
+                      }}
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-gray-400 transition-colors"
+                    />
+                    
+                    {/* Display uploaded images */}
+                    {uploadedImages.length > 0 && (
+                      <div className='mt-4'>
+                        <p className='text-xs font-semibold mb-2'>Uploaded Images ({uploadedImages.length})</p>
+                        <div className='grid grid-cols-2 md:grid-cols-3 gap-2'>
+                          {uploadedImages.map((image, index) => (
+                            <div key={image.publicId} className='relative group'>
+                              <img
+                                src={image.url}
+                                alt={`Uploaded item ${index + 1}`}
+                                className='w-full h-24 object-cover rounded-md border'
+                              />
+                              <button
+                                type='button'
+                                onClick={() => removeUploadedImage(image.publicId)}
+                                className='absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity'
+                                title='Remove image'
+                              >
+                                ×
+                              </button>
+                              <div className='absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b-md'>
+                                {(image.bytes / 1024).toFixed(1)}KB
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* File upload error display */}
+                    {fileUploadError && (
+                      <div className='text-xs text-red-600 mt-2'>
+                        Upload Error: {fileUploadError}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className='flex items-center gap-3 pt-2'>

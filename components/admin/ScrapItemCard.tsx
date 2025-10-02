@@ -10,6 +10,8 @@ import { Switch } from '@/components/ui/switch'
 import { Image as ImageIcon, Tag, CheckCircle, Pencil, Save, X, Plus } from 'lucide-react'
 import { ClickableImage } from '@/components/ui/clickable-image'
 import { toast } from 'sonner'
+import { EnhancedFileSelector } from '@/components/file-selector'
+import { FileUploadError, UploadResult } from '@/components/file-selector/types'
 
 export type ScrapItem = {
   id: string
@@ -48,40 +50,39 @@ export default function ScrapItemCard({ item, onChange, onAction, saving = false
     onChange?.(patch)
   }
 
-  // Single-file uploader used by "+" tiles
-  const uploadFile = async (file: File): Promise<string | null> => {
-    if (!file.type.startsWith('image/')) { toast.error(`${file.name}: not an image`); return null }
-    if (file.size > 8 * 1024 * 1024) { toast.error(`${file.name}: exceeds 8MB`); return null }
-    const base64 = await new Promise<string>((resolve, reject) => { const fr = new FileReader(); fr.onload = () => resolve(fr.result as string); fr.onerror = reject; fr.readAsDataURL(file) })
-    const res = await fetch('/api/protected/upload-image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ imageBase64: base64 }) })
-    if (!res.ok) { const txt = await res.text().catch(()=> ''); toast.error(`Upload failed: ${txt || res.statusText}`); return null }
-    const json = await res.json()
-    return json?.raw?.public_id || null
-  }
-
-  const AddTile: React.FC<{ onAdd: (id: string) => void }> = ({ onAdd }) => {
-    const inputRef = React.useRef<HTMLInputElement | null>(null)
-    const [dragOver, setDragOver] = React.useState(false)
-    const onPick = () => inputRef.current?.click()
-    const handleFiles = async (files: FileList | null) => {
-      if (!files || files.length === 0) return
-      for (const f of Array.from(files)) {
-        const id = await uploadFile(f)
-        if (id) onAdd(id)
-      }
+  // Enhanced file selector for adding photos
+  const AddPhotoSelector: React.FC<{ onAdd: (id: string) => void; type: 'before' | 'after' }> = ({ onAdd, type }) => {
+    const handleFileSelect = (file: File, previewUrl: string) => {
+      console.log(`${type} photo selected:`, file.name)
     }
-    const onDrop: React.DragEventHandler<HTMLDivElement> = (e) => { e.preventDefault(); e.stopPropagation(); setDragOver(false); handleFiles(e.dataTransfer.files) }
+
+    const handleUploadComplete = (uploadResult: UploadResult) => {
+      onAdd(uploadResult.publicId)
+      toast.success(`${type} photo uploaded successfully`)
+    }
+
+    const handleUploadError = (error: FileUploadError) => {
+      console.error(`${type} photo upload error:`, error)
+      toast.error(`Upload failed: ${error.message}`)
+    }
+
     return (
-      <div
-        className={`w-16 h-16 rounded border border-dashed flex items-center justify-center text-muted-foreground bg-muted/40 cursor-pointer ${dragOver ? 'ring-2 ring-primary/40' : ''}`}
-        title="Add image"
-        onClick={onPick}
-        onDragOver={(e)=> { e.preventDefault(); setDragOver(true) }}
-        onDragLeave={(e)=> { e.preventDefault(); setDragOver(false) }}
-        onDrop={onDrop}
-      >
-        <Plus className="h-5 w-5" />
-        <input ref={inputRef} type="file" accept="image/*" hidden multiple onChange={(e)=> handleFiles(e.target.files)} />
+      <div className="w-16 h-16">
+        <EnhancedFileSelector
+          onFileSelect={handleFileSelect}
+          onUploadComplete={handleUploadComplete}
+          onError={handleUploadError}
+          maxFileSize={8 * 1024 * 1024} // 8MB
+          acceptedTypes={['image/jpeg', 'image/png', 'image/webp']}
+          placeholder="+"
+          showPreview={false}
+          uploadToCloudinary={true}
+          cloudinaryOptions={{
+            folder: 'kmwf/scrap-items',
+            tags: ['scrap-item', type, item.id]
+          }}
+          className="w-16 h-16 border border-dashed rounded flex items-center justify-center text-muted-foreground bg-muted/40 cursor-pointer hover:bg-muted/60 transition-colors"
+        />
       </div>
     )
   }
@@ -122,7 +123,10 @@ export default function ScrapItemCard({ item, onChange, onAction, saving = false
               </div>
             ))}
             {editing && (
-              <AddTile onAdd={(id) => setLocal(l => ({ ...l, photos: { ...l.photos, before: [...l.photos.before, id] } }))} />
+              <AddPhotoSelector 
+                type="before" 
+                onAdd={(id) => setLocal(l => ({ ...l, photos: { ...l.photos, before: [...l.photos.before, id] } }))} 
+              />
             )}
           </div>
         </div>
@@ -139,7 +143,10 @@ export default function ScrapItemCard({ item, onChange, onAction, saving = false
               </div>
             ))}
             {editing && (
-              <AddTile onAdd={(id) => setLocal(l => ({ ...l, photos: { ...l.photos, after: [...l.photos.after, id] } }))} />
+              <AddPhotoSelector 
+                type="after" 
+                onAdd={(id) => setLocal(l => ({ ...l, photos: { ...l.photos, after: [...l.photos.after, id] } }))} 
+              />
             )}
           </div>
         </div>

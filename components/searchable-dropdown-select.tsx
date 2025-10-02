@@ -114,9 +114,14 @@ const SearchableDropDownSelect = ({
             <button
                 type="button"
                 onClick={() => setOpen((prev) => !prev)}
-                className="flex items-center justify-between w-full border px-3 py-2 rounded-md text-left bg-background"
+                className="flex items-center justify-between w-full min-h-[44px] border border-input rounded-md px-3 py-2 text-left bg-background hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors duration-200 touch-manipulation"
+                aria-expanded={open}
+                aria-haspopup="listbox"
             >
-                <span>
+                <span className={cn(
+                    "truncate",
+                    !value && "text-muted-foreground"
+                )}>
                     {value
                         ? options.find((opt) => opt.value === value)?.label
                         : placeholder}
@@ -127,22 +132,24 @@ const SearchableDropDownSelect = ({
             {open && (
                 <div
                     ref={dropdownRef}
-                    className="absolute z-10 mt-1 w-full bg-background border rounded-md shadow-md max-h-60 overflow-auto"
+                    className="absolute z-[9999] mt-1 w-full bg-background border border-border rounded-md shadow-lg max-h-60 overflow-auto"
+                    role="listbox"
                 >
                     <input
                         ref={inputRef}
-                        className="w-full p-2 border-b outline-none"
+                        className="w-full p-3 border-b border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
                         value={searchTerm}
                         onChange={(e) => onSearchTermChange(e.target.value)}
                         placeholder="Search..."
+                        autoComplete="off"
                     />
                     {filteredOptions.length === 0 ? (
-                        <div className="p-2 text-sm text-muted-foreground flex flex-col gap-2">
+                        <div className="p-3 text-sm text-muted-foreground flex flex-col gap-2">
                             <span>No option found.</span>
                             {onCreateOption && searchTerm.trim() !== '' && (
                                 <button
                                     type="button"
-                                    className="text-primary underline text-left"
+                                    className="text-primary hover:text-primary/80 underline text-left font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 rounded px-1 py-0.5"
                                     onClick={() => {
                                         onCreateOption(searchTerm.trim());
                                         setOpen(false);
@@ -161,10 +168,10 @@ const SearchableDropDownSelect = ({
                                 role="option"
                                 aria-selected={value === item.value}
                                 className={cn(
-                                    "flex items-center px-3 py-2 cursor-pointer",
+                                    "flex items-center px-3 py-2.5 cursor-pointer transition-colors duration-150",
                                     "hover:bg-accent hover:text-accent-foreground",
                                     index === highlightedIndex && "bg-accent text-accent-foreground",
-                                    value === item.value && "font-semibold"
+                                    value === item.value && "font-semibold bg-primary/5"
                                 )}
                                 onClick={() => {
                                     onChange(item.value === value ? "" : item.value);

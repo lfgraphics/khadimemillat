@@ -119,39 +119,97 @@ export const UserSearchAndCreate: React.FC<UserSearchAndCreateProps> = ({
 
   return (
     <div className={className}>
-      <div className="space-y-2">
-        <label className="text-sm font-medium mb-1 block">Select Donor</label>
-        <SearchableDropDownSelect
-          options={userOptions}
-          value={selectedUserId}
-          onChange={v => setSelectedUserId(v)}
-          searchTerm={search}
-          onSearchTermChange={setSearch}
-          placeholder="Search donor..."
-          width="w-full"
-        />
-        {(!loadingSearch && users.length === 0) && (
-          <p className="text-[11px] text-muted-foreground">Type to search for users.</p>
-        )}
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground block">
+            Select Donor
+            <span className="text-destructive ml-1" aria-label="required">*</span>
+          </label>
+          <SearchableDropDownSelect
+            options={userOptions}
+            value={selectedUserId}
+            onChange={v => setSelectedUserId(v)}
+            searchTerm={search}
+            onSearchTermChange={setSearch}
+            placeholder={loadingSearch ? "Searching..." : "Search donor..."}
+            width="w-full"
+          />
+          {loadingSearch && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+              <span>Searching users...</span>
+            </div>
+          )}
+          {(!loadingSearch && !loadingInitial && users.length === 0 && !search.trim()) && (
+            <p className="text-xs text-muted-foreground">Start typing to search for users.</p>
+          )}
+          {(!loadingSearch && search.trim() && users.length === 0) && (
+            <p className="text-xs text-amber-600">No users found matching "{search}".</p>
+          )}
+        </div>
         {selected && (
-          <div className="mt-2 text-xs border rounded p-2 space-y-1 bg-muted/30">
-            <div><span className="font-medium">Name:</span> {selected.name}</div>
-            {selected.email && <div><span className="font-medium">Email:</span> {selected.email}</div>}
-            {selected.phone && <div><span className="font-medium">Phone:</span> {selected.phone}</div>}
-            {selected.clerkUserId && <div><span className="font-medium">Clerk ID:</span> {selected.clerkUserId}</div>}
-            {selected.mongoUserId && <div><span className="font-medium">Mongo ID:</span> {selected.mongoUserId}</div>}
+          <div className="mt-3 text-xs border border-border rounded-lg p-3 space-y-2 bg-muted/20">
+            <div className="font-medium text-foreground mb-2">Selected Donor Details:</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div><span className="font-medium text-muted-foreground">Name:</span> <span className="text-foreground">{selected.name}</span></div>
+              {selected.email && <div><span className="font-medium text-muted-foreground">Email:</span> <span className="text-foreground">{selected.email}</span></div>}
+              {selected.phone && <div><span className="font-medium text-muted-foreground">Phone:</span> <span className="text-foreground">{selected.phone}</span></div>}
+              {selected.clerkUserId && <div className="col-span-full"><span className="font-medium text-muted-foreground">Clerk ID:</span> <code className="text-xs bg-muted px-1 py-0.5 rounded font-mono">{selected.clerkUserId}</code></div>}
+              {selected.mongoUserId && <div className="col-span-full"><span className="font-medium text-muted-foreground">Mongo ID:</span> <code className="text-xs bg-muted px-1 py-0.5 rounded font-mono">{selected.mongoUserId}</code></div>}
+            </div>
           </div>
         )}
       </div>
       {enableCreate && (
-        <div className="mt-5 border rounded-lg p-4 space-y-3">
-          <p className="text-sm font-medium">Quick Create Donor</p>
-          <div className="grid md:grid-cols-3 gap-3">
-            <Input placeholder="Full Name" value={userForm.name} onChange={e => setUserForm(f => ({ ...f, name: e.target.value }))} />
-            <Input placeholder="Mobile Number" value={userForm.mobile} onChange={e => setUserForm(f => ({ ...f, mobile: e.target.value }))} />
-            <Button type="button" onClick={handleCreateUser} disabled>{'Disabled'}</Button>
+        <div className="mt-6 border border-border rounded-lg p-4 space-y-4 bg-muted/10">
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <p className="text-sm font-medium text-foreground">Quick Create Donor</p>
           </div>
-          <p className="text-[11px] text-muted-foreground">Direct user creation is disabled. Please invite users via Clerk. Contact admin if needed.</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Full Name</label>
+              <Input 
+                placeholder="Enter full name" 
+                value={userForm.name} 
+                onChange={e => setUserForm(f => ({ ...f, name: e.target.value }))}
+                className="min-h-[44px]"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Mobile Number</label>
+              <Input 
+                placeholder="Enter mobile number" 
+                value={userForm.mobile} 
+                onChange={e => setUserForm(f => ({ ...f, mobile: e.target.value }))}
+                className="min-h-[44px]"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Action</label>
+              <Button 
+                type="button" 
+                onClick={handleCreateUser} 
+                disabled
+                className="w-full min-h-[44px] opacity-50 cursor-not-allowed"
+              >
+                Create User
+              </Button>
+            </div>
+          </div>
+          <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
+            <div className="flex items-start gap-2">
+              <svg className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <div>
+                <p className="text-xs font-medium text-amber-800">Feature Disabled</p>
+                <p className="text-xs text-amber-700 mt-1">Direct user creation is disabled. Please invite users via Clerk. Contact admin if needed.</p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

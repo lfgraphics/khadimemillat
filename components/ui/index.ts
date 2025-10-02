@@ -33,4 +33,3 @@ export * from './textarea'
 export * from './tooltip'
 
 export * from './clickable-image'
-export * from './image-uploader'

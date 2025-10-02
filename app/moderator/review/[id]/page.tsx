@@ -20,6 +20,8 @@ import { generateWhatsAppUrl } from '@/lib/utils/phone';
 import { getCloudinaryUrl } from '@/lib/cloudinary-client';
 import { ClickableImage } from '@/components/ui/clickable-image'
 import { safeJson } from '@/lib/utils';
+import { EnhancedFileSelector } from '@/components/file-selector';
+import { FileUploadError, UploadResult } from '@/components/file-selector/types';
 
 type CollectionRequest = {
   _id: string;
@@ -105,21 +107,46 @@ export default function ModeratorReviewDetailPage() {
     }
   };
 
-  const handleAfterPhotoSelect = (id: string, files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    setUploadingPhotos(p => ({ ...p, [id]: true }));
-    const readers: Promise<string>[] = [];
-    for (const f of Array.from(files)) {
-      readers.push(new Promise((resolve, reject) => {
-        const fr = new FileReader();
-        fr.onload = () => resolve(fr.result as string);
-        fr.onerror = reject;
-        fr.readAsDataURL(f);
-      }));
-    }
-    Promise.all(readers).then(base64s => {
-      updateEdit(id, { afterPhotos: [ ...(itemEdits[id]?.afterPhotos || []), ...base64s ] });
-    }).finally(() => setUploadingPhotos(p => ({ ...p, [id]: false })));
+  // Enhanced file selector handlers for after photos
+  const handleAfterPhotoFileSelect = (itemId: string) => (file: File, previewUrl: string) => {
+    console.log(`After photo selected for item ${itemId}:`, file.name);
+  };
+
+  const handleAfterPhotoUploadComplete = (itemId: string) => (uploadResult: UploadResult) => {
+    // Add the uploaded photo to the item's after photos
+    const currentAfterPhotos = itemEdits[itemId]?.afterPhotos || [];
+    updateEdit(itemId, { 
+      afterPhotos: [...currentAfterPhotos, uploadResult.publicId] 
+    });
+    toast.success('After photo uploaded successfully');
+  };
+
+  const handleAfterPhotoUploadError = (itemId: string) => (error: FileUploadError) => {
+    console.error(`After photo upload error for item ${itemId}:`, error);
+    toast.error(`Upload failed: ${error.message}`);
+  };
+
+  // Component for after photo upload
+  const AfterPhotoUploader: React.FC<{ itemId: string; itemName: string }> = ({ itemId, itemName }) => {
+    return (
+      <div className="inline-block">
+        <EnhancedFileSelector
+          onFileSelect={handleAfterPhotoFileSelect(itemId)}
+          onUploadComplete={handleAfterPhotoUploadComplete(itemId)}
+          onError={handleAfterPhotoUploadError(itemId)}
+          maxFileSize={8 * 1024 * 1024} // 8MB
+          acceptedTypes={['image/jpeg', 'image/png', 'image/webp']}
+          placeholder="Add After Photos"
+          showPreview={false}
+          uploadToCloudinary={true}
+          cloudinaryOptions={{
+            folder: 'kmwf/scrap-items/after',
+            tags: ['scrap-item', 'after-photo', itemId]
+          }}
+          className="text-xs bg-muted px-2 py-1 rounded border hover:bg-background transition cursor-pointer"
+        />
+      </div>
+    );
   };
   const [moderatorNotes, setModeratorNotes] = useState("");
   const [status, setStatus] = useState("pending");
@@ -435,10 +462,7 @@ export default function ModeratorReviewDetailPage() {
                             {profit !== null && <span className={profit >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>Profit: {profit}</span>}
                           </div>
                           <div className='flex flex-wrap gap-2 items-center'>
-                            <label className='cursor-pointer text-xs bg-muted px-2 py-1 rounded border hover:bg-background transition'>
-                              {uploadingPhotos[it.id] ? 'Uploading...' : 'Add After Photos'}
-                              <input type='file' multiple accept='image/*' onChange={(e)=> handleAfterPhotoSelect(it.id, e.target.files)} className='hidden' />
-                            </label>
+                            <AfterPhotoUploader itemId={it.id} itemName={it.name} />
                             <Button size='sm' className='h-7 px-3' disabled={itemSaving[it.id]} onClick={()=> saveItem(it.id)}>
                               {itemSaving[it.id] ? <Loader2 className='h-3 w-3 animate-spin' /> : 'Save'}
                             </Button>
