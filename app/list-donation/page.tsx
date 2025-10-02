@@ -13,8 +13,6 @@ import { safeJson } from '@/lib/utils';
 import { useUser } from '@clerk/nextjs';
 import Barcode from 'react-barcode';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import SearchableDropDownSelect, { ComboboxOption } from '@/components/searchable-dropdown-select';
 import UserSearchAndCreate, { Donor } from '@/components/UserSearchAndCreate';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
@@ -22,9 +20,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ClickableImage } from '@/components/ui/clickable-image';
 import { toast } from 'sonner';
-import { EnhancedFileSelector } from '@/components/file-selector';
-import { FileUploadError, UploadResult } from '@/components/file-selector/types';
-import { Label } from '@/components/ui/label';
+
+import MultiStepItemDialog from '@/components/MultiStepItemDialog';
 
 interface LocalItem {
   tempId: string;
@@ -35,7 +32,7 @@ interface LocalItem {
   donorName: string;
   condition: Condition;
   photos: { before: string[]; after: string[] };
-  marketplace: { listed: boolean; demandedPrice?: number }
+  marketplace: { listed: boolean; demandedPrice?: number; description?: string }
 }
 
 interface ErrorBoundaryState {
@@ -144,17 +141,14 @@ const DonationListManager: React.FC = () => {
   const [autoFillLoading, setAutoFillLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [addingItem, setAddingItem] = useState(false);
+  const [multiStepDialogOpen, setMultiStepDialogOpen] = useState(false);
   const { user } = useUser();
   const currentRole = (user?.publicMetadata as any)?.role;
   const isScrapper = currentRole === 'scrapper';
 
-  const emptyItem = useCallback((): LocalItem => ({ tempId: crypto.randomUUID(), name: '', description: '', donorId: donor?.mongoUserId || donor?.id || '', donorName: donor?.name || '', condition: 'good', photos: { before: [], after: [] }, marketplace: { listed: false } }), [donor]);
   const [items, setItems] = useState<LocalItem[]>([]);
-  const [currentItem, setCurrentItem] = useState<LocalItem>(emptyItem());
-  const [itemNameSearch, setItemNameSearch] = useState('');
-  const [preset, setPreset] = useState('');
 
-  useEffect(() => { setCurrentItem(emptyItem()); }, [donor, emptyItem]);
+
 
   // Auto fetch donor from collection request if query param present
   useEffect(() => {
@@ -197,68 +191,21 @@ const DonationListManager: React.FC = () => {
     return () => { cancelled = true; };
   }, [collectionRequestId]);
 
-  const pushItem = async () => {
-    const selectedUser = donor?.mongoUserId || donor?.id || '';
 
-    // Validation
-    if (!selectedUser) {
-      toast.error('Please select a donor first');
-      return;
-    }
 
-    if (!currentItem.name.trim()) {
-      toast.error('Please enter an item name');
-      return;
-    }
-
-    if (currentItem.name.trim().length < 2) {
-      toast.error('Item name must be at least 2 characters long');
-      return;
-    }
-
-    setAddingItem(true);
-
+  // Handle item addition from multi-step dialog
+  const handleMultiStepItemAdd = useCallback((item: LocalItem) => {
     try {
-      // Ensure a fresh tempId for each push regardless of memoized emptyItem
-      const newItem: LocalItem = {
-        ...currentItem,
-        tempId: crypto.randomUUID(),
-        donorId: selectedUser,
-        donorName: donor?.name || '',
-        name: currentItem.name.trim(),
-        description: currentItem.description.trim()
-      };
-
-      setItems(prev => [newItem, ...prev]);
-      setCurrentItem(emptyItem());
-      setPreset('');
-      setItemNameSearch('');
-
-      toast.success(`Added "${newItem.name}" to the list`);
+      setItems(prev => [item, ...prev]);
+      setMultiStepDialogOpen(false);
+      toast.success(`Added "${item.name}" to the list`);
     } catch (error) {
-      console.error('Error adding item:', error);
+      console.error('Error adding item from multi-step dialog:', error);
       toast.error('Failed to add item. Please try again.');
-    } finally {
-      setAddingItem(false);
     }
-  };
+  }, []);
 
-  // Image management now handled by ImageUploader (uploads to Cloudinary and stores public_ids)
-  const removePhoto = (phase: 'before' | 'after', index: number) => {
-    try {
-      setCurrentItem(ci => ({
-        ...ci,
-        photos: {
-          ...ci.photos,
-          [phase]: ci.photos[phase].filter((_, i) => i !== index)
-        }
-      }));
-      // Don't show success toast for simple operations like removing photos
-    } catch (error) {
-      console.error(`Error removing ${phase} photo:`, error);
-      toast.error(`Failed to remove ${phase} photo`);
-    }
-  };
+
 
   // Navigation function using window.location
   const navigateTo = (url: string) => {
@@ -271,69 +218,7 @@ const DonationListManager: React.FC = () => {
 
 
 
-  // Enhanced file selector for adding photos
-  interface PhotoUploaderProps {
-    onAdd: (id: string) => void;
-    type: 'before' | 'after';
-  }
 
-  const PhotoUploader: React.FC<PhotoUploaderProps> = ({ onAdd, type }) => {
-    const handleFileSelect = (file: File) => {
-      console.log(`${type} photo selected:`, file.name);
-
-      // Validate file size (8MB limit)
-      if (file.size > 8 * 1024 * 1024) {
-        toast.error('File size must be less than 8MB');
-        return;
-      }
-
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      if (!allowedTypes.includes(file.type)) {
-        toast.error('Only JPEG, PNG, and WebP images are allowed');
-        return;
-      }
-    };
-
-    const handleUploadComplete = (uploadResult: UploadResult) => {
-      try {
-        onAdd(uploadResult.publicId);
-        // Only show success toast for successful uploads, not for every photo
-        toast.success(`Photo uploaded successfully`);
-      } catch (error) {
-        console.error(`Error adding ${type} photo:`, error);
-        toast.error(`Failed to add photo`);
-      }
-    };
-
-    const handleUploadError = (error: FileUploadError) => {
-      console.error(`${type} photo upload error:`, error);
-      // Only show toast for specific upload errors, not generic camera errors
-      if (error.message && !error.message.toLowerCase().includes('camera') && !error.message.toLowerCase().includes('device')) {
-        toast.error(`Upload failed: ${error.message}`);
-      }
-    };
-
-    return (
-      <div className="w-full h-full min-w-0">
-        <EnhancedFileSelector
-          onFileSelect={handleFileSelect}
-          onUploadComplete={handleUploadComplete}
-          onError={handleUploadError}
-          maxFileSize={8 * 1024 * 1024} // 8MB
-          acceptedTypes={['image/jpeg', 'image/png', 'image/webp']}
-          placeholder="+"
-          showPreview={true}
-          uploadToCloudinary={true}
-          cloudinaryOptions={{
-            folder: `kmwf/donation-items/${type}`,
-            tags: ['donation-item', type, currentItem.tempId]
-          }}
-        // className="w-full h-full min-w-0 rounded-md border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center text-muted-foreground bg-muted/20 cursor-pointer hover:bg-muted/40 hover:border-muted-foreground/50 hover:text-foreground transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 group"
-        />
-      </div>
-    );
-  };
 
   const isValidObjectId = (v: string) => /^[a-fA-F0-9]{24}$/.test(v);
   const resolveDonorMongoId = async (id: string): Promise<string | null> => {
@@ -358,11 +243,8 @@ const DonationListManager: React.FC = () => {
       alert('Could not resolve donor Mongo ID. Ensure the donor exists or reload.');
       return;
     }
-    // Patch donor ids inside working items/current state so submit uses mongo id
+    // Patch donor ids inside working items so submit uses mongo id
     setItems(prev => prev.map(p => ({ ...p, donorId: mongoId })));
-    if (currentItem.donorId && !isValidObjectId(currentItem.donorId)) {
-      setCurrentItem(ci => ({ ...ci, donorId: mongoId }));
-    }
     setConfirmOpen(true);
   };
 
@@ -392,7 +274,8 @@ const DonationListManager: React.FC = () => {
         photos: i.photos,
         marketplaceListing: {
           listed: i.marketplace.listed,
-          demandedPrice: i.marketplace.demandedPrice
+          demandedPrice: i.marketplace.demandedPrice,
+          description: i.marketplace.description
         }
       }));
 
@@ -438,14 +321,7 @@ const DonationListManager: React.FC = () => {
     }
   };
 
-  // When selecting a preset or creating new preset option
-  const handlePresetSelect = (val: string) => {
-    setPreset(val);
-    if (val) setCurrentItem(ci => ({ ...ci, name: val }));
-  };
-  const handleCreatePreset = (label: string) => {
-    handlePresetSelect(label);
-  };
+
 
   const selectedUser = donor?.mongoUserId || donor?.id || '';
   const selectedUserDetails = donor;
@@ -630,240 +506,44 @@ const DonationListManager: React.FC = () => {
       </section>
 
       <section className="space-y-6 sm:space-y-8">
-        <h2 className="font-semibold text-lg sm:text-xl">Add Item</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 min-w-0">
-          {/* Form Fields Column */}
-          <div className={`space-y-6 transition-all duration-300 min-w-0 ${selectedUser && currentItem.name.trim()
-            ? 'ring-2 ring-green-200 ring-offset-2 sm:ring-offset-4 rounded-lg p-4 sm:p-6 bg-green-50/30'
-            : 'p-4 sm:p-6'
-            }`}>
-            <div className="space-y-4">
-              <Label className="text-sm font-medium text-foreground block">
-                Item Name
-                <span className="text-destructive ml-1" aria-label="required">*</span>
-              </Label>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground">Search Presets</label>
-                  <SearchableDropDownSelect
-                    options={presetOptions}
-                    value={preset}
-                    onChange={handlePresetSelect}
-                    searchTerm={itemNameSearch}
-                    onSearchTermChange={setItemNameSearch}
-                    onCreateOption={handleCreatePreset}
-                    placeholder="Search or create item name..."
-                    width="w-full"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground">Final Item Name</label>
-                  <Input
-                    value={currentItem.name}
-                    onChange={e => setCurrentItem(ci => ({ ...ci, name: e.target.value }))}
-                    placeholder="Enter or modify item name"
-                    className={`w-full min-h-[44px] text-base transition-all duration-200 ${!currentItem.name.trim()
-                      ? 'border-input focus:border-ring focus:ring-2 focus:ring-ring focus:ring-offset-2'
-                      : 'border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 bg-green-50/30'
-                      }`}
-                    aria-invalid={!currentItem.name.trim()}
-                    required
-                  />
-                  {!currentItem.name.trim() && (
-                    <p className="text-xs text-muted-foreground">Item name is required</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <Label className="text-sm font-medium text-foreground block">Item Condition</Label>
-              <select
-                className="w-full min-h-[44px] border border-input rounded-md px-3 py-3 text-base bg-background hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors duration-200 touch-manipulation"
-                value={currentItem.condition}
-                onChange={e => setCurrentItem(ci => ({ ...ci, condition: e.target.value as Condition }))}
-                aria-label="Select item condition"
-              >
-                {CONDITIONS.map(c => (
-                  <option key={c} value={c} className="py-2">
-                    {c.charAt(0).toUpperCase() + c.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-3">
-              <Label className="text-sm font-medium text-foreground block">Marketplace Listing</Label>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3 p-3 border border-border rounded-lg bg-muted/10">
-                  <input
-                    id="list-immediately"
-                    type="checkbox"
-                    checked={currentItem.marketplace.listed}
-                    onChange={e => setCurrentItem(ci => ({ ...ci, marketplace: { ...ci.marketplace, listed: e.target.checked } }))}
-                    className="mt-0.5 rounded border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors duration-200 touch-manipulation"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <Label htmlFor='list-immediately' className="text-sm font-medium cursor-pointer text-foreground block">
-                      List for Sale Immediately
-                    </Label>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Check this to make the item available in the marketplace after processing
-                    </p>
-                  </div>
-                </div>
-                {currentItem.marketplace.listed && (
-                  <div className="space-y-2 pl-8">
-                    <Label className="text-xs font-medium text-muted-foreground">Demanded Price (Optional)</Label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">₹</span>
-                      <Input
-                        type="number"
-                        min={0}
-                        step="0.01"
-                        placeholder="0.00"
-                        value={currentItem.marketplace.demandedPrice ?? ''}
-                        onChange={e => setCurrentItem(ci => ({ ...ci, marketplace: { ...ci.marketplace, demandedPrice: e.target.value ? Number(e.target.value) : undefined } }))}
-                        className="w-full min-h-[44px] text-base pl-8 focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all duration-200"
-                        aria-label="Enter demanded price in rupees"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">Leave empty if price will be determined later</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <Label className="text-sm font-medium text-foreground block">Description (Optional)</Label>
-              <Textarea
-                value={currentItem.description}
-                onChange={e => setCurrentItem(ci => ({ ...ci, description: e.target.value }))}
-                placeholder="Add notes about condition, defects, special instructions, or other relevant details..."
-                className="w-full min-h-[100px] resize-y text-base focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all duration-200"
-                rows={4}
-                aria-label="Enter item description"
-              />
-              <p className="text-xs text-muted-foreground">
-                {currentItem.description.length}/500 characters
-              </p>
-            </div>
-          </div>
-
-          {/* Image Upload Column */}
-          <div className="space-y-6 sm:space-y-8">
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <Label className="text-sm font-medium text-foreground block">Before Images</Label>
-                <p className="text-xs text-muted-foreground">Upload photos showing the item's current condition</p>
-              </div>
-              <div className="flex flex-row flex-wrap gap-3 sm:gap-4">
-                {currentItem.photos.before.map((b, i) => (
-                  <div key={i} className="relative group aspect-square min-w-0">
-                    <ClickableImage
-                      src={b}
-                      alt="before"
-                      className="w-full h-full object-cover rounded-md border border-border"
-                      caption={`${currentItem.name || 'Item'} - Before photo`}
-                      transform={{ width: 128, height: 128, crop: 'fill' }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removePhoto('before', i)}
-                      className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full w-7 h-7 sm:w-8 sm:h-8 text-sm font-medium opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center shadow-lg hover:bg-destructive/90 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-1 focus:opacity-100 z-10 touch-manipulation"
-                      aria-label="Remove before image"
-                      title="Remove image"
-                    >
-                      <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-                <div className="aspect-square min-w-0">
-                  <PhotoUploader
-                    type="before"
-                    onAdd={(id) => setCurrentItem(ci => ({ ...ci, photos: { ...ci.photos, before: [...ci.photos.before, id] } }))}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <Label className="text-sm font-medium text-foreground block">After Images</Label>
-                <p className="text-xs text-muted-foreground">Upload photos after cleaning, repair, or processing</p>
-              </div>
-              <div className="flex flex-row flex-wrap gap-3 sm:gap-4">
-                {currentItem.photos.after.map((a, i) => (
-                  <div key={i} className="relative group aspect-square min-w-0">
-                    <ClickableImage
-                      src={a}
-                      alt="after"
-                      className="w-full h-full object-cover rounded-md border border-border"
-                      caption={`${currentItem.name || 'Item'} - After photo`}
-                      transform={{ width: 128, height: 128, crop: 'fill' }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removePhoto('after', i)}
-                      className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full w-7 h-7 sm:w-8 sm:h-8 text-sm font-medium opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center shadow-lg hover:bg-destructive/90 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-1 focus:opacity-100 z-10 touch-manipulation"
-                      aria-label="Remove after image"
-                      title="Remove image"
-                    >
-                      <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-                <div className="aspect-square min-w-0">
-                  <PhotoUploader
-                    type="after"
-                    onAdd={(id) => setCurrentItem(ci => ({ ...ci, photos: { ...ci.photos, after: [...ci.photos.after, id] } }))}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="flex justify-center pt-6 sm:pt-8">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-lg sm:text-xl">Add Items</h2>
           <Button
             type="button"
-            onClick={pushItem}
-            disabled={!selectedUser || !currentItem.name || addingItem}
+            onClick={() => setMultiStepDialogOpen(true)}
+            disabled={!selectedUser}
             size="lg"
-            className="min-w-[200px] min-h-[48px] font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation text-base px-8 py-3"
+            className="min-h-[48px] font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation text-base px-8 py-3"
           >
-            {addingItem ? (
-              <span className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                Adding Item...
-              </span>
-            ) : !selectedUser ? (
+            {!selectedUser ? (
               <span className="flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                Select a donor to add items
-              </span>
-            ) : !currentItem.name ? (
-              <span className="flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                Enter a name
+                Select a donor first
               </span>
             ) : (
               <span className="flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                Add Item to List
+                Add Item
               </span>
             )}
           </Button>
         </div>
+
+        {!selectedUser && (
+          <Card className="p-4 sm:p-6 border bg-muted/30 text-sm space-y-3">
+            <div className="flex items-center gap-3">
+              <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="font-medium">Select a donor to start adding items</p>
+            </div>
+            <p className="text-muted-foreground">Use the donor selection panel above to choose or search for a donor before adding items to the collection.</p>
+          </Card>
+        )}
       </section>
 
       <section className="space-y-6 sm:space-y-8">
@@ -1155,6 +835,16 @@ const DonationListManager: React.FC = () => {
           </div>
         )}
       </section>
+
+      {/* Multi-Step Item Dialog */}
+      <MultiStepItemDialog
+        open={multiStepDialogOpen}
+        onOpenChange={setMultiStepDialogOpen}
+        onItemAdd={handleMultiStepItemAdd}
+        donor={donor}
+        currentRole={currentRole}
+        presetItems={presetOptions}
+      />
     </div>
   );
 };
