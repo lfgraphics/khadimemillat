@@ -5,8 +5,174 @@ import { notificationService } from './notification.service'
 import DonationEntry from '@/models/DonationEntry'
 import { clerkClient } from '@clerk/nextjs/server'
 
+// Interface for admin-created request data
+interface CreateRequestForUserData {
+  userId: string // Clerk ID of the user for whom the request is being created
+  pickupTime: Date
+  address: string
+  phone: string
+  items?: string
+  notes?: string
+  createdBy: string // Admin's Clerk ID for audit trail
+}
+
+// Interface for the created request response
+interface CreatedRequest {
+  id: string
+  userId: string
+  userName: string
+  userAddress: string
+  userPhone: string
+  pickupTime: Date
+  status: 'verified'
+  items?: string
+  notes?: string
+  scrapperNotificationsSent: number
+  createdBy: string
+  createdAt: Date
+}
+
 async function getClerkClient() {
   return typeof clerkClient === 'function' ? await (clerkClient as any)() : clerkClient
+}
+
+/**
+ * Creates a verified collection request on behalf of a user (admin/moderator use)
+ * Automatically assigns all scrappers and sends notifications
+ */
+export async function createVerifiedRequestForUser(data: CreateRequestForUserData): Promise<CreatedRequest> {
+  try {
+    await connectDB()
+    
+    // Get user information from Clerk for audit and notification purposes
+    const client: any = await getClerkClient()
+    let userName = 'Unknown User'
+    
+    try {
+      const user = await client.users.getUser(data.userId)
+      userName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.emailAddresses[0]?.emailAddress || 'Unknown User'
+    } catch (userError) {
+      console.error('[createVerifiedRequestForUser] Failed to fetch user details:', userError)
+      // Continue with request creation even if user details fetch fails
+    }
+
+    // Prepare collection request data with audit trail
+    const requestData: Partial<ICollectionRequest> = {
+      donor: data.userId,
+      requestedPickupTime: data.pickupTime,
+      address: data.address,
+      phone: data.phone,
+      notes: data.items ? `Items: ${data.items}${data.notes ? `\n\nNotes: ${data.notes}` : ''}` : data.notes,
+      status: 'verified', // Admin-created requests are automatically verified
+      assignedScrappers: [], // Will be populated with all scrappers
+      // Add audit trail in notes if not already present
+      ...(data.notes?.includes('Created by admin') ? {} : {
+        notes: `${data.items ? `Items: ${data.items}` : ''}${data.notes ? `${data.items ? '\n\n' : ''}Notes: ${data.notes}` : ''}${data.items || data.notes ? '\n\n' : ''}Created by admin: ${data.createdBy}`
+      })
+    }
+
+    // Get all scrappers for assignment
+    let allScrappers: any[] = []
+    try {
+      allScrappers = await getAllScrappers()
+      requestData.assignedScrappers = allScrappers.map((s: any) => s.id)
+    } catch (scrapperError) {
+      console.error('[createVerifiedRequestForUser] Failed to fetch scrappers:', scrapperError)
+      // Continue without scrapper assignment - can be done later
+    }
+
+    // Create the collection request
+    const doc = await CollectionRequest.create(requestData)
+    const createdRequest = doc.toObject()
+
+    // Send notifications to scrappers
+    let notificationsSent = 0
+    if (allScrappers.length > 0) {
+      try {
+        const formattedPickupTime = new Intl.DateTimeFormat('en-US', {
+          weekday: 'short',
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        }).format(data.pickupTime)
+
+        await notificationService.notifyUsers(allScrappers.map((s: any) => s.id), {
+          title: 'New Verified Collection Request',
+          body: `${userName} - ${formattedPickupTime} at ${data.address}. Phone: ${data.phone}${data.items ? `. Items: ${data.items}` : ''}`,
+          url: '/scrapper/assigned',
+          type: 'collection_assigned'
+        })
+        
+        notificationsSent = allScrappers.length
+        console.log(`[createVerifiedRequestForUser] Sent notifications to ${notificationsSent} scrappers for request ${createdRequest._id}`)
+      } catch (notificationError) {
+        console.error('[createVerifiedRequestForUser] Failed to send scrapper notifications:', notificationError)
+        // Don't fail the request creation if notifications fail
+      }
+    }
+
+    // Return formatted response
+    const response: CreatedRequest = {
+      id: createdRequest._id.toString(),
+      userId: data.userId,
+      userName,
+      userAddress: data.address,
+      userPhone: data.phone,
+      pickupTime: data.pickupTime,
+      status: 'verified',
+      items: data.items,
+      notes: data.notes,
+      scrapperNotificationsSent: notificationsSent,
+      createdBy: data.createdBy,
+      createdAt: createdRequest.createdAt
+    }
+
+    console.log(`[createVerifiedRequestForUser] Successfully created verified request ${response.id} for user ${data.userId} by admin ${data.createdBy}`)
+    return response
+
+  } catch (error: any) {
+    console.error('[createVerifiedRequestForUser] Error creating verified request:', error)
+    
+    // Provide specific error messages based on error type
+    if (error instanceof Error) {
+      if (error.message.includes('validation')) {
+        throw new Error('Invalid request data provided. Please check all required fields.')
+      }
+      if (error.message.includes('duplicate')) {
+        throw new Error('A similar collection request already exists for this user and time.')
+      }
+      if (error.message.includes('connection') || error.message.includes('timeout')) {
+        throw new Error('Database connection failed. Please try again in a few moments.')
+      }
+      if (error.message.includes('network')) {
+        throw new Error('Network error occurred. Please check your connection and try again.')
+      }
+    }
+    
+    // Handle MongoDB specific errors
+    if (error.code === 11000) {
+      throw new Error('A similar collection request already exists for this user and time.')
+    }
+    
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map((err: any) => err.message).join(', ')
+      throw new Error(`Validation failed: ${validationErrors}`)
+    }
+    
+    if (error.name === 'MongoTimeoutError' || error.name === 'MongoNetworkTimeoutError') {
+      throw new Error('Database connection timed out. Please try again in a few moments.')
+    }
+    
+    if (error.name === 'MongoServerError') {
+      throw new Error('Database server error. Please try again in a few moments.')
+    }
+    
+    // Generic fallback
+    throw new Error('Service temporarily unavailable. Please try again.')
+  }
 }
 
 export async function getAllScrappers() {
@@ -121,6 +287,7 @@ export async function markAsCollected(id: string, { actualPickupTime = new Date(
 
 export const collectionRequestService = {
   createCollectionRequest,
+  createVerifiedRequestForUser,
   listCollectionRequests,
   getCollectionRequestById,
   updateCollectionRequest,

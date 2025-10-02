@@ -13,7 +13,9 @@ import {
     Heart,
     ChevronRight,
     LayoutDashboard,
+    Plus,
 } from 'lucide-react'
+import { usePathname } from 'next/navigation'
 
 import {
     Sidebar,
@@ -41,6 +43,8 @@ import NotificationBell from '@/components/NotificationBell'
 // Removed sample data; focused navigation defined inline below.
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+    const pathname = usePathname()
+    
     return (
         <Sidebar collapsible="icon" {...props}>
             <SidebarHeader>
@@ -74,6 +78,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     <Link href="/admin/verify-requests">
                                         <ClipboardCheck className="h-4 w-4" />
                                         <span>Verify Requests</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton 
+                                    asChild 
+                                    tooltip="Create Collection Request"
+                                    isActive={pathname === '/admin/create-collection-request'}
+                                >
+                                    <Link href="/admin/create-collection-request">
+                                        <Plus className="h-4 w-4" />
+                                        <span>Create Collection Request</span>
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
