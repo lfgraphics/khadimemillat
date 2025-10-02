@@ -23,7 +23,13 @@ export const SearchUsers = () => {
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         setLoading(true)
-        router.push(pathname + '?search=' + searchTerm)
+        // Reset to page 1 when searching
+        const params = new URLSearchParams()
+        if (searchTerm.trim()) {
+            params.set('search', searchTerm.trim())
+        }
+        params.set('page', '1')
+        router.push(pathname + '?' + params.toString())
     }
 
     return (
@@ -31,7 +37,7 @@ export const SearchUsers = () => {
             {loading && <Loading />}
             <form
                 onSubmit={handleSubmit}
-                className="flex flex-col md:flex-row w-full items-center justify-center md:justify-start gap-2"
+                className="flex flex-row w-full items-center justify-between md:justify-start gap-2"
             >
                 <Input
                     id="search"
@@ -40,7 +46,7 @@ export const SearchUsers = () => {
                     placeholder="Enter username or email..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full md:w-auto"
+                    className="w-auto"
                 />
                 <Button type="submit">
                     Search
