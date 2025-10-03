@@ -12,6 +12,8 @@ import { getClerkUserWithSupplementaryData } from '@/lib/services/user.service';
 import { donationEntryUpdateSchema } from "@/lib/validators/donationEntry.validator";
 import { checkRole } from "@/utils/roles";
 import { getAuth } from "@clerk/nextjs/server";
+import { calculateValidationStatus } from "@/lib/utils/validation";
+import { EnhancedScrapItem } from "@/types/dashboard";
 
 export async function GET(req: NextRequest, { params }: any) {
     try {
@@ -34,6 +36,26 @@ export async function GET(req: NextRequest, { params }: any) {
         if ((donationDoc as any).collectedBy) {
             try { pickerDetails = await getClerkUserWithSupplementaryData((donationDoc as any).collectedBy); } catch (e) { pickerDetails = { id: (donationDoc as any).collectedBy, name: 'Unknown User' }; }
         }
+        // Map items and calculate validation status
+        const enhancedItems: EnhancedScrapItem[] = itemDocs.map(it => {
+            const item: EnhancedScrapItem = {
+                id: (it as any)._id?.toString?.() || '',
+                name: it.name,
+                condition: it.condition,
+                photos: it.photos,
+                marketplaceListing: it.marketplaceListing,
+                repairingCost: (it as any).repairingCost,
+                validationStatus: { canList: true, errors: [], warnings: [] }, // Will be calculated below
+                createdAt: (it as any).createdAt || new Date().toISOString(),
+                updatedAt: (it as any).updatedAt || new Date().toISOString()
+            }
+            
+            // Calculate validation status for each item
+            item.validationStatus = calculateValidationStatus(item)
+            
+            return item
+        })
+
         return NextResponse.json({
             donation: {
                 id: (donationDoc as any)._id.toString(),
@@ -41,14 +63,7 @@ export async function GET(req: NextRequest, { params }: any) {
                 collectedBy: pickerDetails ? { id: pickerDetails.id, name: pickerDetails.name, email: pickerDetails.email } : null,
                 createdAt: (donationDoc as any).createdAt,
                 status: (donationDoc as any).status,
-                items: itemDocs.map(it => ({
-                    id: (it as any)._id?.toString?.() || '',
-                    name: it.name,
-                    condition: it.condition,
-                    photos: it.photos,
-                    marketplaceListing: it.marketplaceListing,
-                    repairingCost: (it as any).repairingCost,
-                }))
+                items: enhancedItems
             }
         });
     } catch (err: any) {

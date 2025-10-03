@@ -25,6 +25,7 @@ import { Switch } from '@/components/ui/switch'
 import EnhancedFileSelector from '@/components/file-selector'
 import { UploadResult } from '@/components/file-selector/types'
 import { toast } from 'sonner'
+import { calculateValidationStatus, canListItem, formatValidationErrors } from '@/lib/utils/validation'
 
 // Types and interfaces
 interface LocalItem {
@@ -63,9 +64,12 @@ interface MultiStepItemDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     onItemAdd: (item: LocalItem) => void
+    onItemUpdate?: (item: LocalItem) => void
     donor: Donor | null
     currentRole: UserRole
     presetItems: ComboboxOption[]
+    editingItem?: LocalItem | null
+    mode?: 'add' | 'edit'
 }
 
 interface MultiStepState {
@@ -300,12 +304,14 @@ interface MarketplaceListingStepProps {
     formData: MultiStepState['formData']['marketplace']
     onUpdate: (data: Partial<MultiStepState['formData']['marketplace']>) => void
     validation: { isValid: boolean; errors: string[] }
+    itemCondition?: Condition
 }
 
 const MarketplaceListingStep: React.FC<MarketplaceListingStepProps> = ({
     formData,
     onUpdate,
-    validation
+    validation,
+    itemCondition = 'good'
 }) => {
     // Handle listing toggle change
     const handleListingToggle = useCallback((checked: boolean) => {
@@ -343,6 +349,26 @@ const MarketplaceListingStep: React.FC<MarketplaceListingStepProps> = ({
                 </div>
             </div>
 
+            {/* Condition-based validation guidance */}
+            {(itemCondition === 'scrap' || itemCondition === 'not applicable') && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-5 h-5 rounded-full bg-yellow-100 flex items-center justify-center mt-0.5">
+                            <div className="w-2 h-2 bg-yellow-600 rounded-full" />
+                        </div>
+                        <div className="flex-1">
+                            <h4 className="text-sm font-medium text-yellow-900 mb-1">
+                                Listing Restriction
+                            </h4>
+                            <p className="text-sm text-yellow-800">
+                                Items with condition "{itemCondition}" cannot be listed on the marketplace. 
+                                You can still add this item to the collection for record keeping.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Listing Toggle */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -358,6 +384,7 @@ const MarketplaceListingStep: React.FC<MarketplaceListingStepProps> = ({
                         id="marketplace-listing"
                         checked={formData.listed}
                         onCheckedChange={handleListingToggle}
+                        disabled={itemCondition === 'scrap' || itemCondition === 'not applicable'}
                     />
                 </div>
             </div>
@@ -1020,6 +1047,7 @@ interface NavigationControlsProps {
     isLoading: boolean
     isPreviewStep: boolean
     validationErrors?: string[]
+    mode?: 'add' | 'edit'
 }
 
 const NavigationControls: React.FC<NavigationControlsProps> = ({
@@ -1033,12 +1061,13 @@ const NavigationControls: React.FC<NavigationControlsProps> = ({
     onAdd,
     isLoading,
     isPreviewStep,
-    validationErrors = []
+    validationErrors = [],
+    mode = 'add'
 }) => {
     // Determine button text and state based on current step and validation
     const getNextButtonText = () => {
         if (isLoading) return 'Processing...'
-        if (isPreviewStep) return 'Add Item'
+        if (isPreviewStep) return mode === 'edit' ? 'Update Item' : 'Add Item'
         if (currentStep === totalSteps - 2) return 'Review'
         return 'Next'
     }
@@ -1144,9 +1173,12 @@ export const MultiStepItemDialog: React.FC<MultiStepItemDialogProps> = ({
     open,
     onOpenChange,
     onItemAdd,
+    onItemUpdate,
     donor,
     currentRole,
-    presetItems
+    presetItems,
+    editingItem = null,
+    mode = 'add'
 }) => {
     // Filter steps based on user role
     const availableSteps = useMemo(() => {
@@ -1156,22 +1188,43 @@ export const MultiStepItemDialog: React.FC<MultiStepItemDialogProps> = ({
     }, [currentRole])
 
     // Initialize form data
-    const initializeFormData = useCallback(() => ({
-        item: {
-            name: '',
-            condition: 'good' as Condition,
-            description: ''
-        },
-        photos: {
-            before: [],
-            after: []
-        },
-        marketplace: {
-            listed: false,
-            demandedPrice: undefined,
-            description: ''
+    const initializeFormData = useCallback(() => {
+        if (mode === 'edit' && editingItem) {
+            return {
+                item: {
+                    name: editingItem.name || '',
+                    condition: editingItem.condition || 'good' as Condition,
+                    description: editingItem.description || ''
+                },
+                photos: {
+                    before: editingItem.photos?.before || [],
+                    after: editingItem.photos?.after || []
+                },
+                marketplace: {
+                    listed: editingItem.marketplace?.listed || false,
+                    demandedPrice: editingItem.marketplace?.demandedPrice,
+                    description: editingItem.marketplace?.description || ''
+                }
+            }
         }
-    }), [])
+        
+        return {
+            item: {
+                name: '',
+                condition: 'good' as Condition,
+                description: ''
+            },
+            photos: {
+                before: [],
+                after: []
+            },
+            marketplace: {
+                listed: false,
+                demandedPrice: undefined,
+                description: ''
+            }
+        }
+    }, [mode, editingItem])
 
     // Initialize validation state
     const initializeValidation = useCallback(() => {
@@ -1276,6 +1329,11 @@ export const MultiStepItemDialog: React.FC<MultiStepItemDialogProps> = ({
             case 'marketplace-listing':
                 const marketplaceErrors: string[] = []
 
+                // Check if item condition allows listing
+                if (formData.marketplace.listed && (formData.item.condition === 'scrap' || formData.item.condition === 'not applicable')) {
+                    marketplaceErrors.push(`Items with condition "${formData.item.condition}" cannot be listed on marketplace`)
+                }
+
                 if (formData.marketplace.listed) {
                     // Price validation when listing is enabled
                     if (!formData.marketplace.demandedPrice) {
@@ -1294,6 +1352,28 @@ export const MultiStepItemDialog: React.FC<MultiStepItemDialogProps> = ({
                     } else if (formData.marketplace.description.length > 1000) {
                         marketplaceErrors.push('Marketplace description must be less than 1000 characters')
                     }
+
+                    // Additional validation using the validation utilities
+                    const mockItem = {
+                        id: 'temp',
+                        name: formData.item.name,
+                        description: formData.item.description,
+                        condition: formData.item.condition,
+                        photos: formData.photos,
+                        marketplaceListing: {
+                            listed: formData.marketplace.listed,
+                            demandedPrice: formData.marketplace.demandedPrice,
+                            description: formData.marketplace.description,
+                            sold: false,
+                            salePrice: undefined
+                        },
+                        validationStatus: { canList: true, errors: [], warnings: [] },
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    }
+
+                    const validationResult = calculateValidationStatus(mockItem)
+                    marketplaceErrors.push(...validationResult.errors)
                 }
 
                 return { isValid: marketplaceErrors.length === 0, errors: marketplaceErrors }
@@ -1519,7 +1599,7 @@ export const MultiStepItemDialog: React.FC<MultiStepItemDialogProps> = ({
         onOpenChange(false)
     }, [availableSteps.length, initializeFormData, initializeValidation, onOpenChange])
 
-    const handleAdd = useCallback(async () => {
+    const handleSubmit = useCallback(async () => {
         if (!donor) {
             toast.error('No donor selected')
             return
@@ -1527,8 +1607,9 @@ export const MultiStepItemDialog: React.FC<MultiStepItemDialogProps> = ({
 
         setIsLoading(true)
         try {
-            const newItem: LocalItem = {
-                tempId: crypto.randomUUID(),
+            const itemData: LocalItem = {
+                tempId: mode === 'edit' && editingItem ? editingItem.tempId : crypto.randomUUID(),
+                serverId: mode === 'edit' && editingItem ? editingItem.serverId : undefined,
                 name: state.formData.item.name.trim(),
                 description: state.formData.item.description.trim(),
                 donorId: donor.mongoUserId || donor.id,
@@ -1542,16 +1623,22 @@ export const MultiStepItemDialog: React.FC<MultiStepItemDialogProps> = ({
                 }
             }
 
-            onItemAdd(newItem)
-            toast.success(`Added "${newItem.name}" to the collection`)
+            if (mode === 'edit' && onItemUpdate) {
+                onItemUpdate(itemData)
+                toast.success(`Updated "${itemData.name}"`)
+            } else {
+                onItemAdd(itemData)
+                toast.success(`Added "${itemData.name}" to the collection`)
+            }
+            
             onOpenChange(false)
         } catch (error) {
-            console.error('Error adding item:', error)
-            toast.error('Failed to add item. Please try again.')
+            console.error(`Error ${mode === 'edit' ? 'updating' : 'adding'} item:`, error)
+            toast.error(`Failed to ${mode === 'edit' ? 'update' : 'add'} item. Please try again.`)
         } finally {
             setIsLoading(false)
         }
-    }, [donor, state.formData, onItemAdd, onOpenChange])
+    }, [donor, state.formData, onItemAdd, onItemUpdate, onOpenChange, mode, editingItem])
 
 
 
@@ -1565,10 +1652,13 @@ export const MultiStepItemDialog: React.FC<MultiStepItemDialogProps> = ({
             <AlertDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <AlertDialogHeader className="space-y-4">
                     <AlertDialogTitle className="text-xl font-semibold">
-                        Add New Item
+                        {mode === 'edit' ? 'Edit Item' : 'Add New Item'}
                     </AlertDialogTitle>
                     <AlertDialogDescription className="text-sm text-muted-foreground">
-                        Follow the steps below to add a new item to the donation collection.
+                        {mode === 'edit' 
+                            ? 'Update the item details below and save your changes.'
+                            : 'Follow the steps below to add a new item to the donation collection.'
+                        }
                     </AlertDialogDescription>
 
                     {/* Step Indicator */}
@@ -1588,7 +1678,10 @@ export const MultiStepItemDialog: React.FC<MultiStepItemDialogProps> = ({
                             <div className="text-center space-y-2">
                                 <h3 className="text-lg font-medium">{currentStepConfig.title}</h3>
                                 <p className="text-sm text-muted-foreground">
-                                    {currentStepConfig.description}
+                                    {currentStepConfig.id === 'preview' && mode === 'edit' 
+                                        ? 'Review all details before updating the item'
+                                        : currentStepConfig.description
+                                    }
                                 </p>
                             </div>
 
@@ -1619,7 +1712,7 @@ export const MultiStepItemDialog: React.FC<MultiStepItemDialogProps> = ({
                                         formData={state.formData.marketplace}
                                         onUpdate={(updates) => updateFormData({ marketplace: { ...state.formData.marketplace, ...updates } })}
                                         validation={state.validation[state.currentStep] || { isValid: false, errors: [] }}
-
+                                        itemCondition={state.formData.item.condition}
                                     />
                                 )}
 
@@ -1627,7 +1720,7 @@ export const MultiStepItemDialog: React.FC<MultiStepItemDialogProps> = ({
                                     <PreviewStep
                                         formData={state.formData}
                                         donor={donor}
-                                        onConfirm={handleAdd}
+                                        onConfirm={handleSubmit}
                                     />
                                 )}
 
@@ -1686,10 +1779,11 @@ export const MultiStepItemDialog: React.FC<MultiStepItemDialogProps> = ({
                         onNext={handleNext}
                         onPrevious={handlePrevious}
                         onCancel={handleCancel}
-                        onAdd={handleAdd}
+                        onAdd={handleSubmit}
                         isLoading={isLoading}
                         isPreviewStep={isPreviewStep}
                         validationErrors={state.validation[state.currentStep]?.errors || []}
+                        mode={mode}
                     />
                 </AlertDialogFooter>
             </AlertDialogContent>

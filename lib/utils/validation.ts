@@ -1,275 +1,193 @@
-/**
- * Validation utilities for collection request creation
- */
+// Validation utility functions for marketplace listing
 
-export interface ValidationResult {
-  isValid: boolean;
-  error?: string;
-}
+import { EnhancedScrapItem, ValidationStatus, ItemCondition } from '@/types/dashboard'
 
-/**
- * Sanitize and validate address input
- */
-export function validateAddress(address: string): ValidationResult {
-  if (!address || typeof address !== 'string') {
-    return { isValid: false, error: 'Address is required' };
-  }
-
-  const sanitized = address.trim();
+// Calculate validation status for an item
+export function calculateValidationStatus(item: EnhancedScrapItem): ValidationStatus {
+  const errors: string[] = []
+  const warnings: string[] = []
   
-  if (sanitized.length === 0) {
-    return { isValid: false, error: 'Address is required' };
+  // Required fields for marketplace listing
+  if (!item.marketplaceListing.demandedPrice || item.marketplaceListing.demandedPrice <= 0) {
+    errors.push('Price is required for marketplace listing')
   }
-
-  if (sanitized.length < 10) {
-    return { isValid: false, error: 'Address must be at least 10 characters' };
-  }
-
-  if (sanitized.length > 500) {
-    return { isValid: false, error: 'Address must be less than 500 characters' };
-  }
-
-  // Check for potentially malicious content
-  const suspiciousPatterns = [
-    /<script/i,
-    /javascript:/i,
-    /on\w+\s*=/i,
-    /<iframe/i,
-    /<object/i,
-    /<embed/i
-  ];
-
-  if (suspiciousPatterns.some(pattern => pattern.test(sanitized))) {
-    return { isValid: false, error: 'Address contains invalid characters' };
-  }
-
-  return { isValid: true };
-}
-
-/**
- * Sanitize and validate phone number input
- */
-export function validatePhone(phone: string): ValidationResult {
-  if (!phone || typeof phone !== 'string') {
-    return { isValid: false, error: 'Phone number is required' };
-  }
-
-  const sanitized = phone.trim();
   
-  if (sanitized.length === 0) {
-    return { isValid: false, error: 'Phone number is required' };
+  // Photo validation
+  if (item.photos.before.length === 0) {
+    warnings.push('Before photos are recommended for better listings')
   }
-
-  // Extract digits only
-  const digits = sanitized.replace(/[^0-9]/g, '');
   
-  if (digits.length < 10) {
-    return { isValid: false, error: 'Phone number must contain at least 10 digits' };
+  if (item.photos.after.length === 0 && item.condition === 'repairable') {
+    warnings.push('After photos are recommended for repaired items')
   }
-
-  if (digits.length > 15) {
-    return { isValid: false, error: 'Phone number must contain less than 15 digits' };
-  }
-
-  // Check for valid phone number pattern (basic validation)
-  const phonePattern = /^[\+]?[1-9][\d]{0,15}$/;
-  if (!phonePattern.test(digits)) {
-    return { isValid: false, error: 'Invalid phone number format' };
-  }
-
-  return { isValid: true };
-}
-
-/**
- * Validate pickup time
- */
-export function validatePickupTime(pickupTime: string | Date): ValidationResult {
-  if (!pickupTime) {
-    return { isValid: false, error: 'Pickup time is required' };
-  }
-
-  let date: Date;
   
-  if (typeof pickupTime === 'string') {
-    date = new Date(pickupTime);
-  } else {
-    date = pickupTime;
+  // Description validation
+  if (!item.marketplaceListing.description && item.marketplaceListing.listed) {
+    warnings.push('Marketplace description is recommended for better sales')
   }
-
-  if (isNaN(date.getTime())) {
-    return { isValid: false, error: 'Invalid pickup time format' };
-  }
-
-  const now = new Date();
-  const minTime = new Date(now.getTime() + 60 * 60 * 1000); // At least 1 hour from now
-  const maxTime = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000); // Max 1 year from now
-
-  if (date <= now) {
-    return { isValid: false, error: 'Pickup time must be in the future' };
-  }
-
-  if (date < minTime) {
-    return { isValid: false, error: 'Pickup time must be at least 1 hour from now' };
-  }
-
-  if (date > maxTime) {
-    return { isValid: false, error: 'Pickup time cannot be more than 1 year from now' };
-  }
-
-  return { isValid: true };
-}
-
-/**
- * Sanitize and validate text input (items, notes)
- */
-export function validateTextInput(text: string, fieldName: string, minLength = 0, maxLength = 1000): ValidationResult {
-  if (!text || typeof text !== 'string') {
-    if (minLength > 0) {
-      return { isValid: false, error: `${fieldName} is required` };
-    }
-    return { isValid: true };
-  }
-
-  const sanitized = text.trim();
   
-  if (minLength > 0 && sanitized.length === 0) {
-    return { isValid: false, error: `${fieldName} is required` };
+  // Condition validation
+  if (item.condition === 'scrap' && item.marketplaceListing.listed) {
+    errors.push('Scrap items cannot be listed on marketplace')
   }
-
-  if (minLength > 0 && sanitized.length < minLength) {
-    return { isValid: false, error: `${fieldName} must be at least ${minLength} characters` };
+  
+  // Name validation
+  if (!item.name || item.name.trim().length < 3) {
+    errors.push('Item name must be at least 3 characters long')
   }
-
-  if (sanitized.length > maxLength) {
-    return { isValid: false, error: `${fieldName} must be less than ${maxLength} characters` };
+  
+  // Price validation for sold items
+  if (item.marketplaceListing.sold && !item.marketplaceListing.salePrice) {
+    errors.push('Sale price is required for sold items')
   }
-
-  // Check for potentially malicious content
-  const suspiciousPatterns = [
-    /<script/i,
-    /javascript:/i,
-    /on\w+\s*=/i,
-    /<iframe/i,
-    /<object/i,
-    /<embed/i
-  ];
-
-  if (suspiciousPatterns.some(pattern => pattern.test(sanitized))) {
-    return { isValid: false, error: `${fieldName} contains invalid characters` };
+  
+  // Logical validation
+  if (item.marketplaceListing.sold && !item.marketplaceListing.listed) {
+    warnings.push('Item is marked as sold but was never listed')
   }
-
-  return { isValid: true };
-}
-
-/**
- * Validate user selection
- */
-export function validateSelectedUser(user: any): ValidationResult {
-  if (!user) {
-    return { isValid: false, error: 'Please select a user' };
-  }
-
-  if (!user.id || typeof user.id !== 'string' || user.id.trim().length === 0) {
-    return { isValid: false, error: 'Selected user has invalid ID' };
-  }
-
-  if (!user.name || typeof user.name !== 'string' || user.name.trim().length === 0) {
-    return { isValid: false, error: 'Selected user is missing name information' };
-  }
-
-  if (!user.email || typeof user.email !== 'string' || user.email.trim().length === 0) {
-    return { isValid: false, error: 'Selected user is missing email information' };
-  }
-
-  // Basic email validation
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailPattern.test(user.email.trim())) {
-    return { isValid: false, error: 'Selected user has invalid email format' };
-  }
-
-  return { isValid: true };
-}
-
-/**
- * Sanitize string input to prevent XSS
- */
-export function sanitizeString(input: string): string {
-  if (!input || typeof input !== 'string') {
-    return '';
-  }
-
-  return input
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;');
-}
-
-/**
- * Comprehensive form validation for collection request
- */
-export interface CollectionRequestFormData {
-  address: string;
-  phone: string;
-  pickupTime: string;
-  items?: string;
-  notes?: string;
-}
-
-export interface FormValidationResult {
-  isValid: boolean;
-  errors: Record<string, string>;
-}
-
-export function validateCollectionRequestForm(
-  data: CollectionRequestFormData,
-  selectedUser: any
-): FormValidationResult {
-  const errors: Record<string, string> = {};
-
-  // Validate selected user
-  const userValidation = validateSelectedUser(selectedUser);
-  if (!userValidation.isValid) {
-    errors.user = userValidation.error!;
-  }
-
-  // Validate address
-  const addressValidation = validateAddress(data.address);
-  if (!addressValidation.isValid) {
-    errors.address = addressValidation.error!;
-  }
-
-  // Validate phone
-  const phoneValidation = validatePhone(data.phone);
-  if (!phoneValidation.isValid) {
-    errors.phone = phoneValidation.error!;
-  }
-
-  // Validate pickup time
-  const pickupTimeValidation = validatePickupTime(data.pickupTime);
-  if (!pickupTimeValidation.isValid) {
-    errors.pickupTime = pickupTimeValidation.error!;
-  }
-
-  // Validate items (optional)
-  if (data.items) {
-    const itemsValidation = validateTextInput(data.items, 'Items description', 5, 500);
-    if (!itemsValidation.isValid) {
-      errors.items = itemsValidation.error!;
-    }
-  }
-
-  // Validate notes (optional)
-  if (data.notes) {
-    const notesValidation = validateTextInput(data.notes, 'Notes', 5, 1000);
-    if (!notesValidation.isValid) {
-      errors.notes = notesValidation.error!;
-    }
-  }
-
+  
   return {
-    isValid: Object.keys(errors).length === 0,
-    errors
-  };
+    canList: errors.length === 0,
+    errors,
+    warnings
+  }
+}
+
+// Validate multiple items
+export function validateItems(items: EnhancedScrapItem[]): Record<string, ValidationStatus> {
+  const validationResults: Record<string, ValidationStatus> = {}
+  
+  items.forEach(item => {
+    validationResults[item.id] = calculateValidationStatus(item)
+  })
+  
+  return validationResults
+}
+
+// Check if item can be listed on marketplace
+export function canListItem(item: EnhancedScrapItem): boolean {
+  const validation = calculateValidationStatus(item)
+  return validation.canList
+}
+
+// Get validation summary for a collection of items
+export function getValidationSummary(items: EnhancedScrapItem[]) {
+  const validItems = items.filter(item => canListItem(item))
+  const invalidItems = items.filter(item => !canListItem(item))
+  const itemsWithoutPrice = items.filter(item => 
+    !item.marketplaceListing.demandedPrice || item.marketplaceListing.demandedPrice <= 0
+  )
+  
+  return {
+    total: items.length,
+    valid: validItems.length,
+    invalid: invalidItems.length,
+    withoutPrice: itemsWithoutPrice.length,
+    validPercentage: items.length > 0 ? Math.round((validItems.length / items.length) * 100) : 0
+  }
+}
+
+// Validation rules for different item conditions
+export const CONDITION_RULES: Record<ItemCondition, {
+  canList: boolean
+  requiredFields: string[]
+  recommendedFields: string[]
+}> = {
+  'new': {
+    canList: true,
+    requiredFields: ['name', 'demandedPrice'],
+    recommendedFields: ['description', 'beforePhotos']
+  },
+  'good': {
+    canList: true,
+    requiredFields: ['name', 'demandedPrice'],
+    recommendedFields: ['description', 'beforePhotos']
+  },
+  'repairable': {
+    canList: true,
+    requiredFields: ['name', 'demandedPrice'],
+    recommendedFields: ['description', 'beforePhotos', 'afterPhotos', 'repairingCost']
+  },
+  'scrap': {
+    canList: false,
+    requiredFields: [],
+    recommendedFields: []
+  },
+  'not applicable': {
+    canList: false,
+    requiredFields: [],
+    recommendedFields: []
+  }
+}
+
+// Get validation rules for a specific condition
+export function getConditionRules(condition: ItemCondition) {
+  return CONDITION_RULES[condition]
+}
+
+// Validate item based on its condition
+export function validateItemByCondition(item: EnhancedScrapItem): ValidationStatus {
+  const rules = getConditionRules(item.condition)
+  const errors: string[] = []
+  const warnings: string[] = []
+  
+  if (!rules.canList) {
+    errors.push(`Items with condition "${item.condition}" cannot be listed on marketplace`)
+    return { canList: false, errors, warnings }
+  }
+  
+  // Check required fields
+  if (rules.requiredFields.includes('name') && (!item.name || item.name.trim().length < 3)) {
+    errors.push('Item name is required and must be at least 3 characters')
+  }
+  
+  if (rules.requiredFields.includes('demandedPrice') && 
+      (!item.marketplaceListing.demandedPrice || item.marketplaceListing.demandedPrice <= 0)) {
+    errors.push('Price is required for marketplace listing')
+  }
+  
+  // Check recommended fields
+  if (rules.recommendedFields.includes('description') && !item.marketplaceListing.description) {
+    warnings.push('Description is recommended for better listings')
+  }
+  
+  if (rules.recommendedFields.includes('beforePhotos') && item.photos.before.length === 0) {
+    warnings.push('Before photos are recommended')
+  }
+  
+  if (rules.recommendedFields.includes('afterPhotos') && item.photos.after.length === 0) {
+    warnings.push('After photos are recommended for repaired items')
+  }
+  
+  if (rules.recommendedFields.includes('repairingCost') && !item.repairingCost) {
+    warnings.push('Repairing cost helps track profitability')
+  }
+  
+  return {
+    canList: errors.length === 0,
+    errors,
+    warnings
+  }
+}
+
+// Format validation errors for display
+export function formatValidationErrors(validation: ValidationStatus): string {
+  if (validation.errors.length === 0) return ''
+  
+  if (validation.errors.length === 1) {
+    return validation.errors[0]
+  }
+  
+  return `${validation.errors.length} issues: ${validation.errors.join(', ')}`
+}
+
+// Format validation warnings for display
+export function formatValidationWarnings(validation: ValidationStatus): string {
+  if (validation.warnings.length === 0) return ''
+  
+  if (validation.warnings.length === 1) {
+    return validation.warnings[0]
+  }
+  
+  return `${validation.warnings.length} suggestions: ${validation.warnings.join(', ')}`
 }

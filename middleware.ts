@@ -106,7 +106,7 @@ export default clerkMiddleware(async (auth, req) => {
     }
 },
     {
-        authorizedParties: ['http://localhost:3000', 'https://localhost:3000', 'https://khadimemillat.org', 'https://www.khadimemillat.org']
+        authorizedParties: ['http://localhost:3000', 'http://192.168.19.223:3000', 'https://localhost:3000', 'https://khadimemillat.org', 'https://www.khadimemillat.org']
     }
 )
 
