@@ -1,5 +1,4 @@
-import { HandHeart, Facebook, Twitter, Instagram, Phone, Mail, Globe } from "lucide-react";
-import foundationLogo from "@assets/image_1756755536285.png";
+import { Facebook, Twitter, Instagram, Phone, Mail, Globe, MapPin } from "lucide-react";
 import Link from "next/link";
 
 export function Footer() {
@@ -26,7 +25,7 @@ export function Footer() {
                             Established in 2021 in Gorakhpur, Uttar Pradesh, transforming communities through sustainable scrap collection and welfare programs.
                             Every donation creates opportunities for those in need.
                         </p>
-                        <div className="flex space-x-4" data-testid="footer-social-links">
+                        <div className="space-x-4 hidden" data-testid="footer-social-links">
                             <Link href="#" className="text-muted-foreground hover:text-primary transition-colors" data-testid="social-facebook">
                                 <Facebook className="h-5 w-5" />
                             </Link>
@@ -58,11 +57,11 @@ export function Footer() {
                                     Donate
                                 </Link>
                             </li>
-                            <li>
+                            {/* <li>
                                 <Link href="/about" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-link-about">
                                     About Us
                                 </Link>
-                            </li>
+                            </li> */}
                         </ul>
                     </div>
 
@@ -88,8 +87,11 @@ export function Footer() {
                                     khadimemillat.org
                                 </Link>
                             </li>
-                            <li className="text-sm mt-2" data-testid="contact-address">
-                                Gorakhpur, Uttar Pradesh, India
+                            <li className="flex items-center text-sm" data-testid="contact-email">
+                                <MapPin className="h-4 w-4 mr-2" />
+                                <span>
+                                    Gorakhpur, Uttar Pradesh, India
+                                </span>
                             </li>
                         </ul>
                     </div>
@@ -97,7 +99,7 @@ export function Footer() {
 
                 <div className="border-t border-border pt-8 mt-8 text-center" data-testid="footer-copyright">
                     <p className="text-muted-foreground">
-                        © 2025 Khadim-e-Millat Welfare Foundation. All rights reserved.
+                        © 2025 Khadim-e-Millat Welfare Foundation. All rights reserved. <br /> Under Development by <Link href="https://www.codvista.com" target="_blank" className="text-purple-600 underline">Cod Vista</Link>
                     </p>
                 </div>
             </div>

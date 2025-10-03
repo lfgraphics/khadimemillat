@@ -125,7 +125,7 @@ export default function DashboardStatsComponent({ stats, loading }: DashboardSta
             <Card 
               className="group hover-lift hover-glow transition-all duration-300 cursor-default border-0 shadow-sm hover:shadow-lg focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
               role="article"
-              aria-label={generateAriaLabel.statistic(item.label, formattedValue, item.description)}
+              aria-label={generateAriaLabel(item.label, 'dashboard statistics', formattedValue, item.description)}
               tabIndex={0}
             >
               <CardContent className="p-3 sm:p-4">

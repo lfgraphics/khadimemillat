@@ -138,9 +138,9 @@ export default function EnhancedItemCard({
         group cursor-pointer focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2
       `}
       role="article"
-      aria-label={generateAriaLabel.viewItem(item.name)}
+      aria-label={generateAriaLabel(item.name, 'item card', 'clickable', 'Click to view details')}
       tabIndex={0}
-      onKeyDown={(e) => keyboardNavigation.handleActivation(e, () => onEdit(item))}
+      onKeyDown={(e) => keyboardNavigation.handleKeyDown(e, () => onEdit(item))}
     >
       <CardContent className={`p-4 ${compact ? 'space-y-2' : 'space-y-3'}`}>
         {/* Item header with optional selection */}
@@ -178,7 +178,7 @@ export default function EnhancedItemCard({
             onClick={() => onEdit(item)}
             disabled={loading}
             className="ml-2 flex-shrink-0 button-press hover-lift transition-all duration-200 opacity-0 group-hover:opacity-100 focus:opacity-100"
-            aria-label={generateAriaLabel.editItem(item.name)}
+            aria-label={generateAriaLabel('Edit', item.name, 'button', 'Click to edit item')}
             aria-describedby={`${item.id}-title`}
           >
             <Edit className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
@@ -190,7 +190,7 @@ export default function EnhancedItemCard({
         <div className="flex items-center gap-2 flex-wrap" role="group" aria-label="Item status indicators">
           <Badge 
             className={`${statusColor} text-xs`}
-            aria-label={generateAriaLabel.status(statusText, item.name)}
+            aria-label={generateAriaLabel(statusText, item.name, 'status badge')}
           >
             {statusText}
           </Badge>
@@ -210,7 +210,7 @@ export default function EnhancedItemCard({
               role="button"
               tabIndex={0}
               aria-label={`View ${allPhotos.length} photos for ${item.name}`}
-              onKeyDown={(e) => keyboardNavigation.handleActivation(e, () => openModal(allPhotos))}
+              onKeyDown={(e) => keyboardNavigation.handleKeyDown(e, () => openModal(allPhotos))}
             >
               <ImageIcon className="h-3 w-3 mr-1 transition-transform duration-200 hover:scale-110" aria-hidden="true" />
               {allPhotos.length}
@@ -278,7 +278,7 @@ export default function EnhancedItemCard({
                   role="button"
                   tabIndex={0}
                   aria-label={`View photo ${index + 1} of ${allPhotos.length} for ${item.name}`}
-                  onKeyDown={(e) => keyboardNavigation.handleActivation(e, () => openModal(allPhotos))}
+                  onKeyDown={(e) => keyboardNavigation.handleKeyDown(e, () => openModal(allPhotos))}
                 >
                   <img
                     src={photo}
@@ -349,7 +349,7 @@ export default function EnhancedItemCard({
                     ${isActionPending ? 'animate-pulse' : 'hover-lift'}
                     ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
                   `}
-                  aria-label={generateAriaLabel.button(action.label, item.name)}
+                  aria-label={generateAriaLabel(action.label, item.name, 'button', `Click to ${action.label.toLowerCase()}`)}
                   aria-describedby={hasValidationErrors ? `${item.id}-validation-errors` : undefined}
                 >
                   <Icon 

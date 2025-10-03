@@ -112,7 +112,7 @@ export default function MobileItemCard({
         ${loading ? 'animate-pulse opacity-70' : ''}
       `}
       role="article"
-      aria-label={generateAriaLabel.viewItem(item.name)}
+      aria-label={generateAriaLabel(item.name, 'item card', 'clickable', 'Click to view details')}
     >
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
         <CollapsibleTrigger asChild>
@@ -231,7 +231,7 @@ export default function MobileItemCard({
                         role="button"
                         tabIndex={0}
                         aria-label={`View photo ${index + 1} of ${allPhotos.length} for ${item.name}`}
-                        onKeyDown={(e) => keyboardNavigation.handleActivation(e, () => openModal(allPhotos))}
+                        onKeyDown={(e) => keyboardNavigation.handleKeyDown(e, () => openModal(allPhotos))}
                       >
                         <img
                           src={photo}
@@ -295,7 +295,7 @@ export default function MobileItemCard({
                     onClick={() => onEdit(item)}
                     disabled={loading}
                     className="text-xs"
-                    aria-label={generateAriaLabel.editItem(item.name)}
+                    aria-label={generateAriaLabel('Edit', item.name, 'button', 'Click to edit item')}
                   >
                     <Edit className="h-3 w-3 mr-1" />
                     Edit
@@ -320,7 +320,7 @@ export default function MobileItemCard({
                           onClick={() => onQuickAction(item.id, action.action)}
                           disabled={isDisabled}
                           className="text-xs"
-                          aria-label={generateAriaLabel.button(action.label, item.name)}
+                          aria-label={generateAriaLabel(action.label, item.name, 'button', `Click to ${action.label.toLowerCase()}`)}
                         >
                           <Icon 
                             className={`h-3 w-3 mr-1 ${isActionPending ? 'animate-spin' : ''}`} 

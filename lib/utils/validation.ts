@@ -1,6 +1,37 @@
-// Validation utility functions for marketplace listing
+// Validation utility functions for marketplace listing and forms
 
 import { EnhancedScrapItem, ValidationStatus, ItemCondition } from '@/types/dashboard'
+
+// Types for collection request validation
+interface CollectionRequestFormData {
+  address: string;
+  phone: string;
+  pickupTime: string;
+  items?: string;
+  notes?: string;
+}
+
+interface SelectedUser {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  username?: string;
+}
+
+interface ValidationErrors {
+  address?: string;
+  phone?: string;
+  pickupTime?: string;
+  items?: string;
+  notes?: string;
+}
+
+interface ValidationResult {
+  isValid: boolean;
+  errors: ValidationErrors;
+}
 
 // Calculate validation status for an item
 export function calculateValidationStatus(item: EnhancedScrapItem): ValidationStatus {
@@ -190,4 +221,156 @@ export function formatValidationWarnings(validation: ValidationStatus): string {
   }
   
   return `${validation.warnings.length} suggestions: ${validation.warnings.join(', ')}`
+}
+
+// Sanitize string to prevent XSS attacks
+export function sanitizeString(input: string): string {
+  if (!input) return input;
+  
+  return input
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;')
+    .trim();
+}
+
+// Validate phone number format
+function validatePhone(phone: string): string | undefined {
+  if (!phone || !phone.trim()) {
+    return 'Phone number is required';
+  }
+  
+  const cleanPhone = phone.replace(/\D/g, '');
+  
+  if (cleanPhone.length < 10) {
+    return 'Phone number must be at least 10 digits';
+  }
+  
+  if (cleanPhone.length > 15) {
+    return 'Phone number cannot exceed 15 digits';
+  }
+  
+  // Basic format validation for Indian phone numbers
+  if (cleanPhone.length === 10 && !cleanPhone.match(/^[6-9]\d{9}$/)) {
+    return 'Invalid phone number format';
+  }
+  
+  return undefined;
+}
+
+// Validate pickup time
+function validatePickupTime(pickupTime: string): string | undefined {
+  if (!pickupTime || !pickupTime.trim()) {
+    return 'Pickup time is required';
+  }
+  
+  const pickupDate = new Date(pickupTime);
+  const now = new Date();
+  const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+  const oneMonthFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  
+  if (isNaN(pickupDate.getTime())) {
+    return 'Invalid pickup time format';
+  }
+  
+  if (pickupDate < oneHourFromNow) {
+    return 'Pickup time must be at least 1 hour from now';
+  }
+  
+  if (pickupDate > oneMonthFromNow) {
+    return 'Pickup time cannot be more than 30 days in the future';
+  }
+  
+  return undefined;
+}
+
+// Validate address
+function validateAddress(address: string): string | undefined {
+  if (!address || !address.trim()) {
+    return 'Address is required';
+  }
+  
+  if (address.trim().length < 10) {
+    return 'Address must be at least 10 characters long';
+  }
+  
+  if (address.trim().length > 500) {
+    return 'Address cannot exceed 500 characters';
+  }
+  
+  return undefined;
+}
+
+// Validate optional items description
+function validateItemsDescription(items?: string): string | undefined {
+  if (!items) return undefined;
+  
+  if (items.trim().length > 1000) {
+    return 'Items description cannot exceed 1000 characters';
+  }
+  
+  return undefined;
+}
+
+// Validate optional notes
+function validateNotes(notes?: string): string | undefined {
+  if (!notes) return undefined;
+  
+  if (notes.trim().length > 1000) {
+    return 'Notes cannot exceed 1000 characters';
+  }
+  
+  return undefined;
+}
+
+// Main validation function for collection request form
+export function validateCollectionRequestForm(
+  formData: CollectionRequestFormData,
+  selectedUser: SelectedUser | null
+): ValidationResult {
+  const errors: ValidationErrors = {};
+  
+  // Validate user selection
+  if (!selectedUser) {
+    return {
+      isValid: false,
+      errors: { address: 'Please select a user first' }
+    };
+  }
+  
+  // Validate address
+  const addressError = validateAddress(formData.address);
+  if (addressError) {
+    errors.address = addressError;
+  }
+  
+  // Validate phone
+  const phoneError = validatePhone(formData.phone);
+  if (phoneError) {
+    errors.phone = phoneError;
+  }
+  
+  // Validate pickup time
+  const pickupTimeError = validatePickupTime(formData.pickupTime);
+  if (pickupTimeError) {
+    errors.pickupTime = pickupTimeError;
+  }
+  
+  // Validate optional fields
+  const itemsError = validateItemsDescription(formData.items);
+  if (itemsError) {
+    errors.items = itemsError;
+  }
+  
+  const notesError = validateNotes(formData.notes);
+  if (notesError) {
+    errors.notes = notesError;
+  }
+  
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors
+  };
 }

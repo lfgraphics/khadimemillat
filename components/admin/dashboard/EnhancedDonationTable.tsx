@@ -137,7 +137,7 @@ function SwipeableCard({ row, onViewDetails, onQuickAction, loading, selectedId 
           variant="ghost"
           className={`${TOUCH_TARGETS.comfortable} h-full rounded-none px-4 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 button-press transition-all duration-200`}
           onClick={() => handleQuickAction('complete')}
-          aria-label={generateAriaLabel.button('Mark as complete', row.donor?.name || 'donation')}
+          aria-label={generateAriaLabel('Mark as complete', row.donor?.name || 'donation', 'button', 'Click to mark donation as complete')}
         >
           <CheckCircle className="h-5 w-5 transition-transform duration-200 hover:scale-110" aria-hidden="true" />
           <span className="sr-only">Mark as complete</span>
@@ -147,7 +147,7 @@ function SwipeableCard({ row, onViewDetails, onQuickAction, loading, selectedId 
           variant="ghost"
           className={`${TOUCH_TARGETS.comfortable} h-full rounded-none px-4 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 button-press transition-all duration-200`}
           onClick={() => handleQuickAction('archive')}
-          aria-label={generateAriaLabel.button('Archive', row.donor?.name || 'donation')}
+          aria-label={generateAriaLabel('Archive', row.donor?.name || 'donation', 'button', 'Click to archive donation')}
         >
           <Archive className="h-5 w-5 transition-transform duration-200 hover:scale-110" aria-hidden="true" />
           <span className="sr-only">Archive</span>
@@ -187,7 +187,7 @@ function SwipeableCard({ row, onViewDetails, onQuickAction, loading, selectedId 
                 className={`${TOUCH_TARGETS.comfortable} p-2 button-press transition-all duration-200 hover:bg-muted`}
                 onClick={handleViewDetails}
                 disabled={loading && selectedId === row.id}
-                aria-label={generateAriaLabel.viewItem(row.donor?.name || 'donation')}
+                aria-label={generateAriaLabel('View details', row.donor?.name || 'donation', 'button', 'Click to view donation details')}
                 aria-describedby={`donation-${row.id}-title`}
               >
                 {loading && selectedId === row.id ? (
@@ -207,7 +207,7 @@ function SwipeableCard({ row, onViewDetails, onQuickAction, loading, selectedId 
               <Badge 
                 variant="outline" 
                 className="text-xs capitalize"
-                aria-label={generateAriaLabel.status(row.status || 'Unknown')}
+                aria-label={generateAriaLabel(row.status || 'Unknown', 'donation status', 'badge')}
               >
                 {row.status || 'Unknown'}
               </Badge>
@@ -351,7 +351,7 @@ export default function EnhancedDonationTable({
                   role="row"
                   aria-label={`Donation from ${row.donor?.name || 'Unknown donor'}`}
                   tabIndex={0}
-                  onKeyDown={(e) => keyboardNavigation.handleActivation(e, () => onViewDetails(row.id))}
+                  onKeyDown={(e) => keyboardNavigation.handleKeyDown(e, () => onViewDetails(row.id))}
                 >
                   <TableCell className="py-4">
                     <div className="flex flex-col">

@@ -69,7 +69,7 @@ const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> 
     items: '',
     notes: ''
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -114,8 +114,8 @@ const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> 
 
   const handleInputChange = (field: keyof CollectionRequestFormData, value: string) => {
     // Sanitize input to prevent XSS
-    const sanitizedValue = field === 'address' || field === 'items' || field === 'notes' 
-      ? sanitizeString(value) 
+    const sanitizedValue = field === 'address' || field === 'items' || field === 'notes'
+      ? sanitizeString(value)
       : value;
 
     setFormData(prev => ({
@@ -180,7 +180,7 @@ const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> 
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        
+
         // Enhanced error handling based on status codes and error messages
         let errorMessage = '';
         switch (response.status) {
@@ -193,7 +193,7 @@ const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> 
               errorMessage = 'Pickup time must be in the future. Please select a valid date and time.';
             } else if (errorData.details) {
               // Handle validation errors from server
-              const fieldErrors = Object.entries(errorData.details).map(([field, errors]) => 
+              const fieldErrors = Object.entries(errorData.details).map(([field, errors]) =>
                 `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`
               ).join('; ');
               errorMessage = `Validation failed: ${fieldErrors}`;
@@ -225,13 +225,13 @@ const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> 
             errorMessage = errorData.error || `Server error (${response.status}). Please try again.`;
             setCanRetry(true);
         }
-        
+
         setSubmitError(errorMessage);
         throw new Error(errorMessage);
       }
 
       const result = await response.json();
-      
+
       if (result.success && result.data) {
         const createdRequest: CreatedRequest = {
           id: result.data._id || result.data.id,
@@ -267,14 +267,14 @@ const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> 
         throw new Error(errorMessage);
       }
     } catch (error: any) {
-      logError(error, 'collection-request-creation', { 
+      logError(error, 'collection-request-creation', {
         userId: selectedUser?.id,
         formData: { ...formData, phone: '[REDACTED]' } // Don't log sensitive data
       });
-      
+
       const errorDetails = parseApiError(error, 'Collection request creation');
       setCanRetry(errorDetails.retryable);
-      
+
       if (!submitError) {
         setSubmitError(errorDetails.message);
       }
