@@ -11,9 +11,12 @@ import {
     FileCheck,
     List as ListIcon,
     Heart,
-    ChevronRight,
     LayoutDashboard,
     Plus,
+    HandHeart,
+    Store,
+    Target,
+    BellDot,
 } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
@@ -27,17 +30,13 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-    SidebarMenuSub,
-    SidebarMenuSubButton,
-    SidebarMenuSubItem,
     SidebarRail,
 } from "@/components/ui/sidebar"
 import Link from "next/link"
-import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs"
+import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs"
 import { TeamSwitcher } from "./team-switcher"
 import ProfilePopover from "./profile-dropdown"
 import RoleGuard from "./role-guard"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible"
 import NotificationBell from '@/components/NotificationBell'
 
 // Removed sample data; focused navigation defined inline below.
@@ -109,6 +108,30 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild tooltip="Welfare Programs">
+                                    <Link href="/admin/welfare-programs">
+                                        <HandHeart className="h-4 w-4" />
+                                        <span>Welfare Programs</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild tooltip="Campaigns">
+                                    <Link href="/admin/campaigns">
+                                        <Target className="h-4 w-4" />
+                                        <span>Campaigns</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild tooltip="Notifications">
+                                    <Link href="/admin/notifications">
+                                        <BellDot className="h-4 w-4" />
+                                        <span>Manage Notifications</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
                         </SidebarMenu>
                     </SidebarGroup>
                 </RoleGuard>
@@ -164,6 +187,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 <Link href="/donate">
                                     <Heart className="h-4 w-4" />
                                     <span>Donate</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild tooltip="Welfare Programs">
+                                <Link href="/welfare-programs">
+                                    <HandHeart className="h-4 w-4" />
+                                    <span>Welfare Programs</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild tooltip="Marketplace">
+                                <Link href="/marketplace">
+                                    <Store className="h-4 w-4" />
+                                    <span>Marketplace</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>

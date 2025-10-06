@@ -12,7 +12,7 @@ export default function manifest(): MetadataRoute.Manifest {
     return {
         name: 'Khadim-e-Millat Welfare Foundation',
         short_name: 'KMWF',
-        description: 'A Progressive Web App for the organizational tasks and visibility',
+        description: 'A community welfare platform facilitating sustainable scrap collection and redistribution to support welfare programs.',
         start_url: '/',
         scope: '/',
         display: 'standalone',

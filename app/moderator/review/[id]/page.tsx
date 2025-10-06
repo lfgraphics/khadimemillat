@@ -109,7 +109,7 @@ export default function ModeratorReviewDetailPage() {
 
   // Enhanced file selector handlers for after photos
   const handleAfterPhotoFileSelect = (itemId: string) => (file: File, previewUrl: string) => {
-    console.log(`After photo selected for item ${itemId}:`, file.name);
+    // no-op
   };
 
   const handleAfterPhotoUploadComplete = (itemId: string) => (uploadResult: UploadResult) => {

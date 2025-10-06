@@ -37,8 +37,13 @@ export async function POST(req: Request) {
 
     if (!['admin','moderator'].includes(role)) return new NextResponse('Forbidden', { status: 403 })
     const parsed = createNotificationSchema.safeParse(json)
-    if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
-    const created = await notificationService.createNotification(parsed.data.recipient, parsed.data)
+    if (!parsed.success) return NextResponse.json({ error: parsed.error.format() }, { status: 400 })
+    const created = await notificationService.createNotification(parsed.data.recipient, {
+      title: parsed.data.title,
+      message: parsed.data.body,
+      type: parsed.data.type,
+      url: parsed.data.url
+    })
     return NextResponse.json({ success: true, notification: created })
   } catch (e) {
     console.error(e)

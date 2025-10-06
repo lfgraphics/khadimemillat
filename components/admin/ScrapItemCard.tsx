@@ -53,7 +53,7 @@ export default function ScrapItemCard({ item, onChange, onAction, saving = false
   // Enhanced file selector for adding photos
   const AddPhotoSelector: React.FC<{ onAdd: (id: string) => void; type: 'before' | 'after' }> = ({ onAdd, type }) => {
     const handleFileSelect = (file: File, previewUrl: string) => {
-      console.log(`${type} photo selected:`, file.name)
+      // no-op
     }
 
     const handleUploadComplete = (uploadResult: UploadResult) => {
@@ -81,7 +81,7 @@ export default function ScrapItemCard({ item, onChange, onAction, saving = false
             folder: 'kmwf/scrap-items',
             tags: ['scrap-item', type, item.id]
           }}
-          className="w-16 h-16 border border-dashed rounded flex items-center justify-center text-muted-foreground bg-muted/40 cursor-pointer hover:bg-muted/60 transition-colors"
+          className="w-16 h-16 rounded flex items-center justify-center text-muted-foreground bg-muted/40 cursor-pointer hover:bg-muted/60 transition-colors"
         />
       </div>
     )

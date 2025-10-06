@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { CountingNumber } from '@/components/ui/shadcn-io/counting-number';
+import Link from 'next/link';
 import { 
   useReducedMotion, 
   useAnimationPerformance, 
@@ -19,6 +20,7 @@ interface StatItem {
   number: number;
   label: string;
   testId?: string;
+  href?: string; // optional link for this counter
 }
 
 interface AnimatedStatsSectionProps {
@@ -125,27 +127,34 @@ export const AnimatedStatsSection: React.FC<AnimatedStatsSectionProps> = ({
         ref={intersectionRef as any}
         className={cn("grid grid-cols-2 md:grid-cols-4 gap-8", className)}
       >
-        {stats.map((stat, index) => (
-          <div 
-            key={index} 
-            className="text-center" 
-            data-testid={stat.testId}
-          >
-            <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
-              <CountingNumber 
-                number={stat.number}
-                fromNumber={0}
-                inView={false}
-                transition={{
-                  stiffness: 90,
-                  damping: 50,
-                  duration: counterDuration * 1000
-                }}
-              />
+        {stats.map((stat, index) => {
+          const content = (
+            <div className="text-center" data-testid={stat.testId}>
+              <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
+                <CountingNumber 
+                  number={stat.number}
+                  fromNumber={0}
+                  inView={false}
+                  transition={{
+                    stiffness: 90,
+                    damping: 50,
+                    duration: counterDuration * 1000
+                  }}
+                />
+              </div>
+              <div className="text-muted-foreground">{stat.label}</div>
             </div>
-            <div className="text-muted-foreground">{stat.label}</div>
-          </div>
-        ))}
+          )
+          return (
+            <div key={index}>
+              {stat.href ? (
+                <Link href={stat.href} aria-label={`View ${stat.label}`} className="block">
+                  {content}
+                </Link>
+              ) : content}
+            </div>
+          )
+        })}
       </div>
     );
   }
@@ -158,40 +167,52 @@ export const AnimatedStatsSection: React.FC<AnimatedStatsSectionProps> = ({
       initial={enableEntranceAnimations ? "hidden" : undefined}
       animate={isIntersecting && enableEntranceAnimations ? "visible" : undefined}
     >
-      {stats.map((stat, index) => (
-        <motion.div 
-          key={index} 
-          className="text-center" 
-          data-testid={stat.testId}
-          variants={enableEntranceAnimations ? itemVariants : undefined}
-        >
+      {stats.map((stat, index) => {
+        const inner = (
+          <>
+            <motion.div 
+              className="text-3xl md:text-4xl font-bold text-primary mb-2"
+              variants={enableEntranceAnimations ? itemVariants : undefined}
+            >
+              {shouldStartCounters ? (
+                <CountingNumber 
+                  number={stat.number}
+                  fromNumber={0}
+                  inView={false}
+                  transition={{
+                    stiffness: 90,
+                    damping: 50,
+                    duration: counterDuration * 1000
+                  }}
+                />
+              ) : (
+                <span>0</span>
+              )}
+            </motion.div>
+            <motion.div 
+              className="text-muted-foreground"
+              variants={enableEntranceAnimations ? labelVariants : undefined}
+            >
+              {stat.label}
+            </motion.div>
+          </>
+        )
+        const item = (
           <motion.div 
-            className="text-3xl md:text-4xl font-bold text-primary mb-2"
+            key={index} 
+            className="text-center" 
+            data-testid={stat.testId}
             variants={enableEntranceAnimations ? itemVariants : undefined}
           >
-            {shouldStartCounters ? (
-              <CountingNumber 
-                number={stat.number}
-                fromNumber={0}
-                inView={false} // We control the trigger manually
-                transition={{
-                  stiffness: 90,
-                  damping: 50,
-                  duration: counterDuration * 1000
-                }}
-              />
-            ) : (
-              <span>0</span>
-            )}
+            {inner}
           </motion.div>
-          <motion.div 
-            className="text-muted-foreground"
-            variants={enableEntranceAnimations ? labelVariants : undefined}
-          >
-            {stat.label}
-          </motion.div>
-        </motion.div>
-      ))}
+        )
+        return stat.href ? (
+          <Link key={index} href={stat.href} aria-label={`View ${stat.label}`} className="block">
+            {item}
+          </Link>
+        ) : item
+      })}
     </motion.div>
   );
 };

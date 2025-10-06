@@ -85,6 +85,7 @@ async function PrintContentServer({ id }: { id: string }) {
   return <BarcodePrintSheet donor={donation.donor} createdAt={donation.createdAt} items={donation.items} />;
 }
 
-export default async function Page({ params }: { params: { id: string } }) {
-  return <PrintContentServer id={params.id} />;
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return <PrintContentServer id={id} />;
 }

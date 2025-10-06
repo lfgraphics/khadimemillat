@@ -8,6 +8,9 @@ export interface IWebPushSubscription extends Document {
     auth: string
   }
   userAgent?: string
+  userRole: string
+  userEmail?: string
+  userName?: string
   createdAt: Date
   updatedAt: Date
 }
@@ -19,7 +22,10 @@ const webPushSubscriptionSchema = new Schema<IWebPushSubscription>({
     p256dh: { type: String, required: true },
     auth: { type: String, required: true }
   },
-  userAgent: { type: String }
+  userAgent: { type: String },
+  userRole: { type: String, required: true, default: 'user' },
+  userEmail: { type: String },
+  userName: { type: String }
 }, { timestamps: true })
 
 // Unique per user (replace old subscription on re-subscribe)

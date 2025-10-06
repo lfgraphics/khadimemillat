@@ -53,7 +53,33 @@ export default function DynamicDonationPage({
       // Simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Simulate successful payment
+      // Simulate successful payment and persist donation record
+      try {
+        if (donationData.id && !donationData.id.startsWith('dummy-')) {
+          // Complete existing pending donation by ID
+          await fetch(`/api/public/donations/${encodeURIComponent(donationData.id)}/complete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ paymentReference: donationData.id, paymentMethod: 'online' })
+          })
+        } else {
+          // Fallback: record directly against campaign by slug (demo-only)
+          await fetch(`/api/public/campaigns/${encodeURIComponent(donationData.slug)}/donations/complete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              donorName: donationData.donorName,
+              donorEmail: donationData.email,
+              amount: parseFloat(donationData.amount),
+              paymentReference: donationData.id,
+              paymentMethod: 'online'
+            })
+          })
+        }
+      } catch (e) {
+        console.warn('[DONATION_RECORD_FAILED]', e)
+      }
+
       setCompleted(true);
       toast.success('Donation completed successfully!');
       

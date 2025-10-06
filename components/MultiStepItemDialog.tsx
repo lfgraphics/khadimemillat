@@ -790,7 +790,7 @@ const PhotoUploadStep: React.FC<PhotoUploadStepProps> = ({
 
                     <EnhancedFileSelector
                         onFileSelect={(file, previewUrl) => {
-                            console.log('Before photo selected:', file.name)
+                            // no-op
                         }}
                         onUploadComplete={handleBeforePhotoUpload}
                         onError={handleFileError}
@@ -850,7 +850,7 @@ const PhotoUploadStep: React.FC<PhotoUploadStepProps> = ({
 
                     <EnhancedFileSelector
                         onFileSelect={(file, previewUrl) => {
-                            console.log('After photo selected:', file.name)
+                            // no-op
                         }}
                         onUploadComplete={handleAfterPhotoUpload}
                         onError={handleFileError}

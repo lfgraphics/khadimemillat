@@ -11,6 +11,10 @@ export interface ICollectionRequest extends Document {
   assignedScrappers: string[] // Clerk user IDs
   status: 'pending' | 'verified' | 'collected' | 'completed'
   donationEntryId?: mongoose.Types.ObjectId
+  location?: {
+    type: 'Point'
+    coordinates: [number, number]
+  }
   createdAt: Date
   updatedAt: Date
 }
@@ -24,7 +28,26 @@ const collectionRequestSchema = new Schema<ICollectionRequest>({
   notes: { type: String },
   assignedScrappers: [{ type: String }],
   status: { type: String, enum: ['pending', 'verified', 'collected', 'completed'], default: 'pending' },
-  donationEntryId: { type: Schema.Types.ObjectId, ref: 'DonationEntry' }
+  donationEntryId: { type: Schema.Types.ObjectId, ref: 'DonationEntry' },
+  location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      validate: {
+        validator: function (v: number[]) {
+          return Array.isArray(v) && v.length === 2 && v.every(n => typeof n === 'number')
+        },
+        message: 'location.coordinates must be an array of two numbers [lng, lat]'
+      }
+    }
+  }
 }, { timestamps: true })
+
+// create 2dsphere index for geo queries (only useful if location is provided)
+collectionRequestSchema.index({ location: '2dsphere' })
 
 export default mongoose.models.CollectionRequest || mongoose.model<ICollectionRequest>('CollectionRequest', collectionRequestSchema, 'collection-requests')

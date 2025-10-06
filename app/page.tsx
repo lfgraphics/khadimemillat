@@ -2,7 +2,9 @@ import { Headphones, Heart, Mail, Phone, ShoppingBag, Store, Truck, Users } from
 import Link from "next/link";
 import SuspenseSection from "@/components/SuspenseSection";
 import Loading from "@/components/Loading";
-import { AnimatedSection, AnimatedButton, AnimatedStatsSection, AnimatedProcessSteps } from '@/components/animations';
+import { AnimatedSection, AnimatedButton, AnimatedProcessSteps } from '@/components/animations';
+import WelfareProgramsSection from '@/components/WelfareProgramsSection';
+import DynamicHomeCounters from '@/components/DynamicHomeCounters';
 
 export default function Home() {
   return (
@@ -75,20 +77,7 @@ export default function Home() {
           fallback={<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><Loading inline={false} label="Loading stats" /></div>}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <AnimatedStatsSection
-              stats={[
-                { number: 25847, label: "Items Collected", testId: "stat-items-collected" },
-                { number: 1250, label: "Families Helped", testId: "stat-families-helped" },
-                { number: 187, label: "Active Volunteers", testId: "stat-volunteers" },
-                { number: 12, label: "Cities Served", testId: "stat-cities" }
-              ]}
-              threshold={0.3}
-              triggerOnce={true}
-              counterDuration={2.0}
-              simultaneousStart={true}
-              enableEntranceAnimations={true}
-              staggerDelay={0.15}
-            />
+            <DynamicHomeCounters />
           </div>
         </SuspenseSection>
       </section>
@@ -147,91 +136,11 @@ export default function Home() {
 
       {/* Our Programs Section */}
       <section className="bg-card py-16" data-testid="programs-section">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <AnimatedSection 
-            variant="fade" 
-            delay={0.1} 
-            duration={0.5}
-            threshold={0.2}
-          >
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4" data-testid="programs-title">
-                Our Welfare Programs
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto" data-testid="programs-description">
-                Supporting communities through various initiatives funded by our sustainable scrap collection operations
-              </p>
-            </div>
-          </AnimatedSection>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <AnimatedSection 
-              variant="slideUp" 
-              delay={0.2} 
-              duration={0.5}
-              threshold={0.2}
-              className="h-full"
-            >
-              <div className="bg-card rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow h-full flex flex-col" data-testid="program-education">
-                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center mb-4">
-                  <Users className="h-8 w-8 text-blue-600 dark:text-blue-300" />
-                </div>
-                <h3 className="text-xl font-semibold mb-3 text-foreground">Education Support</h3>
-                <p className="text-muted-foreground mb-4 flex-grow">
-                  Providing school supplies, books, and educational resources to underprivileged children
-                </p>
-                <div className="flex items-center text-sm text-primary mt-auto">
-                  <Users className="mr-2 h-4 w-4" />
-                  <span>450 students supported</span>
-                </div>
-              </div>
-            </AnimatedSection>
-
-            <AnimatedSection 
-              variant="slideUp" 
-              delay={0.35} 
-              duration={0.5}
-              threshold={0.2}
-              className="h-full"
-            >
-              <div className="bg-card rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow h-full flex flex-col" data-testid="program-healthcare">
-                <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center mb-4">
-                  <Heart className="h-8 w-8 text-green-600 dark:text-green-300" />
-                </div>
-                <h3 className="text-xl font-semibold mb-3 text-foreground">Healthcare Access</h3>
-                <p className="text-muted-foreground mb-4 flex-grow">
-                  Medical equipment and supplies distribution to local healthcare facilities
-                </p>
-                <div className="flex items-center text-sm text-primary mt-auto">
-                  <Heart className="mr-2 h-4 w-4" />
-                  <span>23 facilities equipped</span>
-                </div>
-              </div>
-            </AnimatedSection>
-
-            <AnimatedSection 
-              variant="slideUp" 
-              delay={0.5} 
-              duration={0.5}
-              threshold={0.2}
-              className="h-full"
-            >
-              <div className="bg-card rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow h-full flex flex-col" data-testid="program-emergency">
-                <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center mb-4">
-                  <Truck className="h-8 w-8 text-orange-600 dark:text-orange-300" />
-                </div>
-                <h3 className="text-xl font-semibold mb-3 text-foreground">Emergency Relief</h3>
-                <p className="text-muted-foreground mb-4 flex-grow">
-                  Rapid response support during natural disasters and emergency situations
-                </p>
-                <div className="flex items-center text-sm text-primary mt-auto">
-                  <Truck className="mr-2 h-4 w-4" />
-                  <span>18 emergency responses</span>
-                </div>
-              </div>
-            </AnimatedSection>
-          </div>
-        </div>
+        <SuspenseSection
+          fallback={<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><Loading inline={false} label="Loading programs" /></div>}
+        >
+          <WelfareProgramsSection />
+        </SuspenseSection>
       </section>
 
       {/* Contact Section */}

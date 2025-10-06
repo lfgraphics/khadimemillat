@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { safeJson } from '@/lib/utils';
-import { useUser } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
+import { useUser, useClerk, useSignIn } from '@clerk/nextjs';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,12 +13,15 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { EnhancedFileSelector } from '@/components/file-selector';
 import { FileUploadError, UploadResult } from '@/components/file-selector/types';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 type Tab = 'money' | 'scrap'
 
 export default function DonationPage() {
   const [tab, setTab] = useState<Tab>('money')
   const { user, isSignedIn } = useUser()
+  const { openSignIn } = useClerk()
+  const { signIn, isLoaded: isSignInLoaded, setActive } = useSignIn()
   const router = useRouter()
   const [profile, setProfile] = useState<{ phone: string; address: string; donorId?: string }>({ phone: '', address: '' })
   const [pickupTime, setPickupTime] = useState('')
@@ -26,15 +29,17 @@ export default function DonationPage() {
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
+
   // File upload states for scrap collection
   const [uploadedImages, setUploadedImages] = useState<UploadResult[]>([])
   const [fileUploadError, setFileUploadError] = useState<string | null>(null)
-  
+
   // Money donation states
   const [donationAmount, setDonationAmount] = useState('')
   const [donorName, setDonorName] = useState('')
   const [donorEmail, setDonorEmail] = useState('')
+  const searchParams = useSearchParams()
+  const [programSlug, setProgramSlug] = useState<string | null>(null)
   const [selectedCause, setSelectedCause] = useState('education')
   const [moneySubmitting, setMoneySubmitting] = useState(false)
   const [moneySuccess, setMoneySuccess] = useState(false)
@@ -55,12 +60,12 @@ export default function DonationPage() {
           if (res.status === 401 || res.status === 403) {
             console.warn('[DONATE_PROFILE_FETCH_AUTH]', res.status)
           } else {
-            const text = await res.text().catch(()=>'')
-            console.warn('[DONATE_PROFILE_FETCH_NON_JSON]', res.status, ct, text?.slice(0,120))
+            const text = await res.text().catch(() => '')
+            console.warn('[DONATE_PROFILE_FETCH_NON_JSON]', res.status, ct, text?.slice(0, 120))
           }
           return
         }
-  const json = await safeJson<any>(res)
+        const json = await safeJson<any>(res)
         if (json.users && json.users.length) {
           const u = json.users[0]
           // Prioritize Clerk user ID; fallback to mongo mapping only if needed
@@ -70,6 +75,21 @@ export default function DonationPage() {
     }
     load()
   }, [isSignedIn])
+
+  // Pre-populate cause from URL 'program' slug and store slug separately
+  useEffect(() => {
+    const p = searchParams?.get('program')
+    if (!p) return
+    setProgramSlug(p)
+    const lower = p.toLowerCase()
+    if (lower.includes('zakat')) setSelectedCause('zakat')
+    else if (lower.includes('sadqa') || lower.includes('sadaq')) setSelectedCause('sadqa')
+    else if (lower.includes('health')) setSelectedCause('healthcare')
+    else if (lower.includes('educ')) setSelectedCause('education')
+    else if (lower.includes('enviro')) setSelectedCause('environment')
+    else if (lower.includes('community')) setSelectedCause('community')
+    else if (lower.includes('emerg')) setSelectedCause('emergency')
+  }, [searchParams])
 
   const missingInfo = !profile.phone || !profile.address
 
@@ -112,7 +132,7 @@ export default function DonationPage() {
     setSubmitting(true); setError(null); setSuccess(false)
     try {
       await updateProfileIfMissing()
-      
+
       // Prepare request data with uploaded images
       const requestData = {
         requestedPickupTime: pickupTime,
@@ -129,15 +149,15 @@ export default function DonationPage() {
           bytes: img.bytes
         }))
       }
-      
+
       // Omit donor to default to current Clerk user on server; aligns with Clerk-first priority
-      const res = await fetch('/api/protected/collection-requests', { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify(requestData) 
+      const res = await fetch('/api/protected/collection-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestData)
       })
       if (!res.ok) throw new Error(await res.text())
-      setSuccess(true); 
+      setSuccess(true);
       setNotes('');
       setUploadedImages([]);
       toast.success('Collection request submitted successfully!')
@@ -146,36 +166,71 @@ export default function DonationPage() {
 
   const submitMoneyDonation = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!donationAmount || parseFloat(donationAmount) <= 0) {
-      toast.error('Please enter a valid donation amount')
-      return
-    }
-    if (!donorName.trim()) {
-      toast.error('Please enter your name')
-      return
-    }
-    if (!donorEmail.trim() || !donorEmail.includes('@')) {
-      toast.error('Please enter a valid email address')
-      return
-    }
+    if (!donationAmount || parseFloat(donationAmount) <= 0) { toast.error('Please enter a valid donation amount'); return }
+    if (!donorName.trim()) { toast.error('Please enter your name'); return }
+    if (donorEmail.trim() && !donorEmail.includes('@')) { toast.error('Please enter a valid email address'); return }
 
     setMoneySubmitting(true)
     setMoneySuccess(false)
-    
+
     try {
-      // Simulate API call with dummy data
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      // Create dummy cause data for navigation
-      const dummyCause = {
-        cause: selectedCause,
-        slug: 'dummy-campaign',
-        id: 'dummy-' + Date.now()
+      // Ask user to sign in or continue as guest
+      if (!isSignedIn) {
+        const wantsLogin = typeof window !== 'undefined'
+          ? window.confirm('Please sign in to donate. Press OK to sign in, or Cancel to continue as guest (we will create an account and send credentials).')
+          : true
+        if (wantsLogin) {
+          try { openSignIn?.({}); } catch {}
+          setMoneySubmitting(false)
+          return
+        } else {
+          // Require phone for guest creation (more robust). Prompt if absent.
+          if (!profile.phone) {
+            toast.error('Phone number required to proceed as guest. Please add your phone in the form above or Account page.')
+            setMoneySubmitting(false)
+            return
+          }
+          const signupRes = await fetch('/api/public/guest-signup', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: donorName, phone: profile.phone, email: donorEmail || undefined })
+          })
+          if (!signupRes.ok) {
+            const msg = await signupRes.text().catch(()=> 'Account creation failed')
+            toast.error(msg)
+            setMoneySubmitting(false)
+            return
+          }
+          const created = await signupRes.json()
+          toast.success('Guest account created. Signing you in...')
+
+          // Immediately sign in with returned credentials
+          if (signIn && isSignInLoaded) {
+            const result = await signIn.create({ identifier: created.identifier, password: created.password })
+            if (result?.status === 'complete') {
+              await setActive?.({ session: result.createdSessionId })
+            }
+          }
+        }
       }
-      
-      // Navigate to the dynamic donation page
-      router.push(`/donate/${dummyCause.cause}/${dummyCause.slug}/${dummyCause.id}?amount=${donationAmount}&donor=${encodeURIComponent(donorName)}&email=${encodeURIComponent(donorEmail)}`)
-      
+
+      let donationId = ''
+      let campaignSlug = 'program-donation'
+
+      if (programSlug) {
+        const res = await fetch(`/api/public/programs/${encodeURIComponent(programSlug)}/donations`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ donorName, donorEmail, amount: parseFloat(donationAmount), message: notes, paymentMethod: 'online' })
+        })
+        if (!res.ok) throw new Error(await res.text())
+        const data = await res.json()
+        donationId = data.donationId || ('dummy-' + Date.now())
+        campaignSlug = data.campaignSlug || 'program-donation'
+      } else {
+        donationId = 'dummy-' + Date.now()
+      }
+
+      router.push(`/donate/${selectedCause}/${campaignSlug}/${donationId}?amount=${donationAmount}&donor=${encodeURIComponent(donorName)}&email=${encodeURIComponent(donorEmail)}`)
       setMoneySuccess(true)
       toast.success('Redirecting to donation page...')
     } catch (error) {
@@ -201,7 +256,7 @@ export default function DonationPage() {
         <h1 className='text-2xl font-semibold'>Donate</h1>
         <p className='text-xs text-muted-foreground'>Contribute via scrap pickup or monetary support.</p>
       </div>
-      <Tabs value={tab} onValueChange={(v)=> setTab(v as Tab)}>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
         <TabsList>
           <TabsTrigger value='money'>Money</TabsTrigger>
           <TabsTrigger value='scrap'>Scrap</TabsTrigger>
@@ -220,21 +275,21 @@ export default function DonationPage() {
                   </div>
                   <div className='space-y-1'>
                     <label className='text-xs font-semibold'>Phone {!profile.phone && <span className='text-red-600'>(required)</span>}</label>
-                    <Input value={profile.phone} onChange={e=>setProfile(p=>({...p,phone:e.target.value}))} placeholder='+15551234567' />
+                    <Input value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} placeholder='+15551234567' />
                   </div>
                   <div className='md:col-span-2 space-y-1'>
                     <label className='text-xs font-semibold'>Address {!profile.address && <span className='text-red-600'>(required)</span>}</label>
-                    <Textarea value={profile.address} onChange={e=>setProfile(p=>({...p,address:e.target.value}))} placeholder='Street, City, ...' className='min-h-24' />
+                    <Textarea value={profile.address} onChange={e => setProfile(p => ({ ...p, address: e.target.value }))} placeholder='Street, City, ...' className='min-h-24' />
                   </div>
                   <div className='space-y-1'>
                     <label className='text-xs font-semibold'>Preferred Pickup Time</label>
-                    <Input type='datetime-local' value={pickupTime} onChange={e=>setPickupTime(e.target.value)} />
+                    <Input type='datetime-local' value={pickupTime} onChange={e => setPickupTime(e.target.value)} />
                   </div>
                   <div className='md:col-span-2 space-y-1'>
                     <label className='text-xs font-semibold'>Notes</label>
-                    <Textarea value={notes} onChange={e=>setNotes(e.target.value)} placeholder='Any additional info...' className='min-h-20' />
+                    <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder='Any additional info...' className='min-h-20' />
                   </div>
-                  
+
                   {/* Enhanced File Selector for Item Images */}
                   <div className='md:col-span-2 space-y-1'>
                     <label className='text-xs font-semibold'>Item Images (Optional)</label>
@@ -254,9 +309,9 @@ export default function DonationPage() {
                         folder: 'kmwf/collection-requests',
                         tags: ['collection-request', 'donation-items']
                       }}
-                      className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-gray-400 transition-colors"
+                      className="rounded-lg p-4"
                     />
-                    
+
                     {/* Display uploaded images */}
                     {uploadedImages.length > 0 && (
                       <div className='mt-4'>
@@ -285,7 +340,7 @@ export default function DonationPage() {
                         </div>
                       </div>
                     )}
-                    
+
                     {/* File upload error display */}
                     {fileUploadError && (
                       <div className='text-xs text-red-600 mt-2'>
@@ -318,58 +373,59 @@ export default function DonationPage() {
                 <div className='grid md:grid-cols-2 gap-4'>
                   <div className='space-y-1'>
                     <label className='text-xs font-semibold'>Donation Amount ()</label>
-                    <Input 
-                      type='number' 
-                      value={donationAmount} 
-                      onChange={e=>setDonationAmount(e.target.value)} 
-                      placeholder='25' 
+                    <Input
+                      type='number'
+                      value={donationAmount}
+                      onChange={e => setDonationAmount(e.target.value)}
+                      placeholder='25'
                       min='1'
                       step='0.01'
                     />
                   </div>
                   <div className='space-y-1'>
                     <label className='text-xs font-semibold'>Select Cause</label>
-                    <select 
-                      value={selectedCause} 
-                      onChange={e=>setSelectedCause(e.target.value)}
-                      className='w-full px-3 py-2 border border-input bg-background rounded-md text-sm'
-                    >
-                      {dummyCauses.map(cause => (
-                        <option key={cause.value} value={cause.value}>{cause.label}</option>
-                      ))}
-                    </select>
+                    <Select value={selectedCause} onValueChange={setSelectedCause}>
+                      <SelectTrigger className='w-full'>
+                        <SelectValue placeholder='Select cause' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {dummyCauses.map(cause => (
+                          <SelectItem key={cause.value} value={cause.value}>{cause.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className='space-y-1'>
                     <label className='text-xs font-semibold'>Your Name</label>
-                    <Input 
-                      value={donorName} 
-                      onChange={e=>setDonorName(e.target.value)} 
-                      placeholder='John Doe' 
+                    <Input
+                      value={donorName}
+                      onChange={e => setDonorName(e.target.value)}
+                      placeholder='John Doe'
                     />
                   </div>
                   <div className='space-y-1'>
                     <label className='text-xs font-semibold'>Email Address</label>
-                    <Input 
+                    <Input
                       type='email'
-                      value={donorEmail} 
-                      onChange={e=>setDonorEmail(e.target.value)} 
-                      placeholder='john@example.com' 
+                      value={donorEmail}
+                      onChange={e => setDonorEmail(e.target.value)}
+                      placeholder='john@example.com'
                     />
                   </div>
                   <div className='md:col-span-2 space-y-1'>
                     <label className='text-xs font-semibold'>Message (Optional)</label>
-                    <Textarea 
-                      value={notes} 
-                      onChange={e=>setNotes(e.target.value)} 
-                      placeholder='Any special message or dedication...' 
-                      className='min-h-20' 
+                    <Textarea
+                      value={notes}
+                      onChange={e => setNotes(e.target.value)}
+                      placeholder='Any special message or dedication...'
+                      className='min-h-20'
                     />
                   </div>
                 </div>
                 <div className='flex items-center gap-3 pt-2'>
                   <Button type='submit' disabled={moneySubmitting}>
-                    {moneySubmitting ? 
-                      <><Loader2 className='h-4 w-4 animate-spin mr-2' /> Processing</> : 
+                    {moneySubmitting ?
+                      <><Loader2 className='h-4 w-4 animate-spin mr-2' /> Processing</> :
                       'Continue to Payment'
                     }
                   </Button>

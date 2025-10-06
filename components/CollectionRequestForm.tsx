@@ -71,12 +71,10 @@ export const CollectionRequestForm: React.FC<CollectionRequestFormProps> = ({
 
   // File upload handlers
   const handleFileSelect = (file: File, previewUrl: string) => {
-    console.log('File selected:', file.name, 'Preview URL:', previewUrl);
     setFileUploadError(null);
   };
 
   const handleUploadComplete = (uploadResult: UploadResult) => {
-    console.log('Upload completed:', uploadResult);
     setUploadedImages(prev => [...prev, uploadResult]);
     toast.success(`Image uploaded successfully`);
   };
@@ -200,7 +198,7 @@ export const CollectionRequestForm: React.FC<CollectionRequestFormProps> = ({
               folder: 'kmwf/collection-requests',
               tags: ['collection-request', 'donation-items']
             }}
-            className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-gray-400 transition-colors"
+            className="rounded-lg"
           />
 
           {/* Display uploaded images */}

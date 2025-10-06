@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { assignScrappers, getCollectionRequestById, markAsCollected, updateCollectionRequest } from '../../../../../lib/services/collectionRequest.service'
-import { notificationService } from '../../../../../lib/services/notification.service'
-import { getClerkUserWithSupplementaryData } from '../../../../../lib/services/user.service'
-import { assignScrappersSchema, updateCollectionRequestSchema } from '../../../../../lib/validators/collectionRequest.validator'
+import { assignScrappers, getCollectionRequestById, markAsCollected, updateCollectionRequest } from '@/lib/services/collectionRequest.service'
+import { notificationService } from '@/lib/services/notification.service'
+import { getClerkUserWithSupplementaryData } from '@/lib/services/user.service'
+import { assignScrappersSchema, updateCollectionRequestSchema } from '@/lib/validators/collectionRequest.validator'
 import connectDB from '@/lib/db'
 import User from '@/models/User'
 
@@ -98,7 +98,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (body.action === 'assign') {
       if (!['admin','moderator'].includes(role)) return new NextResponse('Forbidden', { status: 403 })
       const parsed = assignScrappersSchema.safeParse({ scrapperIds: body.scrapperIds })
-      if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+      if (!parsed.success) return NextResponse.json({ error: parsed.error.format() }, { status: 400 })
       const updated = await assignScrappers(id, parsed.data.scrapperIds)
       return NextResponse.json({ success: true, request: updated })
     }
@@ -108,7 +108,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const currentRequest = await getCollectionRequestById(id)
     if (!currentRequest) return new NextResponse('Not found', { status: 404 })
     const parsed = updateCollectionRequestSchema.safeParse(body)
-    if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+    if (!parsed.success) return NextResponse.json({ error: parsed.error.format() }, { status: 400 })
     const updated = await updateCollectionRequest(id, {
       ...parsed.data,
       requestedPickupTime: parsed.data.requestedPickupTime ? new Date(parsed.data.requestedPickupTime) : undefined
@@ -117,11 +117,22 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     // Notify donor when completed
     if (parsed.data.status === 'completed' && (currentRequest as any).status !== 'completed') {
       try {
-        await notificationService.notifyUsers([(currentRequest as any).donor], {
+        // Get donor user details to determine their role
+        await connectDB()
+        const donorUser = await User.findOne({ clerkUserId: (currentRequest as any).donor }).lean() as any
+        const donorRole = donorUser?.role || 'user'
+        
+        await notificationService.sendNotification({
           title: 'Collection Completed',
-            body: 'Your donation has been processed and completed. Thank you for your contribution!',
+          message: 'Your donation has been processed and completed. Thank you for your contribution!',
+          channels: ['web_push', 'email'],
+          targetRoles: [donorRole],
+          sentBy: userId,
+          metadata: {
+            type: 'collection_completed',
             url: '/notifications',
-            type: 'collection_completed'
+            collectionRequestId: id
+          }
         })
       } catch (e) {
         console.warn('[NOTIFY_COMPLETED_FAIL]', e)

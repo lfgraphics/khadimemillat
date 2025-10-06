@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose'
+import mongoose, { Schema, Document, ObjectId } from 'mongoose'
 
 // Clerk-first: store Clerk user id (string) as recipient instead of Mongo ObjectId
 export interface INotification extends Document {
@@ -11,6 +11,7 @@ export interface INotification extends Document {
   webPushSubscription?: string // optional serialized subscription identifier
   createdAt: Date
   updatedAt: Date
+  _id: ObjectId | string
 }
 
 const notificationSchema = new Schema<INotification>({
