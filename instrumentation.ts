@@ -7,6 +7,6 @@ export async function register() {
   // Only run on server-side
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     const { initializeServer } = await import('./lib/server-startup')
-    initializeServer()
+    await initializeServer()
   }
 }

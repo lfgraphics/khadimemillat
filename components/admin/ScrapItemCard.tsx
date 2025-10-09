@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Image as ImageIcon, Tag, CheckCircle, Pencil, Save, X, Plus } from 'lucide-react'
+import MarkAsSoldModal from '@/components/admin/modals/MarkAsSoldModal'
 import { ClickableImage } from '@/components/ui/clickable-image'
 import { toast } from 'sonner'
 import { EnhancedFileSelector } from '@/components/file-selector'
@@ -180,9 +181,7 @@ export default function ScrapItemCard({ item, onChange, onAction, saving = false
             </Button>
           )}
           {!item.marketplaceListing.sold && (
-            <Button variant="secondary" onClick={() => onAction?.('sold')} disabled={saving || pendingAction === 'sold'}>
-              <CheckCircle className="h-4 w-4 mr-1"/>{pendingAction === 'sold' ? 'Marking…' : 'Mark Sold'}
-            </Button>
+            <MarkAsSoldModal itemId={item.id} trigger={<Button variant="secondary"><CheckCircle className="h-4 w-4 mr-1"/>Mark Sold</Button>} defaultSalePrice={item.marketplaceListing.salePrice} />
           )}
         </div>
       </CardContent>

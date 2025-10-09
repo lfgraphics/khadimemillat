@@ -15,6 +15,7 @@ export interface IUser extends Document {
     address?: string // non-authoritative; Clerk privateMetadata is source of truth
     role: Roles
     lastSyncedFromClerkAt?: Date
+    purchases?: mongoose.Types.ObjectId[]
 }
 
 const userSchema = new Schema<IUser>({
@@ -24,7 +25,8 @@ const userSchema = new Schema<IUser>({
     phone: { type: String },
     address: { type: String },
     role: { type: String, enum: RolesEnum, default: "user" },
-    lastSyncedFromClerkAt: { type: Date }
+    lastSyncedFromClerkAt: { type: Date },
+    purchases: [{ type: Schema.Types.ObjectId, ref: 'Purchase' }]
 }, { timestamps: true })
 
 export default mongoose.models.User || mongoose.model<IUser>("User", userSchema, 'users')

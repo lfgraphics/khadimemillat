@@ -83,6 +83,38 @@ export class NotificationService {
     backoffMultiplier: 2
   }
 
+  // Convenience helpers for domain-specific notifications
+  static async purchaseInquiry({ moderatorIds, itemName, scrapItemId, conversationId, buyerName }: { moderatorIds: string[]; itemName: string; scrapItemId: string; conversationId: string; buyerName?: string }) {
+    const title = 'New purchase inquiry'
+    const body = `${buyerName || 'A user'} asked about: ${itemName}`
+    return this.notifyUsers(moderatorIds, { title, body, url: `/conversations/${conversationId}`, type: 'purchase_inquiry' })
+  }
+
+  static async paymentRequest({ buyerId, amount, conversationId, scrapItemId }: { buyerId: string; amount: number; conversationId: string; scrapItemId: string }) {
+    const title = 'Payment requested'
+    const body = `A payment of ₹${amount} was requested for your purchase.`
+    return this.notifyUsers([buyerId], { title, body, url: `/conversations/${conversationId}`, type: 'payment_request' })
+  }
+
+  static async paymentCompleted({ buyerId, purchaseId, scrapItemId, amount }: { buyerId: string; purchaseId: string; scrapItemId: string; amount: number }) {
+    const title = 'Payment completed'
+    const body = `We received your payment of ₹${amount}. Thank you!`
+    return this.notifyUsers([buyerId], { title, body, url: `/account`, type: 'payment_completed' })
+  }
+
+  static async itemSold({ staffIds, scrapItemId, salePrice }: { staffIds: string[]; scrapItemId: string; salePrice: number }) {
+    const title = 'Item sold'
+    const body = `Item ${scrapItemId} sold for ₹${salePrice}.`
+    return this.notifyUsers(staffIds, { title, body, url: `/admin`, type: 'item_sold' })
+  }
+
+  // Buyer-facing item sold notification (for online sales)
+  static async itemSoldToBuyer({ buyerId, scrapItemId, salePrice }: { buyerId: string; scrapItemId: string; salePrice: number }) {
+    const title = 'Your purchase is confirmed'
+    const body = `Purchase confirmed for ₹${salePrice}. View details in your account.`
+    return this.notifyUsers([buyerId], { title, body, url: `/account`, type: 'item_sold' })
+  }
+
   /**
    * Validates service availability and filters channels accordingly
    */
@@ -954,6 +986,62 @@ export class NotificationService {
     }
   }
 
+  // Notify specific users with only web push (for chat messages)
+  static async notifyUsersWebPushOnly(userIds: string[], payload: {
+    title: string
+    body: string
+    url?: string
+    type?: string
+  }): Promise<NotificationServiceResult> {
+    try {
+      await connectDB()
+      
+      // Get users by their Clerk IDs
+      const users = await User.find({ clerkUserId: { $in: userIds } }).lean()
+      
+      if (users.length === 0) {
+        return {
+          success: false,
+          error: 'No users found with the provided IDs',
+          results: {
+            webPush: { sent: 0, failed: 0 },
+            email: { sent: 0, failed: 0 },
+            whatsapp: { sent: 0, failed: 0 },
+            sms: { sent: 0, failed: 0 }
+          }
+        }
+      }
+
+      // Use the main sendNotification method with only web push
+      const userRoles = [...new Set(users.map(u => u.role))]
+      
+      return await this.sendNotification({
+        title: payload.title,
+        message: payload.body,
+        channels: ['web_push'], // Only web push, no email
+        targetRoles: userRoles,
+        sentBy: 'system',
+        metadata: {
+          type: payload.type || 'chat_message',
+          url: payload.url,
+          specificUserIds: userIds
+        }
+      })
+    } catch (error) {
+      console.error('Failed to notify users with web push:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        results: {
+          webPush: { sent: 0, failed: 0 },
+          email: { sent: 0, failed: 0 },
+          whatsapp: { sent: 0, failed: 0 },
+          sms: { sent: 0, failed: 0 }
+        }
+      }
+    }
+  }
+
   // Notify users by role
   static async notifyByRole(roles: string[], payload: {
     title: string
@@ -1138,4 +1226,25 @@ export async function markAllAsRead(userId: string): Promise<{ success: boolean;
       error: error instanceof Error ? error.message : 'Unknown error'
     }
   }
+}
+
+// Domain helpers: exported functions to match existing service hooks
+export async function purchaseInquiry(params: { moderatorIds: string[]; itemName: string; scrapItemId: string; conversationId: string; buyerName?: string }) {
+  return NotificationService.purchaseInquiry(params)
+}
+
+export async function paymentRequest(params: { buyerId: string; amount: number; conversationId: string; scrapItemId: string }) {
+  return NotificationService.paymentRequest(params)
+}
+
+export async function paymentCompleted(params: { buyerId: string; purchaseId: string; scrapItemId: string; amount: number }) {
+  return NotificationService.paymentCompleted(params)
+}
+
+export async function itemSold(params: { staffIds: string[]; scrapItemId: string; salePrice: number }) {
+  return NotificationService.itemSold(params)
+}
+
+export async function itemSoldToBuyer(params: { buyerId: string; scrapItemId: string; salePrice: number }) {
+  return NotificationService.itemSoldToBuyer(params)
 }

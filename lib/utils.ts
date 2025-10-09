@@ -1,23 +1,10 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import xlsx from "json-as-xlsx";
 import moment from 'moment';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
-
-export const downloadExcel = (data: any[], fileName: string) => {
-  const settings = {
-    fileName: fileName,
-    extraLength: 3,
-    writeOptions: {},
-  };
-  console.log("Downloading Excel file:", fileName);
-  console.log("Data to be exported:", data);
-  console.log(data.length)
-  xlsx(data, settings);
-};
 
 export const formatDate = (dateInput: string | Date | null): string => {
   if (dateInput == null) return ""

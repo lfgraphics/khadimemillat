@@ -19,6 +19,8 @@ export default function AccountPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [purchases, setPurchases] = useState<any[]>([])
+  const [loadingPurchases, setLoadingPurchases] = useState(false)
 
   useEffect(() => {
     if (!isLoaded || !user) return
@@ -35,6 +37,15 @@ export default function AccountPage() {
       } catch (e) { console.error(e) } finally { setLoading(false) }
     }
     load()
+    const loadPurchases = async () => {
+      setLoadingPurchases(true)
+      try {
+        const res = await fetch('/api/protected/purchases', { cache: 'no-store' })
+        const data = await safeJson<any>(res)
+        setPurchases(Array.isArray(data?.purchases) ? data.purchases : [])
+      } catch (e) { console.error(e) } finally { setLoadingPurchases(false) }
+    }
+    loadPurchases()
   }, [isLoaded, user])
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -54,7 +65,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className='p-6 max-w-xl space-y-6'>
+    <div className='p-6 max-w-3xl space-y-6'>
       <div className='flex items-center justify-between'>
         <h1 className='text-2xl font-semibold'>My Profile</h1>
         <p className='text-xs text-muted-foreground'>Personal contact & address</p>
@@ -94,6 +105,58 @@ export default function AccountPage() {
         </Card>
       )}
       <div className='text-xs text-muted-foreground'>These details auto-fill collection requests. Keep them accurate.</div>
+
+      <div className='pt-6'>
+        <div className='flex items-center justify-between mb-3'>
+          <h2 className='text-xl font-semibold'>My Purchases</h2>
+          <Button variant='outline' size='sm' onClick={() => {
+            setLoadingPurchases(true)
+            fetch('/api/protected/purchases', { cache: 'no-store' }).then(r => r.json()).then(d => setPurchases(d?.purchases || [])).finally(() => setLoadingPurchases(false))
+          }}>Refresh</Button>
+        </div>
+        {loadingPurchases ? (
+          <div className='flex items-center gap-2 text-sm text-muted-foreground'><Loader2 className='h-4 w-4 animate-spin'/> Loading purchases…</div>
+        ) : purchases.length === 0 ? (
+          <div className='text-sm text-muted-foreground'>No purchases yet.</div>
+        ) : (
+          <div className='grid gap-3 md:grid-cols-2'>
+            {purchases.map((p) => {
+              const item = p.scrapItemId || {}
+              const thumb = Array.isArray(item?.photos?.after) && item.photos.after[0]
+                ? item.photos.after[0]
+                : (Array.isArray(item?.photos?.before) ? item.photos.before[0] : null)
+              // Non-staff users should not see moderator routes; link to public marketplace if available
+              const itemLink = item?._id ? `/marketplace?highlight=${item._id}` : undefined
+              return (
+                <Card key={p._id} className='overflow-hidden'>
+                  <div className='flex'>
+                    {thumb ? (
+                      <a href={itemLink} className='block w-28 h-28 flex-shrink-0 bg-muted'>
+                        <img src={thumb} alt={item?.name || 'Item'} className='w-full h-full object-cover' />
+                      </a>
+                    ) : (
+                      <div className='w-28 h-28 flex-shrink-0 bg-muted' />
+                    )}
+                    <div className='flex-1'>
+                      <CardHeader className='pb-2'>
+                        <CardTitle className='text-base'>
+                          {itemLink ? <a href={itemLink} className='hover:underline'>{item?.name || 'Item'}</a> : (item?.name || 'Item')}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className='text-sm grid grid-cols-2 gap-1'>
+                        <div>Status: <span className='font-medium'>{p.status}</span></div>
+                        <div>{p.salePrice ? `Amount: ₹${p.salePrice}` : ''}</div>
+                        <div>{p.paymentMethod ? `Payment: ${p.paymentMethod}` : ''}</div>
+                        <div>{p.completedAt ? `Completed: ${new Date(p.completedAt).toLocaleString()}` : ''}</div>
+                      </CardContent>
+                    </div>
+                  </div>
+                </Card>
+              )
+            })}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

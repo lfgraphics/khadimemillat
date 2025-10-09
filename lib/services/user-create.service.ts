@@ -58,7 +58,7 @@ export async function createUserRobust(input: CreateUserInput): Promise<CreatedU
     lastName,
     username,
     password,
-    emailAddress: [emailUsed],
+    emailAddress: [emailUsed], // ← Correct field name
     publicMetadata: { role: input.role || 'user', ...(input.address && { address: input.address }) },
     privateMetadata: { phone: input.phone }
   })
@@ -89,11 +89,11 @@ export async function createUserRobust(input: CreateUserInput): Promise<CreatedU
   }
 
   if (wantWhatsApp) {
-    try { await whatsappService.sendMessage({ to: input.phone, message: `KM Welfare account created.\nUsername: ${username}\nPassword: ${password}\nSign in: ${signInUrl}` }) } catch {}
+    try { await whatsappService.sendMessage({ to: input.phone, message: `KM Welfare account created.\nUsername: ${username}\nPassword: ${password}\nSign in: ${signInUrl}` }) } catch { }
   }
 
   if (wantSMS) {
-    try { await smsService.sendSMS({ to: input.phone, message: `KM Welfare: Username ${username}, Password ${password}. Sign in: ${signInUrl}` } as any) } catch {}
+    try { await smsService.sendSMS({ to: input.phone, message: `KM Welfare: Username ${username}, Password ${password}. Sign in: ${signInUrl}` } as any) } catch { }
   }
 
   return { clerkUserId: clerkUser.id, username, emailUsed, password }

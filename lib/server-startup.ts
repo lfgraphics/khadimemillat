@@ -5,6 +5,8 @@
 
 import { ConfigValidator } from './services/config-validator.service'
 import { schedulerService } from './services/scheduler.service'
+import connectDB from './db'
+import Purchase from '@/models/Purchase'
 
 let serverInitialized = false
 
@@ -12,7 +14,7 @@ let serverInitialized = false
  * Initialize server-side services and validation
  * This should only run once when the server starts
  */
-export function initializeServer(): void {
+export async function initializeServer(): Promise<void> {
   if (serverInitialized) {
     return
   }
@@ -47,6 +49,20 @@ export function initializeServer(): void {
     } catch (schedulerError) {
       if (shouldLogVerbose) {
         console.warn('⚠️ Failed to initialize scheduler service:', schedulerError)
+      }
+    }
+
+    // Ensure database indexes are up to date (drop legacy and sync)
+    try {
+      await connectDB()
+      await Purchase.collection.dropIndex('scrapItemId_1').catch(() => {})
+      await Purchase.syncIndexes()
+      if (shouldLogVerbose) {
+        console.log('✅ Purchase indexes synchronized')
+      }
+    } catch (indexError) {
+      if (shouldLogVerbose) {
+        console.warn('⚠️ Failed to sync Purchase indexes:', indexError)
       }
     }
     

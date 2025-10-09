@@ -107,6 +107,7 @@ export async function createVerifiedRequestForUser(data: CreateRequestForUserDat
         })
         
         notificationsSent = allScrappers.length
+        // Log success for monitoring
         console.log(`[createVerifiedRequestForUser] Sent notifications to ${notificationsSent} scrappers for request ${createdRequest._id}`)
       } catch (notificationError) {
         console.error('[createVerifiedRequestForUser] Failed to send scrapper notifications:', notificationError)
@@ -130,6 +131,7 @@ export async function createVerifiedRequestForUser(data: CreateRequestForUserDat
       createdAt: createdRequest.createdAt
     }
 
+    // Log success for monitoring
     console.log(`[createVerifiedRequestForUser] Successfully created verified request ${response.id} for user ${data.userId} by admin ${data.createdBy}`)
     return response
 
@@ -187,9 +189,21 @@ export async function getUsersByRole(role: string) {
   return users.data.filter((u: any) => u.publicMetadata?.role === role)
 }
 
-export async function createCollectionRequest(data: Partial<ICollectionRequest>) {
+export async function createCollectionRequest(data: Partial<ICollectionRequest> & { currentLocation?: { latitude: number; longitude: number; accuracy?: number } }) {
   await connectDB()
-  const doc = await CollectionRequest.create(data)
+  
+  // Handle current location if provided
+  const requestData: any = { ...data }
+  if (data.currentLocation) {
+    requestData.location = {
+      type: 'Point',
+      coordinates: [data.currentLocation.longitude, data.currentLocation.latitude]
+    }
+    // Remove currentLocation from the data as it's transformed to location
+    delete requestData.currentLocation
+  }
+  
+  const doc = await CollectionRequest.create(requestData)
   // Notify admins/moderators new request
   await notificationService.notifyByRole(['admin','moderator'], {
     title: 'New Collection Request',

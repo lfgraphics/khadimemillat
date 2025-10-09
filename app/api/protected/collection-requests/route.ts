@@ -68,7 +68,8 @@ export async function POST(req: Request) {
       requestedPickupTime: parsed.data.requestedPickupTime ? new Date(parsed.data.requestedPickupTime) : undefined,
       address: parsed.data.address,
       phone: parsed.data.phone,
-      notes: parsed.data.notes
+      notes: parsed.data.notes,
+      currentLocation: parsed.data.currentLocation
     } as any)
 
     // Enrich with donorDetails in response for convenience

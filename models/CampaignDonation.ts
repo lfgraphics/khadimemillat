@@ -14,6 +14,12 @@ export interface ICampaignDonation extends Document {
     status: 'pending' | 'completed' | 'failed' | 'refunded'
     processedBy?: string // Clerk user ID of admin who processed
     processedAt?: Date
+    // Razorpay tracking fields
+    razorpayOrderId?: string
+    razorpayPaymentId?: string
+    razorpaySignature?: string
+    paymentVerified?: boolean
+    paymentVerifiedAt?: Date
 }
 
 const campaignDonationSchema = new Schema<ICampaignDonation>({
@@ -37,7 +43,13 @@ const campaignDonationSchema = new Schema<ICampaignDonation>({
         default: 'pending' 
     },
     processedBy: { type: String },
-    processedAt: { type: Date }
+    processedAt: { type: Date },
+    // Razorpay fields
+    razorpayOrderId: { type: String, index: true },
+    razorpayPaymentId: { type: String, index: true },
+    razorpaySignature: { type: String },
+    paymentVerified: { type: Boolean, default: false },
+    paymentVerifiedAt: { type: Date }
 }, { timestamps: true })
 
 campaignDonationSchema.index({ campaignId: 1 })

@@ -65,10 +65,6 @@ export default clerkMiddleware(async (auth, req) => {
     const { userId } = await auth()
 
     if (!isPublicRoute(req) && !userId) {
-        console.log('User not authenticated, redirecting to sign-in')
-        console.log('userId:', userId)
-        console.log('Request URL:', req.url)
-
         if (req.nextUrl.pathname.startsWith('/api/')) {
             // Return JSON error for API routes instead of redirecting
             return NextResponse.json(
@@ -78,7 +74,6 @@ export default clerkMiddleware(async (auth, req) => {
         }
 
         // Only redirect non-API routes to sign-in
-        console.log('User not authenticated, redirecting to sign-in')
         const signInUrl = new URL('/sign-in', req.url)
         const res = NextResponse.redirect(signInUrl)
         res.cookies.set('redirectTo', req.nextUrl.pathname + req.nextUrl.search, {

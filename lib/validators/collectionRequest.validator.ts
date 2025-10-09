@@ -14,7 +14,12 @@ export const createCollectionRequestSchema = z.object({
   }, { message: 'Invalid datetime format' }),
   address: z.string().min(1),
   phone: z.string().min(1),
-  notes: z.string().optional()
+  notes: z.string().optional(),
+  currentLocation: z.object({
+    latitude: z.number().min(-90).max(90),
+    longitude: z.number().min(-180).max(180),
+    accuracy: z.number().optional()
+  }).optional()
 })
 
 export const updateCollectionRequestSchema = z.object({

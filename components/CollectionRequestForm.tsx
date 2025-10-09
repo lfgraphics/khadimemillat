@@ -13,6 +13,11 @@ export interface CollectionRequestFormValues {
   phone: string;
   requestedPickupTime?: string;
   notes?: string;
+  currentLocation?: {
+    latitude: number;
+    longitude: number;
+    accuracy?: number;
+  };
   images?: Array<{
     url: string;
     publicId: string;
@@ -45,11 +50,13 @@ export const CollectionRequestForm: React.FC<CollectionRequestFormProps> = ({
     phone: defaultValues?.phone || "",
     requestedPickupTime: defaultValues?.requestedPickupTime,
     notes: defaultValues?.notes || "",
+    currentLocation: defaultValues?.currentLocation,
     images: defaultValues?.images || [],
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
 
   // File upload states
   const [uploadedImages, setUploadedImages] = useState<UploadResult[]>(
@@ -88,6 +95,52 @@ export const CollectionRequestForm: React.FC<CollectionRequestFormProps> = ({
   const removeUploadedImage = (publicId: string) => {
     setUploadedImages(prev => prev.filter(img => img.publicId !== publicId));
     toast.success('Image removed');
+  };
+
+  // Get current location
+  const getCurrentLocation = () => {
+    setLocationLoading(true);
+    
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by this browser');
+      setLocationLoading(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const location = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy
+        };
+        updateField('currentLocation', location);
+        toast.success('Location captured successfully');
+        setLocationLoading(false);
+      },
+      (error) => {
+        console.error('Location error:', error);
+        let message = 'Failed to get location';
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            message = 'Location access denied. Please enable location permissions.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            message = 'Location information is unavailable.';
+            break;
+          case error.TIMEOUT:
+            message = 'Location request timed out.';
+            break;
+        }
+        toast.error(message);
+        setLocationLoading(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000 // 5 minutes
+      }
+    );
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -158,6 +211,33 @@ export const CollectionRequestForm: React.FC<CollectionRequestFormProps> = ({
           placeholder="Contact number"
           required
         />
+      </div>
+      
+      {/* Current Location */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium">Current Location (helps scrapper navigate)</label>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={getCurrentLocation}
+            disabled={locationLoading}
+            className="whitespace-nowrap"
+          >
+            {locationLoading ? 'Getting Location...' : 'Get Current Location'}
+          </Button>
+          {form.currentLocation && (
+            <div className="flex-1 text-sm text-muted-foreground flex items-center">
+              📍 Location captured (accuracy: {form.currentLocation.accuracy ? Math.round(form.currentLocation.accuracy) + 'm' : 'unknown'})
+            </div>
+          )}
+        </div>
+        {form.currentLocation && (
+          <div className="text-xs text-muted-foreground">
+            Lat: {form.currentLocation.latitude.toFixed(6)}, Lng: {form.currentLocation.longitude.toFixed(6)}
+          </div>
+        )}
       </div>
       <div className="space-y-1">
         <label className="block text-sm font-medium">Requested Pickup Time</label>

@@ -5,9 +5,21 @@ import { Badge } from '@/components/ui/badge'
 import { safeJson } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Loader2, Phone, MapPin, Calendar, User } from 'lucide-react'
+import { Loader2, Phone, MapPin, Calendar, User, Navigation } from 'lucide-react'
 
-interface RequestItem { _id: string; donor?: any; donorDetails?: { name?: string; phone?: string }; phone: string; address: string; requestedPickupTime: string; status: string }
+interface RequestItem { 
+  _id: string; 
+  donor?: any; 
+  donorDetails?: { name?: string; phone?: string }; 
+  phone: string; 
+  address: string; 
+  requestedPickupTime: string; 
+  status: string;
+  location?: {
+    type: 'Point';
+    coordinates: [number, number]; // [longitude, latitude]
+  }
+}
 
 export default function ScrapperAssignedPage() {
   const [items, setItems] = useState<RequestItem[]>([])
@@ -58,6 +70,15 @@ export default function ScrapperAssignedPage() {
     } catch (e) { console.error(e) } finally { setProcessing(false); setCollectingId(null) }
   }
 
+  const openMapsRoute = (request: RequestItem) => {
+    const destination = request.location?.coordinates 
+      ? `${request.location.coordinates[1]},${request.location.coordinates[0]}` // lat,lng format for Google Maps
+      : encodeURIComponent(request.address)
+    
+    const url = `https://maps.google.com/maps?q=${destination}&navigation=1`
+    window.open(url, '_blank')
+  }
+
   return (
     <div className='p-6 space-y-6'>
       <div className='flex items-center justify-between'>
@@ -81,8 +102,22 @@ export default function ScrapperAssignedPage() {
               <p className='flex items-center gap-1'><Phone className='h-3 w-3' /> <a href={`tel:${r.phone}`} className='text-blue-600'>{r.phone}</a></p>
               <p className='flex items-center gap-1'><MapPin className='h-3 w-3' /> {r.address}</p>
               <p className='flex items-center gap-1'><Calendar className='h-3 w-3' /> {new Date(r.requestedPickupTime).toLocaleString()}</p>
+              {r.location && (
+                <p className='flex items-center gap-1 text-green-600'>
+                  <Navigation className='h-3 w-3' /> Location available
+                </p>
+              )}
             </div>
-            <div className='mt-auto pt-2'>
+            <div className='mt-auto pt-2 space-y-2'>
+              <Button 
+                size='sm' 
+                variant='outline' 
+                className='w-full' 
+                onClick={() => openMapsRoute(r)}
+              >
+                <Navigation className='h-3 w-3 mr-1' />
+                Navigate
+              </Button>
               <Dialog open={collectingId === r._id} onOpenChange={(o) => setCollectingId(o ? r._id : null)}>
                 <DialogTrigger asChild>
                   <Button size='sm' className='w-full' variant='default'>Mark Collected</Button>

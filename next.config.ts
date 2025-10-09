@@ -17,6 +17,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  webpack: (config, { isServer }) => {
+    // Handle @zxing/browser which has browser-specific dependencies
+    if (isServer) {
+      config.externals = [...(config.externals || []), '@zxing/browser']
+    }
+    return config
+  },
 };
 
 export default nextConfig;

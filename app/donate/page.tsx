@@ -38,6 +38,7 @@ export default function DonationPage() {
   const [donationAmount, setDonationAmount] = useState('')
   const [donorName, setDonorName] = useState('')
   const [donorEmail, setDonorEmail] = useState('')
+  const [donorPhone, setDonorPhone] = useState('')
   const searchParams = useSearchParams()
   const [programSlug, setProgramSlug] = useState<string | null>(null)
   const [selectedCause, setSelectedCause] = useState('education')
@@ -70,11 +71,22 @@ export default function DonationPage() {
           const u = json.users[0]
           // Prioritize Clerk user ID; fallback to mongo mapping only if needed
           setProfile({ phone: u.phone || '', address: u.address || '', donorId: u.id || u.mongoUserId || u._id })
+
+          // Auto-populate donation form fields if user is signed in
+          if (user?.fullName && !donorName) {
+            setDonorName(user.fullName)
+          }
+          if (user?.primaryEmailAddress?.emailAddress && !donorEmail) {
+            setDonorEmail(user.primaryEmailAddress.emailAddress)
+          }
+          if (u.phone && !donorPhone) {
+            setDonorPhone(u.phone)
+          }
         }
       } catch (e) { console.error(e) }
     }
     load()
-  }, [isSignedIn])
+  }, [isSignedIn, user, donorName, donorEmail, donorPhone])
 
   // Pre-populate cause from URL 'program' slug and store slug separately
   useEffect(() => {
@@ -127,9 +139,35 @@ export default function DonationPage() {
 
   const submitScrapRequest = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isSignedIn) { setError('Please sign in to submit a collection request.'); return }
-    if (!pickupTime) { setError('Pickup time required'); return }
-    setSubmitting(true); setError(null); setSuccess(false)
+
+    if (!isSignedIn) {
+      toast.error('Please sign in to submit a collection request.')
+      setError('Please sign in to submit a collection request.')
+      return
+    }
+
+    if (!pickupTime) {
+      toast.error('Please select a pickup time')
+      setError('Pickup time required')
+      return
+    }
+
+    if (!profile.phone || profile.phone.length < 10) {
+      toast.error('Please provide a valid phone number (10+ digits)')
+      setError('Phone number required and must be at least 10 digits')
+      return
+    }
+
+    if (!profile.address || profile.address.trim().length < 10) {
+      toast.error('Please provide a detailed address (minimum 10 characters)')
+      setError('Detailed address required for pickup')
+      return
+    }
+
+    setSubmitting(true)
+    setError(null)
+    setSuccess(false)
+
     try {
       await updateProfileIfMissing()
 
@@ -150,97 +188,344 @@ export default function DonationPage() {
         }))
       }
 
+      toast.info('Submitting collection request...')
+
       // Omit donor to default to current Clerk user on server; aligns with Clerk-first priority
       const res = await fetch('/api/protected/collection-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestData)
       })
-      if (!res.ok) throw new Error(await res.text())
-      setSuccess(true);
-      setNotes('');
-      setUploadedImages([]);
-      toast.success('Collection request submitted successfully!')
-    } catch (e: any) { setError(e.message || 'Failed'); } finally { setSubmitting(false) }
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }))
+        const errorMsg = errorData.error || errorData.message || await res.text().catch(() => `Request failed (${res.status})`)
+        throw new Error(errorMsg)
+      }
+
+      const result = await res.json()
+      setSuccess(true)
+      setNotes('')
+      setUploadedImages([])
+      setPickupTime('')
+      toast.success('Collection request submitted successfully! You will receive confirmation shortly.')
+
+      // Optionally show request ID if available
+      if (result.requestId) {
+        toast.info(`Request ID: ${result.requestId}`)
+      }
+    } catch (e: any) {
+      console.error('[COLLECTION_REQUEST_ERROR]', e)
+      const errorMessage = e.message || 'Failed to submit collection request'
+      setError(errorMessage)
+      toast.error(errorMessage)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const submitMoneyDonation = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!donationAmount || parseFloat(donationAmount) <= 0) { toast.error('Please enter a valid donation amount'); return }
-    if (!donorName.trim()) { toast.error('Please enter your name'); return }
-    if (donorEmail.trim() && !donorEmail.includes('@')) { toast.error('Please enter a valid email address'); return }
+
+    // Enhanced validation with specific feedback
+    if (!donationAmount || isNaN(parseFloat(donationAmount)) || parseFloat(donationAmount) <= 0) {
+      toast.error('Please enter a valid donation amount (minimum ₹1)');
+      return
+    }
+
+    if (parseFloat(donationAmount) > 500000) {
+      toast.error('Maximum donation amount is ₹5,00,000. For larger donations, please contact us directly.');
+      return
+    }
+
+    if (!donorName.trim() || donorName.trim().length < 2) {
+      toast.error('Please enter your full name (minimum 2 characters)');
+      return
+    }
+
+    // Phone number validation
+    if (!donorPhone.trim() || donorPhone.trim().length < 10) {
+      toast.error('Please enter a valid phone number (minimum 10 digits)');
+      return
+    }
+
+    // Validate phone format
+    const phoneDigits = donorPhone.replace(/\D/g, '')
+    if (phoneDigits.length < 10) {
+      toast.error('Please provide a valid phone number with at least 10 digits')
+      return
+    }
+
+    // Email is optional for donations
+    if (donorEmail.trim() && (!donorEmail.includes('@') || !donorEmail.includes('.'))) {
+      toast.error('Please enter a valid email address (e.g., name@example.com)');
+      return
+    }
 
     setMoneySubmitting(true)
     setMoneySuccess(false)
+    setError(null)
 
     try {
-      // Ask user to sign in or continue as guest
+      // Handle user authentication/creation
       if (!isSignedIn) {
         const wantsLogin = typeof window !== 'undefined'
           ? window.confirm('Please sign in to donate. Press OK to sign in, or Cancel to continue as guest (we will create an account and send credentials).')
           : true
         if (wantsLogin) {
-          try { openSignIn?.({}); } catch {}
+          try {
+            openSignIn?.({})
+            toast.info('Please complete sign in to continue with your donation')
+          } catch (signInError) {
+            console.error('[SIGN_IN_ERROR]', signInError)
+            toast.error('Failed to open sign in. Please try again.')
+          }
           setMoneySubmitting(false)
           return
         } else {
-          // Require phone for guest creation (more robust). Prompt if absent.
-          if (!profile.phone) {
-            toast.error('Phone number required to proceed as guest. Please add your phone in the form above or Account page.')
-            setMoneySubmitting(false)
-            return
-          }
+          // Create guest account with provided information
+          toast.info('Creating your account for future donations...')
           const signupRes = await fetch('/api/public/guest-signup', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: donorName, phone: profile.phone, email: donorEmail || undefined })
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: donorName.trim(),
+              phone: donorPhone.trim(),
+              email: donorEmail.trim() || undefined
+            })
           })
+
           if (!signupRes.ok) {
-            const msg = await signupRes.text().catch(()=> 'Account creation failed')
-            toast.error(msg)
+            const errorData = await signupRes.json().catch(() => ({ error: 'Unknown error' }))
+            let errorMsg = errorData.error || errorData.message || `Account creation failed (${signupRes.status})`
+
+            // Handle specific error cases
+            if (errorMsg.includes('phone') || errorMsg.includes('Phone')) {
+              errorMsg = 'Phone number already exists. Please sign in instead.'
+            } else if (errorMsg.includes('email') || errorMsg.includes('Email')) {
+              errorMsg = 'Email already exists. Please sign in instead.'
+            }
+
+            toast.error(errorMsg)
             setMoneySubmitting(false)
             return
           }
+
           const created = await signupRes.json()
-          toast.success('Guest account created. Signing you in...')
+          toast.success('✅ Account created successfully!')
+          toast.info('You will receive login credentials via WhatsApp/SMS')
 
           // Immediately sign in with returned credentials
           if (signIn && isSignInLoaded) {
-            const result = await signIn.create({ identifier: created.identifier, password: created.password })
-            if (result?.status === 'complete') {
-              await setActive?.({ session: result.createdSessionId })
+            try {
+              toast.info('Signing you in automatically...')
+              const result = await signIn.create({
+                identifier: created.identifier,
+                password: created.password
+              })
+
+              if (result?.status === 'complete') {
+                await setActive?.({ session: result.createdSessionId })
+                toast.success('🎉 Signed in successfully!')
+
+                // Show welcome message
+                setTimeout(() => {
+                  toast.info(`Welcome ${donorName}! Your account is now set up for future donations.`)
+                }, 1000)
+              } else {
+                toast.warning('Account created but auto-login incomplete. Please check your credentials.')
+                console.warn('[AUTO_LOGIN_INCOMPLETE]', result?.status)
+              }
+            } catch (loginError: any) {
+              console.error('[AUTO_LOGIN_ERROR]', loginError)
+              toast.warning('Account created successfully! Please sign in manually to continue.')
+              toast.info(`Username: ${created.username}`)
             }
+          } else {
+            toast.warning('Account created! Please sign in manually to continue.')
+            toast.info(`Username: ${created.username}`)
           }
         }
       }
 
+      // Create donation record
       let donationId = ''
-      let campaignSlug = 'program-donation'
 
       if (programSlug) {
+        toast.info('Creating donation record...')
         const res = await fetch(`/api/public/programs/${encodeURIComponent(programSlug)}/donations`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ donorName, donorEmail, amount: parseFloat(donationAmount), message: notes, paymentMethod: 'online' })
+          body: JSON.stringify({
+            donorName: donorName.trim(),
+            donorEmail: donorEmail.trim() || undefined,
+            donorPhone: donorPhone.trim() || undefined,
+            amount: parseFloat(donationAmount),
+            message: notes,
+            paymentMethod: 'online'
+          })
         })
-        if (!res.ok) throw new Error(await res.text())
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({ error: 'Unknown error' }))
+          const errorMsg = errorData.error || errorData.message || await res.text().catch(() => `Request failed (${res.status})`)
+          throw new Error(errorMsg)
+        }
+
         const data = await res.json()
-        donationId = data.donationId || ('dummy-' + Date.now())
-        campaignSlug = data.campaignSlug || 'program-donation'
+        donationId = data.donationId
       } else {
-        donationId = 'dummy-' + Date.now()
+        // Create general donation directly
+        const res = await fetch('/api/public/donations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            donorName: donorName.trim(),
+            donorEmail: donorEmail.trim() || undefined,
+            donorPhone: donorPhone.trim() || undefined,
+            amount: parseFloat(donationAmount),
+            message: notes,
+            cause: selectedCause,
+            paymentMethod: 'online'
+          })
+        })
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({ error: 'Unknown error' }))
+          const errorMsg = errorData.error || errorData.message || await res.text().catch(() => `Request failed (${res.status})`)
+          throw new Error(errorMsg)
+        }
+
+        const data = await res.json()
+        donationId = data.donationId
       }
 
-      router.push(`/donate/${selectedCause}/${campaignSlug}/${donationId}?amount=${donationAmount}&donor=${encodeURIComponent(donorName)}&email=${encodeURIComponent(donorEmail)}`)
-      setMoneySuccess(true)
-      toast.success('Redirecting to donation page...')
-    } catch (error) {
-      toast.error('Failed to process donation. Please try again.')
-    } finally {
+      if (!donationId) {
+        throw new Error('Failed to create donation record')
+      }
+
+      // Create Razorpay order
+      toast.info('Creating secure payment order...')
+      const orderRes = await fetch('/api/razorpay/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'donation',
+          amount: parseFloat(donationAmount),
+          referenceId: donationId,
+          email: donorEmail.trim() || undefined,
+          phone: donorPhone.trim() || undefined
+        })
+      })
+
+      if (!orderRes.ok) {
+        const errorData = await orderRes.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || `Order creation failed (${orderRes.status})`)
+      }
+
+      const order = await orderRes.json()
+
+      // Load Razorpay checkout if not present
+      if (typeof window !== 'undefined' && !(window as any).Razorpay) {
+        toast.info('Loading secure payment gateway...')
+        await new Promise<void>((resolve, reject) => {
+          const script = document.createElement('script')
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+          script.onload = () => resolve()
+          script.onerror = () => reject(new Error('Failed to load payment gateway'))
+          document.head.appendChild(script)
+        })
+      }
+
+      // Initialize Razorpay checkout
+      const razorpay = new (window as any).Razorpay({
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency || 'INR',
+        order_id: order.orderId,
+        name: 'Khadim-e-Millat Welfare Foundation',
+        description: `Donation for ${selectedCause.charAt(0).toUpperCase() + selectedCause.slice(1)}`,
+        image: '/favicon.ico',
+        prefill: {
+          name: donorName.trim(),
+          email: donorEmail.trim() || undefined,
+          contact: donorPhone.trim() || undefined
+        },
+        theme: {
+          color: '#3B82F6'
+        },
+        handler: async function (response: any) {
+          try {
+            toast.info('Verifying payment...')
+
+            // Verify payment on server
+            const verifyRes = await fetch('/api/razorpay/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: 'donation',
+                orderId: order.orderId,
+                paymentId: response.razorpay_payment_id,
+                signature: response.razorpay_signature,
+                referenceId: donationId
+              })
+            })
+
+            if (!verifyRes.ok) {
+              const errorData = await verifyRes.json().catch(() => ({ error: 'Verification failed' }))
+              throw new Error(errorData.error || 'Payment verification failed')
+            }
+
+            setMoneySuccess(true)
+            toast.success('🎉 Donation completed successfully!')
+            toast.success('Thank you for your generous contribution!')
+
+            // Reset form
+            setDonationAmount('')
+            setDonorName('')
+            setDonorEmail('')
+            setDonorPhone('')
+            setNotes('')
+
+            // Show additional success message
+            setTimeout(() => {
+              toast.info('You will receive confirmation and receipt shortly.')
+            }, 2000)
+
+          } catch (error: any) {
+            console.error('[PAYMENT_VERIFICATION_ERROR]', error)
+            toast.error(error.message || 'Payment verification failed. Please contact support.')
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            toast.info('Payment cancelled by user')
+            setMoneySubmitting(false)
+          }
+        }
+      })
+
+      // Add error handlers
+      razorpay.on('payment.failed', function (response: any) {
+        console.error('[PAYMENT_FAILED]', response.error)
+        toast.error(response.error?.description || 'Payment failed. Please try again.')
+        setMoneySubmitting(false)
+      })
+
+      // Open Razorpay checkout
+      toast.success('Opening secure payment gateway...')
+      razorpay.open()
+
+    } catch (error: any) {
+      console.error('[DONATION_SUBMISSION_ERROR]', error)
+      const errorMessage = error.message || 'Failed to process donation. Please try again.'
+      toast.error(errorMessage)
+      setError(errorMessage)
       setMoneySubmitting(false)
     }
   }
 
-  const dummyCauses = [
+  const donationCauses = [
     { value: 'sadqa', label: 'Sadqa' },
     { value: 'zakat', label: 'Zakat' },
     { value: 'education', label: 'Education Support' },
@@ -389,7 +674,7 @@ export default function DonationPage() {
                         <SelectValue placeholder='Select cause' />
                       </SelectTrigger>
                       <SelectContent>
-                        {dummyCauses.map(cause => (
+                        {donationCauses.map(cause => (
                           <SelectItem key={cause.value} value={cause.value}>{cause.label}</SelectItem>
                         ))}
                       </SelectContent>
@@ -404,12 +689,21 @@ export default function DonationPage() {
                     />
                   </div>
                   <div className='space-y-1'>
-                    <label className='text-xs font-semibold'>Email Address</label>
+                    <label className='text-xs font-semibold'>Phone Number</label>
+                    <Input
+                      type='tel'
+                      value={donorPhone}
+                      onChange={e => setDonorPhone(e.target.value)}
+                      placeholder='+1234567890'
+                    />
+                  </div>
+                  <div className='space-y-1'>
+                    <label className='text-xs font-semibold'>Email Address (Optional)</label>
                     <Input
                       type='email'
                       value={donorEmail}
                       onChange={e => setDonorEmail(e.target.value)}
-                      placeholder='john@example.com'
+                      placeholder='john@example.com (optional)'
                     />
                   </div>
                   <div className='md:col-span-2 space-y-1'>
@@ -430,10 +724,7 @@ export default function DonationPage() {
                     }
                   </Button>
                 </div>
-                {moneySuccess && <p className='text-xs text-green-600'>Redirecting to donation page...</p>}
-                <div className='text-xs text-muted-foreground mt-4'>
-                  <p>This is a demo form. In production, this would integrate with a payment processor like Stripe or PayPal.</p>
-                </div>
+                {moneySuccess && <p className='text-xs text-green-600'>Payment processing completed successfully!</p>}
               </form>
             </CardContent>
           </Card>

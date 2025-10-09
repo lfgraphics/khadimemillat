@@ -16,9 +16,9 @@ interface DonationData {
   id: string;
 }
 
-export default function DynamicDonationPage({ 
-  params 
-}: { 
+export default function DynamicDonationPage({
+  params
+}: {
   params: Promise<{ cause: string; slug: string; id: string }>
 }) {
   // Unwrap Next.js params Promise per React 19 pattern
@@ -44,15 +44,133 @@ export default function DynamicDonationPage({
     });
   }, [searchParams, cause, slug, id]);
 
+  const handleRazorpayPayment = async () => {
+    if (!donationData) return;
+
+    setProcessing(true);
+
+    try {
+      toast.info('Creating secure payment order...')
+
+      // Create Razorpay order for donation
+      const orderRes = await fetch('/api/razorpay/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'donation',
+          amount: parseFloat(donationData.amount),
+          referenceId: donationData.id,
+          email: donationData.email,
+          phone: '' // Optional for donations
+        })
+      })
+
+      if (!orderRes.ok) {
+        const errorData = await orderRes.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || `Order creation failed (${orderRes.status})`)
+      }
+
+      const order = await orderRes.json()
+
+      // Dynamically load Razorpay checkout if not present
+      if (typeof window !== 'undefined' && !(window as any).Razorpay) {
+        toast.info('Loading secure payment gateway...')
+        await new Promise<void>((resolve, reject) => {
+          const script = document.createElement('script')
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+          script.onload = () => resolve()
+          script.onerror = () => reject(new Error('Failed to load Razorpay'))
+          document.head.appendChild(script)
+        })
+      }
+
+      // Initialize Razorpay checkout
+      const razorpay = new (window as any).Razorpay({
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency || 'INR',
+        order_id: order.orderId,
+        name: 'Khadim-e-Millat Welfare Foundation',
+        description: `Donation for ${donationData.cause}`,
+        image: '/favicon.ico', // Your organization logo
+        prefill: {
+          name: donationData.donorName,
+          email: donationData.email,
+        },
+        theme: {
+          color: '#3B82F6' // Your brand color
+        },
+        handler: async function (response: any) {
+          try {
+            toast.info('Verifying payment...')
+
+            // Verify payment on server
+            const verifyRes = await fetch('/api/razorpay/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: 'donation',
+                orderId: order.orderId,
+                paymentId: response.razorpay_payment_id,
+                signature: response.razorpay_signature,
+                referenceId: donationData.id
+              })
+            })
+
+            if (!verifyRes.ok) {
+              const errorData = await verifyRes.json().catch(() => ({ error: 'Verification failed' }))
+              throw new Error(errorData.error || 'Payment verification failed')
+            }
+
+            setCompleted(true)
+            toast.success('🎉 Donation completed successfully!')
+            toast.success('Thank you for your generous contribution!')
+
+            // Show additional success message
+            setTimeout(() => {
+              toast.info('You will receive confirmation and receipt shortly.')
+            }, 2000)
+
+          } catch (error: any) {
+            console.error('[PAYMENT_VERIFICATION_ERROR]', error)
+            toast.error(error.message || 'Payment verification failed. Please contact support.')
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            toast.info('Payment cancelled by user')
+            setProcessing(false)
+          }
+        }
+      })
+
+      // Add error handlers
+      razorpay.on('payment.failed', function (response: any) {
+        console.error('[PAYMENT_FAILED]', response.error)
+        toast.error(response.error?.description || 'Payment failed. Please try again.')
+        setProcessing(false)
+      })
+
+      // Open Razorpay checkout
+      razorpay.open()
+
+    } catch (error: any) {
+      console.error('[DONATION_PAYMENT_ERROR]', error)
+      toast.error(error.message || 'Failed to initiate payment. Please try again.')
+      setProcessing(false)
+    }
+  }
+
   const handleDummyPayment = async () => {
     if (!donationData) return;
-    
+
     setProcessing(true);
-    
+
     try {
-      // Simulate payment processing
+      // Simulate payment processing for testing
+      toast.info('Processing demo payment...')
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Simulate successful payment and persist donation record
       try {
         if (donationData.id && !donationData.id.startsWith('dummy-')) {
@@ -81,16 +199,10 @@ export default function DynamicDonationPage({
       }
 
       setCompleted(true);
-      toast.success('Donation completed successfully!');
-      
-      // In a real implementation, you would:
-      // 1. Send data to your payment processor (Stripe, PayPal, etc.)
-      // 2. Create a donation record in your database
-      // 3. Send confirmation email
-      // 4. Redirect to success page or show confirmation
-      
+      toast.success('Demo donation completed successfully!');
+
     } catch (error) {
-      toast.error('Payment processing failed. Please try again.');
+      toast.error('Demo payment processing failed. Please try again.');
     } finally {
       setProcessing(false);
     }
@@ -201,87 +313,86 @@ export default function DynamicDonationPage({
 
             {/* Payment Method Selection */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-muted-foreground">Payment Method</h3>
+              <h3 className="font-semibold text-muted-foreground">Select Payment Method</h3>
               <div className="grid gap-3">
-                <div className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                <div className="p-4 border-2 border-primary rounded-lg bg-primary/5">
                   <div className="flex items-center gap-3">
-                    <input type="radio" name="payment" defaultChecked className="text-blue-600" />
-                    <div>
-                      <p className="font-medium">Credit/Debit Card</p>
-                      <p className="text-xs text-gray-500">Visa, Mastercard, American Express</p>
+                    <div className="flex-shrink-0">
+                      <div className="w-4 h-4 rounded-full bg-primary"></div>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-primary">Secure Online Payment</p>
+                      <p className="text-sm text-muted-foreground">Credit/Debit Card, UPI, Net Banking via Razorpay</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">Recommended</span>
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">Instant Receipt</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <input type="radio" name="payment" className="text-blue-600" />
-                    <div>
-                      <p className="font-medium">PayPal</p>
-                      <p className="text-xs text-gray-500">Pay with your PayPal account</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Dummy Payment Form */}
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold">Card Number</label>
-                <Input
-                  placeholder="4242 4242 4242 4242" 
-                  className="font-mono"
-                  defaultValue="4242 4242 4242 4242"
-                />
-                <p className="text-xs text-gray-500">Use any valid test card number</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold">Expiry Date</label>
-                  <Input 
-                    placeholder="MM/YY" 
-                    defaultValue="12/25"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold">CVC</label>
-                  <Input 
-                    placeholder="123" 
-                    defaultValue="123"
-                  />
                 </div>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-4">
-              <Button 
+            <div className="space-y-3 pt-4">
+              <Button
+                onClick={handleRazorpayPayment}
+                disabled={processing}
+                className="w-full bg-primary hover:bg-primary/90 text-white py-3 text-lg"
+                size="lg"
+              >
+                {processing ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                    Processing Payment...
+                  </>
+                ) : (
+                  <>
+                    🔒 Secure Donate ₹{donationData.amount}
+                  </>
+                )}
+              </Button>
+
+              {/* Demo option for testing */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-muted-foreground/20" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">For Testing Only</span>
+                </div>
+              </div>
+
+              <Button
                 onClick={handleDummyPayment}
                 disabled={processing}
-                className="flex-1"
+                variant="outline"
+                className="w-full"
               >
                 {processing ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Processing...
+                    Processing Demo...
                   </>
                 ) : (
-                  `Donate ₹${donationData.amount}`
+                  `Demo Payment ₹${donationData.amount}`
                 )}
               </Button>
-              <Button 
-                variant="outline" 
+
+              <Button
+                variant="ghost"
                 onClick={() => window.history.back()}
                 disabled={processing}
+                className="w-full"
               >
                 Cancel
               </Button>
             </div>
 
-            {/* Demo Notice */}
-            <div className="text-xs text-gray-500 text-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="font-medium">Demo Environment</p>
-              <p>This is a demonstration page. In production, this would integrate with a real payment processor like Stripe or PayPal.</p>
+            {/* Security Notice */}
+            <div className="text-xs text-center p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="font-medium text-green-800">🔒 Your payment is secure</p>
+              <p className="text-green-700">We use industry-standard encryption to protect your information</p>
             </div>
           </div>
         </CardContent>

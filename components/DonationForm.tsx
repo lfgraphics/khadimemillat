@@ -24,7 +24,9 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
   const [donorPhone, setDonorPhone] = useState('')
   const [message, setMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [razorpayReady, setRazorpayReady] = useState(false)
   const [emailGenerated, setEmailGenerated] = useState(false)
+  const [allowEditProfileFields, setAllowEditProfileFields] = useState(false)
 
   // Auto-populate user data when logged in
   useEffect(() => {
@@ -37,10 +39,28 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
     }
   }, [isLoaded, user])
 
-  // Generate dynamic email for logged out users based on name and phone
-  const generateDynamicEmail = (name: string, phone: string) => {
-    if (!name.trim() && !phone.trim()) return ''
+  // Load Razorpay script
+  useEffect(() => {
+    const existing = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]') as HTMLScriptElement | null
+    if (existing) {
+      if ((window as any).Razorpay) setRazorpayReady(true)
+      else existing.addEventListener('load', () => setRazorpayReady(true))
+      return
+    }
+    const script = document.createElement('script')
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    script.async = true
+    script.onload = () => setRazorpayReady(true)
+    script.onerror = () => {
+      console.error('Failed to load Razorpay')
+      setRazorpayReady(false)
+    }
+    document.body.appendChild(script)
+  }, [])
 
+  // Generate dynamic email for logged out users based on name and phone
+  const isValidEmail = (email: string) => /[^\s@]+@[^\s@]+\.[^\s@]+/.test(email)
+  const generateDynamicEmail = (name: string, phone: string) => {
     let username = ''
     if (name.trim()) {
       username = name.toLowerCase().replace(/[^a-z0-9]/g, '')
@@ -49,9 +69,10 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
       const cleanPhone = phone.replace(/[^0-9]/g, '')
       username = username ? `${username}${cleanPhone.slice(-4)}` : cleanPhone.slice(-4)
     }
-
     const host = typeof window !== 'undefined' ? window.location.host.replace('www.', '') : 'example.com'
-    return username ? `${username}@${host}` : ''
+    const candidate = username ? `${username}@${host}` : ''
+    if (candidate && isValidEmail(candidate)) return candidate
+    return `donor-${Date.now()}@example.com`
   }
 
   const handlePresetAmount = (presetAmount: number) => {
@@ -109,9 +130,9 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
       return
     }
 
-    if (!donorEmail.trim()) {
-      toast.error('Email is required for all donations')
-      return
+    if (!donorEmail.trim() || !isValidEmail(donorEmail.trim())) {
+      const fallback = generateDynamicEmail(donorName, donorPhone)
+      setDonorEmail(fallback)
     }
 
     // Phone number is optional for logged out users
@@ -141,32 +162,71 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
 
       const donation = await response.json()
 
-      // Demo flow: immediately mark as completed so it appears in campaign supporters list
-      try {
-        if (donation?._id) {
-          await fetch(`/api/public/donations/${encodeURIComponent(donation._id)}/complete`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ paymentReference: donation._id, paymentMethod: 'online' })
-          })
+      // Create Razorpay order
+      if (!razorpayReady) throw new Error('Payment gateway is not ready. Please try again.')
+      const orderRes = await fetch('/api/razorpay/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'donation', amount, referenceId: donation._id, email: donorEmail.trim(), phone: donorPhone.trim() || undefined
+        })
+      })
+      if (!orderRes.ok) {
+        const er = await orderRes.json().catch(() => ({}))
+        throw new Error(er.error || 'Failed to create payment order')
+      }
+      const { orderId, amount: amtPaise, currency, keyId } = await orderRes.json()
+
+      const rzp = new (window as any).Razorpay({
+        key: keyId,
+        amount: amtPaise,
+        currency,
+        name: 'Khadim-e-Millat Welfare Foundation',
+        description: `Donation for ${campaignSlug}`,
+        order_id: orderId,
+        prefill: { name: donorName, email: donorEmail, contact: donorPhone },
+        theme: { color: '#16a34a' },
+        handler: async (resp: any) => {
+          try {
+            const verifyRes = await fetch('/api/razorpay/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: 'donation', orderId: resp.razorpay_order_id, paymentId: resp.razorpay_payment_id, signature: resp.razorpay_signature, referenceId: donation._id
+              })
+            })
+            if (verifyRes.status === 202) {
+              toast.info('Payment received. Verification is pending; you will receive a confirmation shortly.')
+              // Optionally: poll a status endpoint here if available
+              return
+            }
+            if (!verifyRes.ok) {
+              const data = await verifyRes.json().catch(() => ({}))
+              throw new Error(data.error || 'Payment verification failed')
+            }
+            toast.success('Donation completed successfully! Thank you for your support.')
+            // Reset form
+            setAmount('')
+            setCustomAmount('')
+            if (!user) {
+              setDonorName('')
+              setDonorEmail('')
+              setDonorPhone('')
+            }
+            setMessage('')
+          } catch (err) {
+            console.error('[VERIFY_PAYMENT_ERROR]', err)
+            toast.error(err instanceof Error ? err.message : 'Payment verification failed')
+          }
         }
-      } catch (e) {
-        console.warn('[DONATION_COMPLETE_FAILED]', e)
-      }
+      })
+      rzp.on('payment.failed', (resp: any) => {
+        console.error('[PAYMENT_FAILED]', resp.error)
+        toast.error(resp.error?.description || 'Payment failed. Please try again.')
+      })
+      rzp.open()
 
-      toast.success('Donation recorded successfully! Thank you for your support.')
-
-      // Reset form
-      setAmount('')
-      setCustomAmount('')
-      if (!user) {
-        setDonorName('')
-        setDonorEmail('')
-        setDonorPhone('')
-      }
-      setMessage('')
-
-  // In production, redirect to payment gateway and complete via webhook
+      // In production, webhook also confirms payment
 
     } catch (error) {
       console.error('Error submitting donation:', error)
@@ -202,12 +262,12 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
 
         {/* Custom Amount */}
         <Input
-          type="string"
-          inputMode='numeric'
+          type="number"
+          inputMode="numeric"
           placeholder="Enter custom amount"
-          value={Number(customAmount)}
+          value={customAmount}
           onChange={(e) => handleCustomAmount(e.target.value)}
-          min="1"
+          min={1}
           className="text-sm"
         />
       </div>
@@ -225,7 +285,7 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
             onChange={(e) => handleNameChange(e.target.value)}
             placeholder="Enter your full name"
             required
-            disabled={!!user}
+            disabled={!!user && !allowEditProfileFields}
             className="text-sm"
           />
         </div>
@@ -265,7 +325,7 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
             onChange={(e) => handleEmailChange(e.target.value)}
             placeholder={user ? "Your email" : "Enter your email or use generated"}
             required
-            disabled={!!user}
+            disabled={!!user && !allowEditProfileFields}
             className="text-sm"
           />
           {!user && emailGenerated && (
@@ -290,6 +350,13 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
         </div>
       </div>
 
+      {user && (
+        <div className="flex items-center gap-2 text-xs">
+          <input id="editProfileFields" type="checkbox" checked={allowEditProfileFields} onChange={e => setAllowEditProfileFields(e.target.checked)} />
+          <label htmlFor="editProfileFields">Edit my name/email for this donation</label>
+        </div>
+      )}
+
       {/* Submit Button */}
       <Button
         type="submit"
@@ -304,13 +371,13 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
         ) : (
           <>
             <Heart className="mr-2 h-4 w-4" />
-            Donate ₹{amount ? amount.toLocaleString() : '0'}
+            Proceed to Payment ₹{amount ? amount.toLocaleString() : '0'}
           </>
         )}
       </Button>
 
       <p className="text-xs text-muted-foreground text-center">
-        You will be redirected to a secure payment gateway to complete your donation.
+        You will be redirected to Razorpay secure payment gateway to complete your donation.
         {!user && " No account creation required."}
       </p>
     </form>

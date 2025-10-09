@@ -17,6 +17,9 @@ import {
     Store,
     Target,
     BellDot,
+    MessageSquare,
+    ScanLine as Scan,
+    ShoppingBag
 } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
@@ -105,6 +108,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     <Link href="/list-donation">
                                         <ListIcon className="h-4 w-4" />
                                         <span>List Donation</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild tooltip="Money Donations">
+                                    <Link href="/admin/money-donations">
+                                        <Heart className="h-4 w-4" />
+                                        <span>Money Donations</span>
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
@@ -206,6 +217,40 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild tooltip="My Donations">
+                                <Link href="/my-donations">
+                                    <Heart className="h-4 w-4" />
+                                    <span>My Donations</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild tooltip="My Purchases">
+                                <Link href="/account#purchases">
+                                    <ShoppingBag className="h-4 w-4" />
+                                    <span>My Purchases</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild tooltip="My Conversations">
+                                <Link href="/conversations">
+                                    <MessageSquare className="h-4 w-4" />
+                                    <span>My Conversations</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <RoleGuard allowedRoles={["admin", "moderator", "scrapper"]}>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild tooltip="Barcode Scanner">
+                                    <Link href="/scanner">
+                                        <Scan className="h-4 w-4" />
+                                        <span>Barcode Scanner</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </RoleGuard>
                         <SidebarMenuItem>
                             <SidebarMenuButton asChild tooltip="Account">
                                 <Link href="/account">

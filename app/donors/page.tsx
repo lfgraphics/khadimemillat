@@ -1,7 +1,6 @@
 import { Metadata } from 'next'
+import { getUniqueDonors } from '@/server/donors'
 import { Users, Calendar } from 'lucide-react'
-import connectDB from '@/lib/db'
-import CampaignDonation from '@/models/CampaignDonation'
 
 export const metadata: Metadata = {
   title: 'Our Donors | Khadim-e-Millat Welfare Foundation',
@@ -17,39 +16,11 @@ type Donor = {
   donationsCount: number
 }
 
-async function getUniqueDonors(): Promise<Donor[]> {
-  await connectDB()
-  const donations = await CampaignDonation.find({ status: 'completed' })
-    .sort({ createdAt: -1 })
-    .select('donorId donorName donorEmail amount createdAt')
-    .lean()
-
-  const map = new Map<string, Donor>()
-  for (const d of donations) {
-    const key = (d as any).donorId || (d as any).donorEmail || (d as any).donorName
-    if (!key) continue
-    const exists = map.get(key)
-    if (!exists) {
-      map.set(key, {
-        id: key,
-        name: (d as any).donorName || 'Anonymous',
-        email: (d as any).donorEmail,
-        lastDonationAt: (d as any).createdAt.toISOString(),
-        totalAmount: (d as any).amount || 0,
-        donationsCount: 1,
-      })
-    } else {
-      exists.totalAmount += (d as any).amount || 0
-      exists.donationsCount += 1
-    }
-  }
-  return Array.from(map.values()).sort((a, b) => (
-    new Date(b.lastDonationAt).getTime() - new Date(a.lastDonationAt).getTime()
-  ))
-}
+// Reuse the shared donors aggregator
+const getDonors = getUniqueDonors
 
 export default async function DonorsPage() {
-  const donors = await getUniqueDonors()
+  const donors = await getDonors()
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

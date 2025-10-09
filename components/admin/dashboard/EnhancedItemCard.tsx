@@ -31,6 +31,7 @@ import { useImageModal } from '@/components/marketplace/ImageModalProvider'
 import ConfirmationDialog from './ConfirmationDialog'
 import { ValidationIndicator } from './ValidationStatusTooltip'
 import { generateAriaLabel, keyboardNavigation } from '@/lib/utils/accessibility'
+import MarkAsSoldModal from '@/components/admin/modals/MarkAsSoldModal'
 
 interface EnhancedItemCardProps {
   item: EnhancedScrapItem
@@ -114,6 +115,11 @@ export default function EnhancedItemCard({
   // Handle quick action click
   const handleQuickAction = (action: QuickAction) => {
     if (needsConfirmation(action)) {
+      if (action === 'sold') {
+        // Open mark-as-sold modal instead of generic confirm
+        ;(document.getElementById(`mark-sold-trigger-${item.id}`) as HTMLButtonElement | null)?.click()
+        return
+      }
       setConfirmationDialog({ open: true, action })
     } else {
       onQuickAction(item.id, action)
@@ -375,6 +381,17 @@ export default function EnhancedItemCard({
 
               return button
             })}
+          {/* Hidden trigger and modal for sold action */}
+          {!item.marketplaceListing.sold && (
+            <>
+              <button id={`mark-sold-trigger-${item.id}`} className="hidden" />
+              <MarkAsSoldModal
+                itemId={item.id}
+                defaultSalePrice={item.marketplaceListing.salePrice}
+                trigger={<button id={`mark-sold-trigger-${item.id}-internal`} className="hidden" />}
+              />
+            </>
+          )}
         </div>
 
         {/* Confirmation Dialog */}

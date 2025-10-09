@@ -1,6 +1,6 @@
 {
   "name": "khadimemillat",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -48,6 +48,9 @@
     "marked": "^16.3.0",
     "moment": "^2.30.1",
     "mongoose": "^8.18.1",
+    "razorpay": "^2.9.0",
+    "@zxing/library": "^0.21.3",
+    "@zxing/browser": "^0.1.5",
     "motion": "^12.23.22",
     "next": "15.5.4",
     "next-cloudinary": "^6.16.0",
@@ -72,7 +75,6 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/marked": "^6.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

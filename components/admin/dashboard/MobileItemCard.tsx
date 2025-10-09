@@ -33,6 +33,7 @@ import {
 import { formatValidationErrors } from '@/lib/utils/validation'
 import { useImageModal } from '@/components/marketplace/ImageModalProvider'
 import { generateAriaLabel, keyboardNavigation } from '@/lib/utils/accessibility'
+import MarkAsSoldModal from '@/components/admin/modals/MarkAsSoldModal'
 
 interface MobileItemCardProps {
   item: EnhancedScrapItem
@@ -102,6 +103,9 @@ export default function MobileItemCard({
   }
 
   const availableActions = getAvailableActions()
+  const openSold = () => {
+    ;(document.getElementById(`mark-sold-trigger-${item.id}`) as HTMLButtonElement | null)?.click()
+  }
 
   return (
     <Card 
@@ -317,7 +321,7 @@ export default function MobileItemCard({
                           key={action.action}
                           size="sm"
                           variant={action.variant || 'outline'}
-                          onClick={() => onQuickAction(item.id, action.action)}
+                          onClick={() => (action.action === 'sold' ? openSold() : onQuickAction(item.id, action.action))}
                           disabled={isDisabled}
                           className="text-xs"
                           aria-label={generateAriaLabel(action.label, item.name, 'button', `Click to ${action.label.toLowerCase()}`)}
@@ -331,6 +335,17 @@ export default function MobileItemCard({
                       )
                     })}
                 </div>
+                {/* Hidden trigger and modal for sold action */}
+                {!item.marketplaceListing.sold && (
+                  <>
+                    <button id={`mark-sold-trigger-${item.id}`} className="hidden" />
+                    <MarkAsSoldModal
+                      itemId={item.id}
+                      defaultSalePrice={item.marketplaceListing.salePrice}
+                      trigger={<button id={`mark-sold-trigger-${item.id}-internal`} className="hidden" />}
+                    />
+                  </>
+                )}
               </div>
             </div>
           </CardContent>

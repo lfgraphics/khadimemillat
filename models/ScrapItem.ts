@@ -10,6 +10,13 @@ export interface IScrapItem extends Document {
         demandedPrice?: number
         salePrice?: number
         sold: boolean
+        soldToUserId?: string
+        soldToName?: string
+    // soldVia indicates the channel by which the sale was finalized; when 'online', expect paymentMethod='online' in Purchase
+    soldVia?: 'online' | 'chat' | 'offline'
+        soldAt?: Date
+        soldBy?: string
+        conversationId?: mongoose.Types.ObjectId
     }
     repairingCost?: number
     profit?: number
@@ -28,6 +35,12 @@ const scrapItemSchema = new Schema<IScrapItem>({
         demandedPrice: Number,
         salePrice: Number,
         sold: { type: Boolean, default: false },
+        soldToUserId: { type: String },
+        soldToName: { type: String },
+        soldVia: { type: String, enum: ['online', 'chat', 'offline'] },
+        soldAt: { type: Date },
+        soldBy: { type: String },
+        conversationId: { type: Schema.Types.ObjectId, ref: 'Conversation' },
     },
     repairingCost: Number,
 }, { timestamps: true })
