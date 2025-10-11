@@ -24,11 +24,11 @@ export default function NotificationsPage() {
       <div className='flex items-center justify-between'>
         <h1 className='text-2xl font-semibold'>Notifications</h1>
         <div className='flex items-center gap-2'>
-          <Button variant='outline' size='sm' onClick={()=> refreshNotifications()} disabled={loading}>{loading ? <Loader2 className='h-4 w-4 animate-spin' /> : 'Refresh'}</Button>
-          <Button variant='secondary' size='sm' onClick={async ()=>{ const unread = items.filter(i=> !i.read); if (unread.length===0) return; for (const n of unread) await markAsRead(n._id); await refreshNotifications() }} disabled={items.every(i=> i.read)}>Mark Page Read</Button>
+          <Button variant='outline' size='sm' onClick={() => refreshNotifications()} disabled={loading}>{loading ? <Loader2 className='h-4 w-4 animate-spin' /> : 'Refresh'}</Button>
+          <Button variant='secondary' size='sm' onClick={async () => { const unread = items.filter(i => !i.read); if (unread.length === 0) return; for (const n of unread) await markAsRead(n._id); await refreshNotifications() }} disabled={items.every(i => i.read)}>Mark Page Read</Button>
         </div>
       </div>
-  <Tabs value={filter} onValueChange={(v)=> { fetchNotifications({ force: true, page: 1, limit: limit || 12, filter: v as any }) }}>
+      <Tabs value={filter} onValueChange={(v) => { fetchNotifications({ force: true, page: 1, limit: limit || 12, filter: v as any }) }}>
         <TabsList>
           <TabsTrigger value='all'>All</TabsTrigger>
           <TabsTrigger value='unread'>Unread</TabsTrigger>
@@ -45,7 +45,7 @@ export default function NotificationsPage() {
       )}
       {loading && items.length === 0 && (
         <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
-          {Array.from({ length: 6 }).map((_,i)=>(<Card key={i} className='p-4 animate-pulse h-40' />))}
+          {Array.from({ length: 6 }).map((_, i) => (<Card key={i} className='p-4 animate-pulse h-40' />))}
         </div>
       )}
       {!loading && items.length === 0 && !error && (
@@ -68,7 +68,7 @@ export default function NotificationsPage() {
               <div className='mt-auto flex items-center justify-between pt-1'>
                 <span className='text-[10px] text-muted-foreground'>{new Date(n.createdAt).toLocaleString()}</span>
                 <div className='flex items-center gap-2'>
-                  {!n.read && <Button size='sm' variant='ghost' className='h-6 px-2 text-[10px]' onClick={()=> markAsRead(n._id)}>Mark</Button>}
+                  {!n.read && <Button size='sm' variant='ghost' className='h-6 px-2 text-[10px]' onClick={() => markAsRead(n._id)}>Mark</Button>}
                   {n.url && <Button asChild size='sm' variant='link' className='h-6 px-0 text-[10px]'><Link href={n.url}>Open →</Link></Button>}
                 </div>
               </div>
@@ -80,8 +80,8 @@ export default function NotificationsPage() {
         <div className='flex items-center justify-between pt-2'>
           <p className='text-[11px] text-muted-foreground'>Page {page} of {totalPages}</p>
           <div className='flex items-center gap-2'>
-            <Button size='sm' variant='outline' disabled={page===1} onClick={()=> fetchNotifications({ force: true, page: Math.max(1, page-1), limit: limit || 12, filter })}>Prev</Button>
-            <Button size='sm' variant='outline' disabled={page===totalPages} onClick={()=> fetchNotifications({ force: true, page: Math.min(totalPages, page+1), limit: limit || 12, filter })}>Next</Button>
+            <Button size='sm' variant='outline' disabled={page === 1} onClick={() => fetchNotifications({ force: true, page: Math.max(1, page - 1), limit: limit || 12, filter })}>Prev</Button>
+            <Button size='sm' variant='outline' disabled={page === totalPages} onClick={() => fetchNotifications({ force: true, page: Math.min(totalPages, page + 1), limit: limit || 12, filter })}>Next</Button>
           </div>
         </div>
       )}
