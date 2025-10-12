@@ -15,7 +15,13 @@ export async function POST(request: NextRequest) {
             message,
             cause,
             paymentMethod,
-            paymentReference
+            paymentReference,
+            wants80GReceipt,
+            donorPAN,
+            donorAddress,
+            donorCity,
+            donorState,
+            donorPincode
         } = body
 
         if (!donorName || !amount || amount <= 0) {
@@ -24,59 +30,96 @@ export async function POST(request: NextRequest) {
             }, { status: 400 })
         }
 
-        if (!donorPhone && !donorEmail) {
+        if (!donorPhone) {
             return NextResponse.json({
-                error: 'Either phone number or email is required'
+                error: 'Phone number is required'
             }, { status: 400 })
+        }
+
+        // Validate 80G requirements if requested
+        if (wants80GReceipt) {
+            if (!donorPAN?.trim()) {
+                return NextResponse.json({
+                    error: 'PAN number is required for 80G receipt'
+                }, { status: 400 })
+            }
+            if (!donorAddress?.trim() || !donorCity?.trim() || !donorState?.trim() || !donorPincode?.trim()) {
+                return NextResponse.json({
+                    error: 'Complete address is required for 80G receipt'
+                }, { status: 400 })
+            }
         }
 
         await connectDB()
 
         const { userId } = await auth()
 
-        // Find or create a general welfare program for the specified cause
-        let program = await WelfareProgram.findOne({
-            slug: { $regex: cause, $options: 'i' },
-            isActive: true
-        }).lean()
-
-        // If no specific program exists, create a general one or use a default
-        if (!program) {
-            // Try to find a general donation program
+        // Find an appropriate welfare program, prefer one that matches the cause
+        let program = null
+        
+        if (cause) {
+            // First try to find exact match by slug
             program = await WelfareProgram.findOne({
-                slug: { $regex: cause, $options: 'i' },
+                slug: cause.toLowerCase(),
                 isActive: true
             }).lean()
-
-            // If still no program, create one on the fly
+            
+            // If no exact match, try partial matching
             if (!program) {
-                const newProgram = new WelfareProgram({
-                    title: cause ? cause : 'General Donations',
-                    slug: cause.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '') || 'general-donations',
-                    description: 'General donations for various causes',
-                    category: cause || 'general',
-                    targetAmount: 0, // No specific target
-                    isActive: true,
-                    isPublic: true
-                })
-                await newProgram.save()
-                program = newProgram.toObject()
+                program = await WelfareProgram.findOne({
+                    $and: [
+                        { isActive: true },
+                        {
+                            $or: [
+                                { title: { $regex: cause, $options: 'i' } },
+                                { description: { $regex: cause, $options: 'i' } },
+                                { slug: { $regex: cause, $options: 'i' } }
+                            ]
+                        }
+                    ]
+                }).lean()
             }
         }
 
-        const donation = new CampaignDonation({
+        // If no matching program found, get any active program
+        if (!program) {
+            program = await WelfareProgram.findOne({
+                isActive: true
+            }).lean()
+        }
+
+        // If no programs exist at all, return error
+        if (!program) {
+            return NextResponse.json({
+                error: 'No active welfare programs available. Please contact administration.'
+            }, { status: 500 })
+        }
+
+        const donationData: any = {
             programId: (program as any)._id,
             donorId: userId || undefined,
             donorName: donorName.trim(),
             donorEmail: donorEmail?.trim() || `${donorName.replace(/\s+/g, '-').toLowerCase()}${donorPhone?.replace(/\D/g, '').slice(-4) || Date.now()}@khadimemillat.org`,
-            donorPhone: donorPhone?.trim() || undefined,
+            donorPhone: donorPhone.trim(),
             amount: parseFloat(amount.toString()),
             message: message?.trim() || undefined,
             paymentMethod: paymentMethod || 'online',
             paymentReference,
-            status: 'pending'
-        })
+            status: 'pending',
+            receiptPreferences: { email: true, sms: true, razorpayManaged: true }
+        }
 
+        // Add 80G information if requested
+        if (wants80GReceipt) {
+            donationData.wants80GReceipt = true
+            donationData.donorPAN = donorPAN.trim().toUpperCase()
+            donationData.donorAddress = donorAddress.trim()
+            donationData.donorCity = donorCity.trim()
+            donationData.donorState = donorState.trim()
+            donationData.donorPincode = donorPincode.trim()
+        }
+
+        const donation = new CampaignDonation(donationData)
         await donation.save()
 
         return NextResponse.json({
@@ -87,7 +130,7 @@ export async function POST(request: NextRequest) {
         }, { status: 201 })
 
     } catch (error) {
-        console.error('[GENERAL_DONATION_API]', error)
+        console.log('[GENERAL_DONATION_API] Error:', error instanceof Error ? error.message : 'Unknown error')
         return NextResponse.json({
             error: 'Failed to create donation record',
             details: error instanceof Error ? error.message : 'Unknown error'

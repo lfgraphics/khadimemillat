@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { EnhancedFileSelector } from '@/components/file-selector';
 import { FileUploadError, UploadResult } from '@/components/file-selector/types';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Checkbox, Label } from '@/components/ui';
 
 type Tab = 'money' | 'scrap'
 
@@ -41,9 +42,59 @@ export default function DonationPage() {
   const [donorPhone, setDonorPhone] = useState('')
   const searchParams = useSearchParams()
   const [programSlug, setProgramSlug] = useState<string | null>(null)
-  const [selectedCause, setSelectedCause] = useState('education')
+  const [selectedCause, setSelectedCause] = useState('sadqa') // Default to first cause
   const [moneySubmitting, setMoneySubmitting] = useState(false)
   const [moneySuccess, setMoneySuccess] = useState(false)
+  
+  // Dynamic causes state
+  const [donationCauses, setDonationCauses] = useState<Array<{value: string, label: string, description?: string}>>([])
+  const [causesLoading, setCausesLoading] = useState(true)
+  
+  // 80G Tax exemption states
+  const [wants80GReceipt, setWants80GReceipt] = useState(false)
+  const [donorPAN, setDonorPAN] = useState('')
+  const [donorAddress, setDonorAddress] = useState('')
+  const [donorCity, setDonorCity] = useState('')
+  const [donorState, setDonorState] = useState('')
+  const [donorPincode, setDonorPincode] = useState('')
+  
+
+
+  useEffect(() => {
+    // Fetch dynamic causes from welfare programs
+    const fetchCauses = async () => {
+      try {
+        setCausesLoading(true)
+        const res = await fetch('/api/public/welfare-programs?format=simple')
+        if (!res.ok) {
+          throw new Error('Failed to fetch welfare programs')
+        }
+        const data = await res.json()
+        if (data.programs && Array.isArray(data.programs)) {
+          setDonationCauses(data.programs)
+          // Set default selected cause to the first available program
+          if (data.programs.length > 0 && !selectedCause) {
+            setSelectedCause(data.programs[0].value)
+          }
+        }
+      } catch (error) {
+        console.error('[FETCH_CAUSES_ERROR]', error)
+        toast.error('Failed to load donation causes')
+        // Fallback to hardcoded causes if API fails
+        setDonationCauses([
+          { value: 'sadqa', label: 'Sadqa' },
+          { value: 'zakat', label: 'Zakat' },
+          { value: 'education', label: 'Education Support' },
+          { value: 'healthcare', label: 'Healthcare Access' },
+          { value: 'emergency', label: 'Emergency Relief' }
+        ])
+      } finally {
+        setCausesLoading(false)
+      }
+    }
+    
+    fetchCauses()
+  }, [])
 
   useEffect(() => {
     // Load current user profile; server reads phone/address from Clerk privateMetadata
@@ -91,17 +142,36 @@ export default function DonationPage() {
   // Pre-populate cause from URL 'program' slug and store slug separately
   useEffect(() => {
     const p = searchParams?.get('program')
-    if (!p) return
+    if (!p || donationCauses.length === 0) return
+    
     setProgramSlug(p)
     const lower = p.toLowerCase()
-    if (lower.includes('zakat')) setSelectedCause('zakat')
-    else if (lower.includes('sadqa') || lower.includes('sadaq')) setSelectedCause('sadqa')
-    else if (lower.includes('health')) setSelectedCause('healthcare')
-    else if (lower.includes('educ')) setSelectedCause('education')
-    else if (lower.includes('enviro')) setSelectedCause('environment')
-    else if (lower.includes('community')) setSelectedCause('community')
-    else if (lower.includes('emerg')) setSelectedCause('emergency')
-  }, [searchParams])
+    
+    // Try to find exact match first
+    const exactMatch = donationCauses.find(cause => cause.value === lower)
+    if (exactMatch) {
+      setSelectedCause(exactMatch.value)
+      return
+    }
+    
+    // Fallback to partial matching
+    if (lower.includes('zakat')) {
+      const zakatCause = donationCauses.find(c => c.value.includes('zakat'))
+      if (zakatCause) setSelectedCause(zakatCause.value)
+    } else if (lower.includes('sadqa') || lower.includes('sadaq')) {
+      const sadqaCause = donationCauses.find(c => c.value.includes('sadqa'))
+      if (sadqaCause) setSelectedCause(sadqaCause.value)
+    } else if (lower.includes('health')) {
+      const healthCause = donationCauses.find(c => c.value.includes('health'))
+      if (healthCause) setSelectedCause(healthCause.value)
+    } else if (lower.includes('educ')) {
+      const educCause = donationCauses.find(c => c.value.includes('education'))
+      if (educCause) setSelectedCause(educCause.value)
+    } else if (lower.includes('emerg')) {
+      const emergCause = donationCauses.find(c => c.value.includes('emergency'))
+      if (emergCause) setSelectedCause(emergCause.value)
+    }
+  }, [searchParams, donationCauses])
 
   const missingInfo = !profile.phone || !profile.address
 
@@ -262,11 +332,72 @@ export default function DonationPage() {
       return
     }
 
+    // 80G validation
+    if (wants80GReceipt) {
+      const panValue = donorPAN.trim().toUpperCase()
+      console.log('[80G_VALIDATION] PAN value:', panValue, 'Length:', panValue.length)
+      
+      if (!panValue || !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panValue)) {
+        console.log('[80G_VALIDATION] PAN validation failed for:', panValue)
+        toast.error('Please enter a valid PAN number (e.g., ABCDE1234F)');
+        return
+      }
+      
+      if (!donorAddress.trim() || donorAddress.trim().length < 5) {
+        toast.error('Please enter a complete address for 80G certificate');
+        return
+      }
+      
+      if (!donorCity.trim() || donorCity.trim().length < 2) {
+        toast.error('Please enter a valid city name');
+        return
+      }
+      
+      if (!donorState.trim() || donorState.trim().length < 2) {
+        toast.error('Please enter a valid state name');
+        return
+      }
+      
+      if (!donorPincode.trim() || !/^[0-9]{6}$/.test(donorPincode.trim())) {
+        toast.error('Please enter a valid 6-digit pincode');
+        return
+      }
+    }
+
     setMoneySubmitting(true)
     setMoneySuccess(false)
     setError(null)
 
     try {
+      // Update user profile if logged in and details have changed
+      if (isSignedIn && user) {
+        const updateData: any = {}
+        
+        // Check if profile fields have been modified
+        if (donorPhone.trim()) updateData.phone = donorPhone.trim()
+        if (donorAddress.trim()) updateData.address = donorAddress.trim()
+        if (donorCity.trim()) updateData.city = donorCity.trim()
+        if (donorState.trim()) updateData.state = donorState.trim()
+        if (donorPincode.trim()) updateData.pincode = donorPincode.trim()
+        
+        // Update profile if there are changes
+        if (Object.keys(updateData).length > 0) {
+          try {
+            // Use the existing profile update approach from earlier in the component
+            if (profile.donorId) {
+              await fetch(`/api/protected/users/${encodeURIComponent(profile.donorId)}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updateData)
+              })
+            }
+          } catch (profileError) {
+            console.warn('[PROFILE_UPDATE_FAILED]', profileError)
+            // Don't fail donation if profile update fails
+          }
+        }
+      }
+
       // Handle user authentication/creation
       if (!isSignedIn) {
         const wantsLogin = typeof window !== 'undefined'
@@ -359,10 +490,18 @@ export default function DonationPage() {
           body: JSON.stringify({
             donorName: donorName.trim(),
             donorEmail: donorEmail.trim() || undefined,
-            donorPhone: donorPhone.trim() || undefined,
+            donorPhone: donorPhone.trim(),
             amount: parseFloat(donationAmount),
             message: notes,
-            paymentMethod: 'online'
+            paymentMethod: 'online',
+            wants80GReceipt,
+            ...(wants80GReceipt && {
+              donorPAN: donorPAN.trim().toUpperCase(),
+              donorAddress: donorAddress.trim(),
+              donorCity: donorCity.trim(),
+              donorState: donorState.trim(),
+              donorPincode: donorPincode.trim()
+            })
           })
         })
 
@@ -382,11 +521,19 @@ export default function DonationPage() {
           body: JSON.stringify({
             donorName: donorName.trim(),
             donorEmail: donorEmail.trim() || undefined,
-            donorPhone: donorPhone.trim() || undefined,
+            donorPhone: donorPhone.trim(),
             amount: parseFloat(donationAmount),
             message: notes,
             cause: selectedCause,
-            paymentMethod: 'online'
+            paymentMethod: 'online',
+            wants80GReceipt,
+            ...(wants80GReceipt && {
+              donorPAN: donorPAN.trim().toUpperCase(),
+              donorAddress: donorAddress.trim(),
+              donorCity: donorCity.trim(),
+              donorState: donorState.trim(),
+              donorPincode: donorPincode.trim()
+            })
           })
         })
 
@@ -480,17 +627,11 @@ export default function DonationPage() {
             toast.success('🎉 Donation completed successfully!')
             toast.success('Thank you for your generous contribution!')
 
-            // Reset form
-            setDonationAmount('')
-            setDonorName('')
-            setDonorEmail('')
-            setDonorPhone('')
-            setNotes('')
-
-            // Show additional success message
+            // Redirect to thank you page
+            toast.loading('Redirecting to confirmation page...', { id: 'redirect-loading' })
             setTimeout(() => {
-              toast.info('You will receive confirmation and receipt shortly.')
-            }, 2000)
+              window.location.href = `/thank-you?donationId=${donationId}&paymentId=${response.razorpay_payment_id}`
+            }, 1500)
 
           } catch (error: any) {
             console.error('[PAYMENT_VERIFICATION_ERROR]', error)
@@ -525,16 +666,6 @@ export default function DonationPage() {
     }
   }
 
-  const donationCauses = [
-    { value: 'sadqa', label: 'Sadqa' },
-    { value: 'zakat', label: 'Zakat' },
-    { value: 'education', label: 'Education Support' },
-    { value: 'healthcare', label: 'Healthcare Initiatives' },
-    { value: 'environment', label: 'Environmental Projects' },
-    { value: 'community', label: 'Community Development' },
-    { value: 'emergency', label: 'Emergency Relief' }
-  ]
-
   return (
     <div className='p-6 max-w-3xl mx-auto space-y-8'>
       <div className='flex items-center justify-between'>
@@ -555,29 +686,29 @@ export default function DonationPage() {
               <form onSubmit={submitScrapRequest} className='space-y-5'>
                 <div className='grid md:grid-cols-2 gap-4'>
                   <div className='space-y-1'>
-                    <label className='text-xs font-semibold'>Name</label>
+                    <Label className='text-xs font-semibold'>Name</Label>
                     <Input disabled value={user?.fullName || user?.username || ''} className='bg-muted/40' />
                   </div>
                   <div className='space-y-1'>
-                    <label className='text-xs font-semibold'>Phone {!profile.phone && <span className='text-red-600'>(required)</span>}</label>
+                    <Label className='text-xs font-semibold'>Phone {!profile.phone && <span className='text-red-600'>(required)</span>}</Label>
                     <Input value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} placeholder='+15551234567' />
                   </div>
                   <div className='md:col-span-2 space-y-1'>
-                    <label className='text-xs font-semibold'>Address {!profile.address && <span className='text-red-600'>(required)</span>}</label>
+                    <Label className='text-xs font-semibold'>Address {!profile.address && <span className='text-red-600'>(required)</span>}</Label>
                     <Textarea value={profile.address} onChange={e => setProfile(p => ({ ...p, address: e.target.value }))} placeholder='Street, City, ...' className='min-h-24' />
                   </div>
                   <div className='space-y-1'>
-                    <label className='text-xs font-semibold'>Preferred Pickup Time</label>
+                    <Label className='text-xs font-semibold'>Preferred Pickup Time</Label>
                     <Input type='datetime-local' value={pickupTime} onChange={e => setPickupTime(e.target.value)} />
                   </div>
                   <div className='md:col-span-2 space-y-1'>
-                    <label className='text-xs font-semibold'>Notes</label>
+                    <Label className='text-xs font-semibold'>Notes</Label>
                     <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder='Any additional info...' className='min-h-20' />
                   </div>
 
                   {/* Enhanced File Selector for Item Images */}
                   <div className='md:col-span-2 space-y-1'>
-                    <label className='text-xs font-semibold'>Item Images (Optional)</label>
+                    <Label className='text-xs font-semibold'>Item Images (Optional)</Label>
                     <p className='text-xs text-muted-foreground mb-2'>
                       Upload photos of the items you want to donate. This helps our team prepare for collection.
                     </p>
@@ -657,9 +788,10 @@ export default function DonationPage() {
               <form onSubmit={submitMoneyDonation} className='space-y-5'>
                 <div className='grid md:grid-cols-2 gap-4'>
                   <div className='space-y-1'>
-                    <label className='text-xs font-semibold'>Donation Amount ()</label>
+                    <Label className='text-xs font-semibold'>Donation Amount (INR)</Label>
                     <Input
-                      type='number'
+                      type='string'
+                      inputMode="numeric"
                       value={donationAmount}
                       onChange={e => setDonationAmount(e.target.value)}
                       placeholder='25'
@@ -668,20 +800,31 @@ export default function DonationPage() {
                     />
                   </div>
                   <div className='space-y-1'>
-                    <label className='text-xs font-semibold'>Select Cause</label>
-                    <Select value={selectedCause} onValueChange={setSelectedCause}>
+                    <Label className='text-xs font-semibold'>Select Cause</Label>
+                    <Select value={selectedCause} onValueChange={setSelectedCause} disabled={causesLoading}>
                       <SelectTrigger className='w-full'>
-                        <SelectValue placeholder='Select cause' />
+                        <SelectValue placeholder={causesLoading ? 'Loading causes...' : 'Select cause'} />
                       </SelectTrigger>
                       <SelectContent>
-                        {donationCauses.map(cause => (
-                          <SelectItem key={cause.value} value={cause.value}>{cause.label}</SelectItem>
-                        ))}
+                        {causesLoading ? (
+                          <SelectItem value="loading" disabled>
+                            <div className="flex items-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Loading causes...
+                            </div>
+                          </SelectItem>
+                        ) : (
+                          donationCauses.map(cause => (
+                            <SelectItem key={cause.value} value={cause.value}>
+                              {cause.label}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className='space-y-1'>
-                    <label className='text-xs font-semibold'>Your Name</label>
+                    <Label className='text-xs font-semibold'>Your Name</Label>
                     <Input
                       value={donorName}
                       onChange={e => setDonorName(e.target.value)}
@@ -689,7 +832,7 @@ export default function DonationPage() {
                     />
                   </div>
                   <div className='space-y-1'>
-                    <label className='text-xs font-semibold'>Phone Number</label>
+                    <Label className='text-xs font-semibold'>Phone Number</Label>
                     <Input
                       type='tel'
                       value={donorPhone}
@@ -698,7 +841,7 @@ export default function DonationPage() {
                     />
                   </div>
                   <div className='space-y-1'>
-                    <label className='text-xs font-semibold'>Email Address (Optional)</label>
+                    <Label className='text-xs font-semibold'>Email Address (Optional)</Label>
                     <Input
                       type='email'
                       value={donorEmail}
@@ -707,13 +850,83 @@ export default function DonationPage() {
                     />
                   </div>
                   <div className='md:col-span-2 space-y-1'>
-                    <label className='text-xs font-semibold'>Message (Optional)</label>
+                    <Label className='text-xs font-semibold'>Message (Optional)</Label>
                     <Textarea
                       value={notes}
                       onChange={e => setNotes(e.target.value)}
                       placeholder='Any special message or dedication...'
                       className='min-h-20'
                     />
+                  </div>
+                  
+                  {/* 80G Tax Exemption Section */}
+                  <div className='md:col-span-2 border-t pt-4'>
+                    <div className='flex items-center space-x-2 mb-4'>
+                      <Checkbox
+                        id="wants80G"
+                        checked={wants80GReceipt}
+                        onCheckedChange={(checked) => setWants80GReceipt(checked === true)}
+                        className="rounded border-gray-300"
+                      />
+                      <Label htmlFor="wants80G" className="text-sm font-medium">
+                        🏛️ I want 80G Tax Exemption Certificate
+                      </Label>
+                    </div>
+                    
+                    {wants80GReceipt && (
+                      <div className="space-y-4 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-700">
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div className='space-y-1'>
+                            <Label className='text-xs font-semibold text-blue-900 dark:text-blue-100'>PAN Number *</Label>
+                            <Input
+                              value={donorPAN}
+                              onChange={e => setDonorPAN(e.target.value.toUpperCase())}
+                              placeholder='ABCDE1234F'
+                              pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}"
+                              maxLength={10}
+                              className="uppercase"
+                            />
+                          </div>
+                          <div className='space-y-1'>
+                            <Label className='text-xs font-semibold text-blue-900 dark:text-blue-100'>Address *</Label>
+                            <Input
+                              value={donorAddress}
+                              onChange={e => setDonorAddress(e.target.value)}
+                              placeholder='House/Flat no, Street name'
+                            />
+                          </div>
+                          <div className='space-y-1'>
+                            <Label className='text-xs font-semibold text-blue-900 dark:text-blue-100'>City *</Label>
+                            <Input
+                              value={donorCity}
+                              onChange={e => setDonorCity(e.target.value)}
+                              placeholder='Mumbai'
+                            />
+                          </div>
+                          <div className='space-y-1'>
+                            <Label className='text-xs font-semibold text-blue-900 dark:text-blue-100'>State *</Label>
+                            <Input
+                              value={donorState}
+                              onChange={e => setDonorState(e.target.value)}
+                              placeholder='Maharashtra'
+                            />
+                          </div>
+                          <div className='space-y-1'>
+                            <Label className='text-xs font-semibold text-blue-900 dark:text-blue-100'>Pincode *</Label>
+                            <Input
+                              value={donorPincode}
+                              onChange={e => setDonorPincode(e.target.value)}
+                              placeholder='400001'
+                              pattern="[0-9]{6}"
+                              maxLength={6}
+                            />
+                          </div>
+                        </div>
+                        <p className="text-xs text-blue-700 dark:text-blue-300">
+                          Address is mandatory for 80G certificate as per Income Tax Department requirements.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className='flex items-center gap-3 pt-2'>

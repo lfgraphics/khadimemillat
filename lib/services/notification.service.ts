@@ -411,12 +411,12 @@ export class NotificationService {
       // Log notification in user's notification history
       try {
         const notification = new Notification({
-          userId,
+          recipient: userId,
           title: payload.title,
-          message: payload.body,
-          type: 'push',
-          isRead: false,
-          data: payload.data
+          body: payload.body,
+          type: 'collection_request', // Use a valid enum value
+          read: false,
+          metadata: payload.data
         })
         await notification.save()
       } catch (dbError) {
@@ -546,7 +546,7 @@ export class NotificationService {
                 const result = await this.sendWebPushToUser(user.clerkUserId, {
                   title: options.title,
                   body: options.message,
-                  icon: '/icon-192x192.png',
+                  icon: '/android-chrome-192x192.png',
                   url: options.metadata?.url
                 })
                 if (!result.success) {
@@ -1149,10 +1149,10 @@ export class NotificationService {
       await connectDB()
       
       const notification = new Notification({
-        userId,
+        recipient: userId,
         title: data.title,
-        message: data.message,
-        type: data.type || 'notification',
+        body: data.message,
+        type: data.type || 'general',
         isRead: false,
         data: data.data
       })

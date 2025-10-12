@@ -27,17 +27,59 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
   const [razorpayReady, setRazorpayReady] = useState(false)
   const [emailGenerated, setEmailGenerated] = useState(false)
   const [allowEditProfileFields, setAllowEditProfileFields] = useState(false)
+  
+  // 80G Receipt and preferences state
+  const [wants80GReceipt, setWants80GReceipt] = useState(false)
+  const [donorPAN, setDonorPAN] = useState('')
+  const [donorAddress, setDonorAddress] = useState('')
+  const [donorCity, setDonorCity] = useState('')
+  const [donorState, setDonorState] = useState('')
+  const [donorPincode, setDonorPincode] = useState('')
+  const [receiptViaEmail, setReceiptViaEmail] = useState(true)
+  const [receiptViaSMS, setReceiptViaSMS] = useState(true)
+  const [razorpayManagedReceipt, setRazorpayManagedReceipt] = useState(true)
 
   // Auto-populate user data when logged in
   useEffect(() => {
     if (isLoaded && user) {
       setDonorName(user.fullName || '')
       setDonorEmail(user.primaryEmailAddress?.emailAddress || '')
-      // Try to get phone from user metadata
-      const phone = user.publicMetadata?.phone || (user as any).privateMetadata?.phone
-      if (phone) setDonorPhone(phone as string)
+      
+      // Fetch complete user profile from API (like /donate page does)
+      const loadUserProfile = async () => {
+        try {
+          const res = await fetch('/api/protected/users?self=1', { cache: 'no-store' })
+          const ct = res.headers.get('content-type') || ''
+          if (!res.ok || !ct.includes('application/json')) {
+            return
+          }
+          const json = await res.json()
+          if (json.users && json.users.length) {
+            const u = json.users[0]
+            if (u.phone && !donorPhone) {
+              setDonorPhone(u.phone)
+            }
+            if (u.address && !donorAddress) {
+              setDonorAddress(u.address)
+            }
+            if (u.city && !donorCity) {
+              setDonorCity(u.city)
+            }
+            if (u.state && !donorState) {
+              setDonorState(u.state)
+            }
+            if (u.pincode && !donorPincode) {
+              setDonorPincode(u.pincode)
+            }
+          }
+        } catch (e) {
+          console.error('[CAMPAIGN_FORM_PROFILE_FETCH]', e)
+        }
+      }
+      
+      loadUserProfile()
     }
-  }, [isLoaded, user])
+  }, [isLoaded, user, donorPhone, donorAddress, donorCity, donorState, donorPincode])
 
   // Load Razorpay script
   useEffect(() => {
@@ -117,6 +159,9 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
     setEmailGenerated(false) // User is manually editing email
   }
 
+  // PAN validation helper
+  const isValidPAN = (pan: string) => /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -130,16 +175,78 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
       return
     }
 
+    if (!donorPhone.trim()) {
+      toast.error('Please enter your phone number')
+      return
+    }
+
     if (!donorEmail.trim() || !isValidEmail(donorEmail.trim())) {
       const fallback = generateDynamicEmail(donorName, donorPhone)
       setDonorEmail(fallback)
     }
 
-    // Phone number is optional for logged out users
+    if (!donorPhone.trim()) {
+      toast.error('Please enter your phone number')
+      return
+    }
+
+    // Validate 80G receipt requirements
+    if (wants80GReceipt) {
+      if (!donorPAN.trim()) {
+        toast.error('PAN number is required for 80G tax exemption receipt')
+        return
+      }
+      if (!isValidPAN(donorPAN.trim().toUpperCase())) {
+        toast.error('Please enter a valid PAN number (e.g., ABCDE1234F)')
+        return
+      }
+      if (!donorAddress.trim()) {
+        toast.error('Address is required for 80G tax exemption receipt')
+        return
+      }
+      if (!donorCity.trim()) {
+        toast.error('City is required for 80G tax exemption receipt')
+        return
+      }
+      if (!donorState.trim()) {
+        toast.error('State is required for 80G tax exemption receipt')
+        return
+      }
+      if (!donorPincode.trim() || !/^[0-9]{6}$/.test(donorPincode.trim())) {
+        toast.error('Valid 6-digit pincode is required for 80G tax exemption receipt')
+        return
+      }
+    }
 
     setIsSubmitting(true)
 
     try {
+      // Update user profile if logged in and details have changed
+      if (user) {
+        const updateData: any = {}
+        
+        // Check if profile fields have been modified
+        if (donorPhone.trim()) updateData.phone = donorPhone.trim()
+        if (donorAddress.trim()) updateData.address = donorAddress.trim()
+        if (donorCity.trim()) updateData.city = donorCity.trim()
+        if (donorState.trim()) updateData.state = donorState.trim()
+        if (donorPincode.trim()) updateData.pincode = donorPincode.trim()
+        
+        // Update profile if there are changes
+        if (Object.keys(updateData).length > 0) {
+          try {
+            await fetch('/api/protected/users/profile', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(updateData)
+            })
+          } catch (profileError) {
+            console.warn('[PROFILE_UPDATE_FAILED]', profileError)
+            // Don't fail donation if profile update fails
+          }
+        }
+      }
+
       const response = await fetch(`/api/public/campaigns/${campaignSlug}/donations`, {
         method: 'POST',
         headers: {
@@ -151,6 +258,17 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
           donorPhone: donorPhone.trim() || undefined,
           amount,
           message: message.trim() || undefined,
+          wants80GReceipt,
+          donorPAN: wants80GReceipt ? donorPAN.trim().toUpperCase() : undefined,
+          donorAddress: wants80GReceipt ? donorAddress.trim() : undefined,
+          donorCity: wants80GReceipt ? donorCity.trim() : undefined,
+          donorState: wants80GReceipt ? donorState.trim() : undefined,
+          donorPincode: wants80GReceipt ? donorPincode.trim() : undefined,
+          receiptPreferences: {
+            email: receiptViaEmail,
+            sms: receiptViaSMS,
+            razorpayManaged: razorpayManagedReceipt
+          },
           paymentMethod: 'online'
         }),
       })
@@ -168,7 +286,16 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type: 'donation', amount, referenceId: donation._id, email: donorEmail.trim(), phone: donorPhone.trim() || undefined
+          type: 'donation', 
+          amount, 
+          referenceId: donation._id, 
+          email: donorEmail.trim(), 
+          phone: donorPhone.trim() || undefined,
+          receiptPreferences: {
+            email: receiptViaEmail,
+            sms: receiptViaSMS,
+            razorpayManaged: razorpayManagedReceipt
+          }
         })
       })
       if (!orderRes.ok) {
@@ -197,23 +324,24 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
             })
             if (verifyRes.status === 202) {
               toast.info('Payment received. Verification is pending; you will receive a confirmation shortly.')
-              // Optionally: poll a status endpoint here if available
+              // Redirect to thank you page even for pending status
+              toast.loading('Redirecting to confirmation page...', { id: 'redirect-loading' })
+              setTimeout(() => {
+                window.location.href = `/thank-you?donationId=${donation._id}&paymentId=${resp.razorpay_payment_id}`
+              }, 2000)
               return
             }
             if (!verifyRes.ok) {
               const data = await verifyRes.json().catch(() => ({}))
               throw new Error(data.error || 'Payment verification failed')
             }
+            
+            // Success! Redirect to thank you page
             toast.success('Donation completed successfully! Thank you for your support.')
-            // Reset form
-            setAmount('')
-            setCustomAmount('')
-            if (!user) {
-              setDonorName('')
-              setDonorEmail('')
-              setDonorPhone('')
-            }
-            setMessage('')
+            toast.loading('Redirecting to confirmation page...', { id: 'redirect-loading' })
+            setTimeout(() => {
+              window.location.href = `/thank-you?donationId=${donation._id}&paymentId=${resp.razorpay_payment_id}`
+            }, 1500)
           } catch (err) {
             console.error('[VERIFY_PAYMENT_ERROR]', err)
             toast.error(err instanceof Error ? err.message : 'Payment verification failed')
@@ -290,24 +418,22 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
           />
         </div>
 
-        {!user && (
-          <div>
-            <Label htmlFor="donorPhone" className="text-sm font-medium text-foreground">
-              Phone Number
-              <span className="text-xs text-muted-foreground ml-1">
-                (Optional - helps with email generation)
-              </span>
-            </Label>
-            <Input
-              id="donorPhone"
-              type="tel"
-              value={donorPhone}
-              onChange={(e) => handlePhoneChange(e.target.value)}
-              placeholder="Enter your phone number (optional)"
-              className="text-sm"
-            />
-          </div>
-        )}
+        {/* Phone Number Field - Always shown */}
+        <div>
+          <Label htmlFor="donorPhone" className="text-sm font-medium text-foreground">
+            Phone Number *
+          </Label>
+          <Input
+            id="donorPhone"
+            type="tel"
+            value={donorPhone}
+            onChange={(e) => handlePhoneChange(e.target.value)}
+            placeholder="Enter your phone number"
+            required
+            disabled={!!user && !allowEditProfileFields}
+            className="text-sm"
+          />
+        </div>
 
         <div>
           <Label htmlFor="donorEmail" className="text-sm font-medium text-foreground">
@@ -347,6 +473,124 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
             rows={3}
             className="text-sm resize-none"
           />
+        </div>
+      </div>
+
+      {/* 80G Receipt and Preferences Section */}
+      <div className="space-y-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-foreground">Receipt Preferences</h3>
+          
+          {/* 80G Receipt Option */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <input
+                id="wants80GReceipt"
+                type="checkbox"
+                checked={wants80GReceipt}
+                onChange={(e) => setWants80GReceipt(e.target.checked)}
+                className="rounded border-gray-300"
+              />
+              <Label htmlFor="wants80GReceipt" className="text-sm font-medium">
+                I want 80G tax exemption certificate
+              </Label>
+            </div>
+            <p className="text-xs text-muted-foreground ml-6">
+              Get tax benefits under Section 80G of Income Tax Act. PAN number required.
+            </p>
+          </div>
+
+          {/* PAN Input (conditionally shown) */}
+          {wants80GReceipt && (
+            <>
+              <div>
+                <Label htmlFor="donorPAN" className="text-sm font-medium text-foreground">
+                  PAN Number *
+                </Label>
+                <Input
+                  id="donorPAN"
+                  type="text"
+                  value={donorPAN}
+                  onChange={(e) => setDonorPAN(e.target.value.toUpperCase())}
+                  placeholder="ABCDE1234F"
+                  required={wants80GReceipt}
+                  maxLength={10}
+                  className="text-sm uppercase"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Required for 80G certificate. Format: ABCDE1234F
+                </p>
+              </div>
+
+              {/* Address Fields for 80G */}
+              <div className="space-y-3 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100">Address Details (Required for 80G Certificate)</h4>
+                
+                <div>
+                  <Label htmlFor="donorAddress" className="text-sm font-medium text-foreground">
+                    Address *
+                  </Label>
+                  <Input
+                    id="donorAddress"
+                    type="text"
+                    value={donorAddress}
+                    onChange={(e) => setDonorAddress(e.target.value)}
+                    placeholder="Enter your complete address"
+                    required={wants80GReceipt}
+                    className="text-sm"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="donorCity" className="text-sm font-medium text-foreground">
+                      City *
+                    </Label>
+                    <Input
+                      id="donorCity"
+                      type="text"
+                      value={donorCity}
+                      onChange={(e) => setDonorCity(e.target.value)}
+                      placeholder="City"
+                      required={wants80GReceipt}
+                      className="text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="donorPincode" className="text-sm font-medium text-foreground">
+                      Pincode *
+                    </Label>
+                    <Input
+                      id="donorPincode"
+                      type="text"
+                      value={donorPincode}
+                      onChange={(e) => setDonorPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="123456"
+                      required={wants80GReceipt}
+                      maxLength={6}
+                      className="text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="donorState" className="text-sm font-medium text-foreground">
+                    State *
+                  </Label>
+                  <Input
+                    id="donorState"
+                    type="text"
+                    value={donorState}
+                    onChange={(e) => setDonorState(e.target.value)}
+                    placeholder="State"
+                    required={wants80GReceipt}
+                    className="text-sm"
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

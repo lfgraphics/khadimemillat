@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     try {
         const { sessionClaims } = getAuth(req) as any
         const body = await req.json()
-        const { type, amount, referenceId, email, phone } = body || {}
+        const { type, amount, referenceId, email, phone, receiptPreferences } = body || {}
         if (!type || !amount || !referenceId) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
         }
@@ -40,7 +40,14 @@ export async function POST(req: NextRequest) {
         let order
         if (type === 'donation') {
             if (!email) return NextResponse.json({ error: 'Email is required for donations' }, { status: 400 })
-            order = await createDonationOrder({ amount, currency: 'INR', donationId: referenceId, donorEmail: email, donorPhone: phone })
+            order = await createDonationOrder({ 
+                amount, 
+                currency: 'INR', 
+                donationId: referenceId, 
+                donorEmail: email, 
+                donorPhone: phone,
+                receiptPreferences: receiptPreferences || { email: true, sms: false, razorpayManaged: false }
+            })
             // Persist order id onto the donation with retry
             try {
                 const CampaignDonation = (await import('@/models/CampaignDonation')).default

@@ -75,6 +75,21 @@ export async function POST(req: NextRequest) {
             donation.processedAt = new Date()
             await donation.save()
             
+            // Log receipt handling preferences for tracking
+            const receiptPrefs = (donation as any).receiptPreferences || {}
+            addBreadcrumb({ 
+                category: 'payments', 
+                message: 'donation completed with receipt preferences', 
+                level: 'info', 
+                data: { 
+                    donationId: String(donation._id), 
+                    razorpayManaged: receiptPrefs.razorpayManaged,
+                    wants80G: (donation as any).wants80GReceipt,
+                    email: receiptPrefs.email,
+                    sms: receiptPrefs.sms
+                } 
+            })
+            
             // Send thank you notifications after successful donation
             try {
                 await sendDonationThankYouNotifications(donation)

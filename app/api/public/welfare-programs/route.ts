@@ -10,10 +10,23 @@ export async function GET(request: NextRequest) {
 
         const { searchParams } = new URL(request.url)
         const includeStats = searchParams.get('includeStats') === 'true'
+        const format = searchParams.get('format') // 'simple' for donation forms
 
         const programs = await WelfareProgram.find({ isActive: true })
             .sort({ displayOrder: 1, createdAt: -1 })
             .lean()
+
+        // Simple format for donation forms
+        if (format === 'simple') {
+            const simplifiedPrograms = programs.map((program: any) => ({
+                value: program.slug,
+                label: program.title,
+                description: program.description,
+                icon: program.icon,
+                iconColor: program.iconColor
+            }))
+            return NextResponse.json({ programs: simplifiedPrograms })
+        }
 
         if (includeStats) {
             // Get aggregated stats for each program

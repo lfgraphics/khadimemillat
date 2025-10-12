@@ -11,10 +11,47 @@ export async function POST(
   try {
     const { slug } = await params
     const body = await request.json()
-    const { donorName, donorEmail, donorPhone, amount, message, paymentMethod, paymentReference } = body
+    const { 
+      donorName, 
+      donorEmail, 
+      donorPhone, 
+      amount, 
+      message, 
+      paymentMethod, 
+      paymentReference,
+      wants80GReceipt,
+      donorPAN,
+      donorAddress,
+      donorCity,
+      donorState,
+      donorPincode,
+      receiptPreferences
+    } = body
 
     if (!donorName || !donorEmail || !amount || amount <= 0) {
       return NextResponse.json({ error: 'Missing required fields or invalid amount' }, { status: 400 })
+    }
+
+    // Validate 80G requirements
+    if (wants80GReceipt) {
+      if (!donorPAN || !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(donorPAN)) {
+        return NextResponse.json(
+          { error: "Valid PAN number is required for 80G receipt" },
+          { status: 400 }
+        )
+      }
+      if (!donorAddress || !donorCity || !donorState || !donorPincode) {
+        return NextResponse.json(
+          { error: "Complete address is required for 80G receipt" },
+          { status: 400 }
+        )
+      }
+      if (!/^[0-9]{6}$/.test(donorPincode)) {
+        return NextResponse.json(
+          { error: "Valid 6-digit pincode is required for 80G receipt" },
+          { status: 400 }
+        )
+      }
     }
 
     await connectDB()
@@ -32,11 +69,18 @@ export async function POST(
       donorName,
       donorEmail,
       donorPhone: donorPhone || undefined,
+      donorAddress: wants80GReceipt ? donorAddress : undefined,
+      donorCity: wants80GReceipt ? donorCity : undefined,
+      donorState: wants80GReceipt ? donorState : undefined,
+      donorPincode: wants80GReceipt ? donorPincode : undefined,
       amount,
       message,
       paymentMethod: paymentMethod || 'online',
       paymentReference,
-      status: 'pending'
+      status: 'pending',
+      wants80GReceipt: wants80GReceipt || false,
+      donorPAN: wants80GReceipt ? donorPAN : undefined,
+      receiptPreferences: receiptPreferences || { email: true, sms: false, razorpayManaged: false }
     })
 
     await donation.save()

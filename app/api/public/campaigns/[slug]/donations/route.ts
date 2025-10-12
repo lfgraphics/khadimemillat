@@ -89,20 +89,46 @@ export async function POST(
             amount,
             message,
             paymentMethod,
-            paymentReference
+            paymentReference,
+            wants80GReceipt,
+            donorPAN,
+            donorAddress,
+            donorCity,
+            donorState,
+            donorPincode,
+            receiptPreferences
         } = body
 
-        if (!donorName || !donorEmail || !amount || amount <= 0) {
+        if (!donorName || !donorEmail || !donorPhone || !amount || amount <= 0) {
             return NextResponse.json(
-                { error: "Missing required fields or invalid amount" },
+                { error: "Missing required fields: donorName, donorEmail, donorPhone, and amount are required" },
                 { status: 400 }
             )
         }
 
-        const { userId } = await auth()
+        // Validate 80G requirements
+        if (wants80GReceipt) {
+            if (!donorPAN || !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(donorPAN)) {
+                return NextResponse.json(
+                    { error: "Valid PAN number is required for 80G receipt" },
+                    { status: 400 }
+                )
+            }
+            if (!donorAddress || !donorCity || !donorState || !donorPincode) {
+                return NextResponse.json(
+                    { error: "Complete address is required for 80G receipt" },
+                    { status: 400 }
+                )
+            }
+            if (!/^[0-9]{6}$/.test(donorPincode)) {
+                return NextResponse.json(
+                    { error: "Valid 6-digit pincode is required for 80G receipt" },
+                    { status: 400 }
+                )
+            }
+        }
 
-        // Phone number is optional for logged-out users
-        // They can donate without creating an account
+        const { userId } = await auth()
 
         const donation = new CampaignDonation({
             campaignId: (campaign as any)._id,
@@ -110,19 +136,26 @@ export async function POST(
             donorId: userId || undefined,
             donorName,
             donorEmail,
-            donorPhone: donorPhone || undefined,
+            donorPhone,
+            donorAddress: wants80GReceipt ? donorAddress : undefined,
+            donorCity: wants80GReceipt ? donorCity : undefined,
+            donorState: wants80GReceipt ? donorState : undefined,
+            donorPincode: wants80GReceipt ? donorPincode : undefined,
             amount,
             message,
             paymentMethod: paymentMethod || 'online',
             paymentReference,
-            status: 'pending'
+            status: 'pending',
+            wants80GReceipt: wants80GReceipt || false,
+            donorPAN: wants80GReceipt ? donorPAN : undefined,
+            receiptPreferences: receiptPreferences || { email: true, sms: true, razorpayManaged: true }
         })
 
         await donation.save()
 
         return NextResponse.json(donation, { status: 201 })
     } catch (error) {
-        console.error("Error creating donation:", error)
+        console.log("Error creating donation:", error instanceof Error ? error.message : 'Unknown error')
         return NextResponse.json(
             { error: "Failed to create donation" },
             { status: 500 }

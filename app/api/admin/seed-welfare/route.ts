@@ -7,6 +7,36 @@ import CampaignDonation from "@/models/CampaignDonation"
 
 const samplePrograms = [
   {
+    title: "Sadqa",
+    slug: "sadqa",
+    description: "Voluntary charitable giving (Sadqa) to support various welfare activities and help those in need in our community.",
+    coverImage: "https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&h=600&fit=crop",
+    icon: "Heart",
+    iconColor: "#EC4899",
+    donationLink: "/welfare-programs/sadqa",
+    displayOrder: 1
+  },
+  {
+    title: "Zakat",
+    slug: "zakat",
+    description: "Obligatory Islamic almsgiving (Zakat) distributed to eligible recipients according to Islamic principles and guidelines.",
+    coverImage: "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=800&h=600&fit=crop",
+    icon: "Coins",
+    iconColor: "#10B981",
+    donationLink: "/welfare-programs/zakat",
+    displayOrder: 2
+  },
+  {
+    title: "Organization Support",
+    slug: "organization-support",
+    description: "Direct support for organizational operations, infrastructure, and administrative needs to ensure sustainable welfare services.",
+    coverImage: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=600&fit=crop",
+    icon: "Building",
+    iconColor: "#8B5CF6",
+    donationLink: "/welfare-programs/organization-support",
+    displayOrder: 3
+  },
+  {
     title: "Education Support",
     slug: "education-support",
     description: "Providing school supplies, books, and educational resources to underprivileged children in rural and urban areas.",
@@ -14,7 +44,7 @@ const samplePrograms = [
     icon: "GraduationCap",
     iconColor: "#3B82F6",
     donationLink: "/welfare-programs/education-support",
-    displayOrder: 1
+    displayOrder: 4
   },
   {
     title: "Healthcare Access",
@@ -22,9 +52,9 @@ const samplePrograms = [
     description: "Medical equipment and supplies distribution to local healthcare facilities and free medical camps.",
     coverImage: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&h=600&fit=crop",
     icon: "Stethoscope",
-    iconColor: "#10B981",
+    iconColor: "#EF4444",
     donationLink: "/welfare-programs/healthcare-access",
-    displayOrder: 2
+    displayOrder: 5
   },
   {
     title: "Emergency Relief",
@@ -34,7 +64,17 @@ const samplePrograms = [
     icon: "Shield",
     iconColor: "#F59E0B",
     donationLink: "/welfare-programs/emergency-relief",
-    displayOrder: 3
+    displayOrder: 6
+  },
+  {
+    title: "General Welfare",
+    slug: "general-welfare",
+    description: "Supporting diverse community needs and other charitable contributions for overall community welfare and development.",
+    coverImage: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=800&h=600&fit=crop",
+    icon: "Users",
+    iconColor: "#6B7280",
+    donationLink: "/welfare-programs/general-welfare",
+    displayOrder: 7
   }
 ]
 

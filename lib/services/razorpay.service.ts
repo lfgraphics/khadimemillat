@@ -17,7 +17,18 @@ function getRazorpay() {
   return razorpayInstance
 }
 
-export async function createDonationOrder(params: { amount: number; currency: Currency; donationId: string; donorEmail: string; donorPhone?: string }) {
+export async function createDonationOrder(params: { 
+  amount: number; 
+  currency: Currency; 
+  donationId: string; 
+  donorEmail: string; 
+  donorPhone?: string;
+  receiptPreferences?: {
+    email?: boolean;
+    sms?: boolean;
+    razorpayManaged?: boolean;
+  }
+}) {
   const rp = getRazorpay()
   const options: any = {
     amount: Math.round(params.amount * 100),
@@ -30,6 +41,29 @@ export async function createDonationOrder(params: { amount: number; currency: Cu
       phone: params.donorPhone || ''
     }
   }
+
+  // Add receipt preferences to Razorpay order if razorpayManaged is enabled
+  // Note: Razorpay receipts are limited in test mode but work in live mode
+  if (params.receiptPreferences?.razorpayManaged) {
+    options.receipt = `donation_${params.donationId}` // Ensure receipt is provided for Razorpay
+    
+    // Store only essential receipt information in notes
+    if (params.receiptPreferences.email && params.donorEmail) {
+      options.notes.receipt_email = params.donorEmail
+    }
+    
+    if (params.receiptPreferences.sms && params.donorPhone) {
+      options.notes.receipt_phone = params.donorPhone
+    }
+    
+    console.log('[RAZORPAY_RECEIPT_ENABLED]', {
+      orderId: `donation_${params.donationId}`,
+      email: !!params.receiptPreferences.email,
+      sms: !!params.receiptPreferences.sms,
+      testMode: !RAZORPAY_KEY_ID?.startsWith('rzp_live_')
+    })
+  }
+
   const order = await rp.orders.create(options)
   return { id: order.id, amount: order.amount, currency: order.currency }
 }
