@@ -11,6 +11,7 @@ const isPublicRoute = createRouteMatcher([
     '/donate(.*)',
     '/our-services(.*)',
     '/api/public(.*)',
+    '/api/receipts(.*)'
 ])
 
 // Define protected routes and their allowed roles

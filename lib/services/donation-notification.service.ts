@@ -189,34 +189,46 @@ export async function sendDonationThankYouNotifications(donation: any) {
             }
         }
 
-        // Send WhatsApp notification if phone available
+        // Send WhatsApp notification with receipt image if phone available
         if (userPhone && userNotificationPrefs.whatsapp) {
             try {
-                const whatsappMessage = `🙏 *Khadim-e-Millat Welfare Foundation*
+                // Extract phone number from donation.donorPhone if userPhone is empty
+                const phoneToUse = userPhone || donation.donorPhone || ''
+                
+                if (phoneToUse) {
+                    // Send donation confirmation with receipt image using our enhanced service
+                    const whatsappResult = await whatsappService.sendDonationConfirmation(
+                        whatsappService.formatPhoneNumber(phoneToUse),
+                        {
+                            donationId: donationId.toString(),
+                            donorName,
+                            amount,
+                            currency,
+                            campaignName,
+                            programName,
+                            wants80G,
+                            razorpayPaymentId: paymentId // Pass the actual Razorpay transaction ID
+                        }
+                    )
 
-*Donation Received Successfully!*
-
-Dear ${donorName},
-
-Thank you for your generous donation of *${currency} ${amount}*
-
-📋 *Receipt Details:*
-• Amount: ${currency} ${amount}
-• Program: ${programName}
-• Date: ${receiptDate}
-• Receipt ID: ${donationId.toString().slice(-8)}
-• Transaction ID: ${paymentId || donationId.toString().slice(-8)}
-
-Your contribution makes a real difference. May Allah bless you!
-
-🌐 www.khadimemillat.org`
-
-                await whatsappService.sendMessage({
-                    to: userPhone,
-                    message: whatsappMessage
-                })
-
-                console.log(`[DONATION_WHATSAPP_SENT] ${userPhone} - ${donationId}`)
+                    if (whatsappResult.success) {
+                        console.log(`[DONATION_WHATSAPP_WITH_IMAGE_SENT] ${phoneToUse} - ${donationId} - MessageId: ${whatsappResult.messageId}`)
+                        
+                        // Note: 80G certificate info is included in the same receipt image, no separate message needed
+                    } else {
+                        console.error('[DONATION_WHATSAPP_WITH_IMAGE_FAILED]', whatsappResult.error)
+                        
+                        // Fallback to text-only message if image sending fails
+                        const fallbackMessage = `🙏 *Assalamu Alaikum ${donorName}*\n\nThank you for your generous donation of *${currency} ${amount.toLocaleString('en-IN')}*\n\n📋 Receipt ID: ${donationId.toString().slice(-8)}\n🔗 Details: ${process.env.NEXT_PUBLIC_APP_URL || 'https://khadimemillat.org'}/thank-you?donationId=${donationId}\n\nMay Allah bless you!\n\n_Khadim-e-Millat Welfare Foundation_`
+                        
+                        await whatsappService.sendMessage({
+                            to: whatsappService.formatPhoneNumber(phoneToUse),
+                            message: fallbackMessage
+                        })
+                        
+                        console.log(`[DONATION_WHATSAPP_FALLBACK_SENT] ${phoneToUse} - ${donationId}`)
+                    }
+                }
             } catch (whatsappError) {
                 console.error('[DONATION_WHATSAPP_FAILED]', whatsappError)
             }
@@ -269,5 +281,87 @@ Your contribution makes a real difference. May Allah bless you!
     } catch (error) {
         console.error('[DONATION_NOTIFICATION_ERROR]', error)
         throw error
+    }
+}
+
+// Function to resend donation receipt via WhatsApp with image
+export async function resendDonationReceiptWhatsApp(donationId: string, phoneNumber: string) {
+    try {
+        // Import models dynamically to avoid circular dependencies
+        const CampaignDonation = (await import('@/models/CampaignDonation')).default
+        
+        // Fetch donation details
+        const donation = await CampaignDonation.findById(donationId)
+            .populate('campaignId', 'name title')
+            .populate('programId', 'title name')
+            .lean()
+
+        if (!donation) {
+            throw new Error('Donation not found')
+        }
+
+        const donationData = donation as any
+        const campaignName = donationData.campaignId?.name || donationData.campaignId?.title
+        const programName = donationData.programId?.title || donationData.programId?.name || 'General Donation'
+
+        // Send receipt with image
+        const result = await whatsappService.sendDonationReceipt(
+            whatsappService.formatPhoneNumber(phoneNumber),
+            donationId,
+            donationData.donorName || 'Valued Donor',
+            donationData.amount || 0,
+            campaignName || programName
+        )
+
+        console.log(`[RECEIPT_RESEND_WHATSAPP] ${phoneNumber} - ${donationId} - Success: ${result.success}`)
+        return result
+
+    } catch (error) {
+        console.error('[RECEIPT_RESEND_WHATSAPP_ERROR]', error)
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to resend receipt'
+        }
+    }
+}
+
+// Function to send 80G certificate via WhatsApp with image
+export async function send80GCertificateWhatsApp(donationId: string, phoneNumber: string) {
+    try {
+        // Import models dynamically to avoid circular dependencies
+        const CampaignDonation = (await import('@/models/CampaignDonation')).default
+        
+        // Fetch donation details
+        const donation = await CampaignDonation.findById(donationId).lean()
+
+        if (!donation) {
+            throw new Error('Donation not found')
+        }
+
+        const donationData = donation as any
+        
+        // Check if 80G certificate exists
+        if (!donationData.certificate80G?.certificateNumber) {
+            throw new Error('80G certificate not generated for this donation')
+        }
+
+        // Send certificate with image
+        const result = await whatsappService.send80GCertificate(
+            whatsappService.formatPhoneNumber(phoneNumber),
+            donationId,
+            donationData.donorName || 'Valued Donor',
+            donationData.amount || 0,
+            donationData.certificate80G.certificateNumber
+        )
+
+        console.log(`[80G_CERTIFICATE_RESEND_WHATSAPP] ${phoneNumber} - ${donationId} - Success: ${result.success}`)
+        return result
+
+    } catch (error) {
+        console.error('[80G_CERTIFICATE_RESEND_WHATSAPP_ERROR]', error)
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to send 80G certificate'
+        }
     }
 }
