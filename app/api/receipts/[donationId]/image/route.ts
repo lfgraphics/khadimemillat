@@ -64,7 +64,7 @@ export async function GET(
         throw new Error('Puppeteer not available')
       }
       
-      // Launch browser
+      // Launch browser with optimized settings for image generation
       const browser = await puppeteer.default.launch({
         headless: true,
         args: [
@@ -73,8 +73,17 @@ export async function GET(
           '--disable-dev-shm-usage',
           '--disable-gpu',
           '--no-first-run',
-          '--no-zygote'
-        ]
+          '--no-zygote',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor',
+          '--run-all-compositor-stages-before-draw',
+          '--disable-background-timer-throttling',
+          '--disable-renderer-backgrounding',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-ipc-flooding-protection'
+        ],
+        defaultViewport: null,
+        ignoreDefaultArgs: ['--disable-extensions']
       })
       
       // Generate HTML for the receipt (simplified for image generation)
@@ -109,17 +118,34 @@ export async function GET(
         const imageBuffer = await page.screenshot({
           type: 'png',
           fullPage: true,
-          omitBackground: false
+          omitBackground: false,
+          quality: 90,
+          encoding: 'binary'
         })
         
         await browser.close()
 
-        // Return the image
-        return new NextResponse(Buffer.from(imageBuffer), {
+        // Ensure proper buffer handling and validate image
+        const validImageBuffer = Buffer.isBuffer(imageBuffer) ? imageBuffer : Buffer.from(imageBuffer)
+        
+        // Validate that we have a proper PNG buffer
+        if (validImageBuffer.length === 0) {
+          throw new Error('Generated image buffer is empty')
+        }
+        
+        // Check PNG signature (first 8 bytes should be PNG signature)
+        const pngSignature = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
+        if (validImageBuffer.length >= 8 && !validImageBuffer.subarray(0, 8).equals(pngSignature)) {
+          console.warn('Generated buffer does not have valid PNG signature')
+        }
+
+        // Return the image with proper headers
+        return new NextResponse(new Uint8Array(validImageBuffer), {
           headers: {
             'Content-Type': 'image/png',
             'Content-Disposition': `attachment; filename="donation-receipt-${donationData._id.toString().slice(-8)}.png"`,
-            'Cache-Control': 'public, max-age=3600'
+            'Cache-Control': 'public, max-age=3600',
+            'Content-Length': validImageBuffer.length.toString()
           }
         })
       } catch (pageError) {
@@ -128,13 +154,13 @@ export async function GET(
       }
       
     } catch (puppeteerError) {
-      console.log('Puppeteer failed, redirecting to SVG endpoint:', puppeteerError instanceof Error ? puppeteerError.message : String(puppeteerError))
+      console.log('Puppeteer failed, falling back to HTML receipt:', puppeteerError instanceof Error ? puppeteerError.message : String(puppeteerError))
       
-      // Redirect to SVG endpoint as fallback
-      const svgUrl = new URL(request.url)
-      svgUrl.pathname = svgUrl.pathname.replace('/image', '/svg')
-      
-      return NextResponse.redirect(svgUrl.toString(), 302)
+      // Return error response instead of redirecting to SVG
+      return NextResponse.json(
+        { error: 'Failed to generate receipt image. Please try downloading as HTML.' },
+        { status: 500 }
+      )
     }
 
   } catch (error) {

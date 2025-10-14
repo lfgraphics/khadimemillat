@@ -85,19 +85,10 @@ export default function DonationThankYou({
     try {
       toast.info('Generating receipt image...')
       
-      // Try to download receipt image from server-side API (PNG first, fallback to SVG)
-      let imageResponse = await fetch(`/api/receipts/${donationId}/image`)
-      let fileExtension = 'png'
+      // Download receipt image from server-side API (PNG only)
+      const imageResponse = await fetch(`/api/receipts/${donationId}/image`)
       
       console.log('PNG endpoint response:', imageResponse.status, imageResponse.headers.get('content-type'))
-      
-      if (!imageResponse.ok) {
-        // Fallback to SVG endpoint
-        toast.info('Falling back to SVG format...')
-        imageResponse = await fetch(`/api/receipts/${donationId}/svg`)
-        fileExtension = 'svg'
-        console.log('SVG endpoint response:', imageResponse.status, imageResponse.headers.get('content-type'))
-      }
       
       if (imageResponse.ok) {
         const blob = await imageResponse.blob()
@@ -106,13 +97,13 @@ export default function DonationThankYou({
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `donation-receipt-${receiptId}.${fileExtension}`
+        a.download = `donation-receipt-${receiptId}.png`
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
         
-        toast.success(`Receipt downloaded successfully as ${fileExtension.toUpperCase()}!`)
+        toast.success('Receipt downloaded successfully as PNG!')
       } else {
         // Fallback: Download HTML receipt
         const receiptContent = generateReceiptContent()
@@ -139,22 +130,11 @@ export default function DonationThankYou({
     try {
       const shareText = `I just donated ${currency} ${amount.toLocaleString('en-IN')} to Khadim-e-Millat Welfare Foundation for ${programName}. Join me in supporting this noble cause!`
       
-      // Try to generate receipt image via server-side API (PNG first, fallback to SVG)
+      // Generate receipt image via server-side API (PNG only)
       toast.info('Generating receipt image...')
-      let imageResponse = await fetch(`/api/receipts/${donationId}/image`)
-      let fileExtension = 'png'
-      let mimeType = 'image/png'
+      const imageResponse = await fetch(`/api/receipts/${donationId}/image`)
       
       console.log('PNG endpoint response:', imageResponse.status, imageResponse.headers.get('content-type'))
-      
-      if (!imageResponse.ok) {
-        // Fallback to SVG endpoint
-        toast.info('Falling back to SVG format...')
-        imageResponse = await fetch(`/api/receipts/${donationId}/svg`)
-        fileExtension = 'svg'
-        mimeType = 'image/svg+xml'
-        console.log('SVG endpoint response:', imageResponse.status, imageResponse.headers.get('content-type'))
-      }
       
       if (imageResponse.ok) {
         const blob = await imageResponse.blob()
@@ -162,19 +142,19 @@ export default function DonationThankYou({
         
         // Check if Web Share API is supported and can share files
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], 'receipt.png')] })) {
-          const file = new File([blob], `donation-receipt-${receiptId}.${fileExtension}`, { type: mimeType })
+          const file = new File([blob], `donation-receipt-${receiptId}.png`, { type: 'image/png' })
           await navigator.share({
             title: 'Donation Receipt - Khadim-e-Millat Welfare Foundation',
             text: shareText,
             files: [file]
           })
-          toast.success(`Receipt shared successfully as ${fileExtension.toUpperCase()}!`)
+          toast.success(`Receipt shared successfully as PNG!`)
         } else {
           // Fallback: Download the image and share text
           const url = URL.createObjectURL(blob)
           const a = document.createElement('a')
           a.href = url
-          a.download = `donation-receipt-${receiptId}.${fileExtension}`
+          a.download = `donation-receipt-${receiptId}.png`
           document.body.appendChild(a)
           a.click()
           document.body.removeChild(a)
@@ -190,7 +170,7 @@ export default function DonationThankYou({
           } else {
             // Final fallback: Copy to clipboard
             await navigator.clipboard.writeText(shareText + ` - ${window.location.origin}`)
-            toast.success(`Receipt downloaded as ${fileExtension.toUpperCase()} and text copied to clipboard!`)
+            toast.success(`Receipt downloaded as PNG and text copied to clipboard!`)
           }
         }
       } else {
