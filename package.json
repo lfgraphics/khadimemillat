@@ -6,6 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
+    "postinstall": "npx puppeteer browsers install chrome",
     "migrate": "npx tsx scripts/run-migrations.ts",
     "migrate:notifications": "npx tsx scripts/migrate-notification-models.ts",
     "seed:welfare": "npx tsx scripts/seed-welfare-programs.ts",

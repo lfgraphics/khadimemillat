@@ -80,10 +80,19 @@ export async function GET(
           '--disable-background-timer-throttling',
           '--disable-renderer-backgrounding',
           '--disable-backgrounding-occluded-windows',
-          '--disable-ipc-flooding-protection'
+          '--disable-ipc-flooding-protection',
+          '--single-process', // Important for serverless environments
+          '--disable-extensions',
+          '--disable-default-apps',
+          '--disable-sync',
+          '--no-default-browser-check',
+          '--disable-translate',
+          '--disable-plugins'
         ],
         defaultViewport: null,
-        ignoreDefaultArgs: ['--disable-extensions']
+        ignoreDefaultArgs: ['--disable-extensions'],
+        // Try to use system Chrome first, fallback to bundled Chrome
+        executablePath: process.env.CHROME_EXECUTABLE_PATH || undefined
       })
       
       // Generate HTML for the receipt (simplified for image generation)
