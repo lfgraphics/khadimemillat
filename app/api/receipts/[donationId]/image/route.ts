@@ -63,10 +63,139 @@ export async function GET(
       if (!puppeteer) {
         throw new Error('Puppeteer not available')
       }
+
+      // Simple Chrome executable detection
+      const findChrome = () => {
+        const fs = require('fs')
+        const path = require('path')
+        
+        // Check environment variable first (if explicitly set)
+        if (process.env.CHROME_EXECUTABLE_PATH && process.env.CHROME_EXECUTABLE_PATH.trim()) {
+          if (fs.existsSync(process.env.CHROME_EXECUTABLE_PATH)) {
+            return process.env.CHROME_EXECUTABLE_PATH
+          }
+        }
+
+        // Try the two main serverless paths where Chrome gets installed
+        const possiblePaths = [
+          '/vercel/path0/.cache/puppeteer/chrome/linux-141.0.7390.76/chrome-linux64/chrome',
+          path.join(process.cwd(), '.cache/puppeteer/chrome/linux-141.0.7390.76/chrome-linux64/chrome'),
+        ]
+
+        for (const chromePath of possiblePaths) {
+          if (fs.existsSync(chromePath)) {
+            console.log(`Found Chrome at: ${chromePath}`)
+            return chromePath
+          }
+        }
+
+        // Try Puppeteer's default
+        try {
+          const execPath = puppeteer.default.executablePath()
+          if (fs.existsSync(execPath)) {
+            return execPath
+          }
+        } catch (error) {
+          console.log('Puppeteer executablePath() failed:', error instanceof Error ? error.message : String(error))
+        }
+
+        return null
+      }
+
+      const chromeExecutablePath = findChrome()
+      
+      if (!chromeExecutablePath) {
+        // Try @sparticuz/chromium as fallback for serverless environments
+        try {
+          const chromium = await import('@sparticuz/chromium').catch(() => null)
+          if (chromium) {
+            console.log('Using @sparticuz/chromium as fallback')
+            const browser = await puppeteer.default.launch({
+              args: chromium.default.args,
+              defaultViewport: { width: 1280, height: 720 },
+              executablePath: await chromium.default.executablePath(),
+              headless: true,
+            })
+            
+            // Generate HTML for the receipt (simplified for image generation)
+            const receiptHTML = generateReceiptImageHTML({
+              donorName: donationData.donorName,
+              donorPAN: donationData.donorPAN,
+              donorAddress: donationData.donorAddress,
+              donorCity: donationData.donorCity,
+              donorState: donationData.donorState,
+              donorPincode: donationData.donorPincode,
+              amount: donationData.amount,
+              currency: 'INR',
+              receiptId: donationData._id.toString().slice(-8),
+              certificateNumber: donationData.certificate80G?.certificateNumber,
+              wants80G: donationData.wants80GReceipt || false,
+              campaignName,
+              programName,
+              donationDate,
+              donationId: donationData._id.toString(),
+              razorpayPaymentId: donationData.razorpayPaymentId
+            })
+
+            const page = await browser.newPage()
+            
+            try {
+              await page.setViewport({ width: 800, height: 1200, deviceScaleFactor: 2 })
+              await page.setContent(receiptHTML, { 
+                waitUntil: 'networkidle0',
+                timeout: 15000
+              })
+              
+              const imageBuffer = await page.screenshot({
+                type: 'png',
+                fullPage: true,
+                omitBackground: false,
+                encoding: 'binary'
+              })
+              
+              await browser.close()
+
+              // Ensure proper buffer handling and validate image
+              const validImageBuffer = Buffer.isBuffer(imageBuffer) ? imageBuffer : Buffer.from(imageBuffer)
+              
+              // Validate that we have a proper PNG buffer
+              if (validImageBuffer.length === 0) {
+                throw new Error('Generated image buffer is empty')
+              }
+              
+              // Check PNG signature (first 8 bytes should be PNG signature)
+              const pngSignature = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
+              if (validImageBuffer.length >= 8 && !validImageBuffer.subarray(0, 8).equals(pngSignature)) {
+                console.warn('Generated buffer does not have valid PNG signature')
+              }
+
+              // Return the image with proper headers
+              return new NextResponse(new Uint8Array(validImageBuffer), {
+                headers: {
+                  'Content-Type': 'image/png',
+                  'Content-Disposition': `attachment; filename="donation-receipt-${donationData._id.toString().slice(-8)}.png"`,
+                  'Cache-Control': 'public, max-age=3600',
+                  'Content-Length': validImageBuffer.length.toString()
+                }
+              })
+            } catch (pageError) {
+              await browser.close().catch(() => {})
+              throw pageError
+            }
+          }
+        } catch (chromiumError) {
+          console.log('Chromium fallback failed:', chromiumError instanceof Error ? chromiumError.message : String(chromiumError))
+        }
+        
+        throw new Error('No Chrome executable found. Searched common paths but Chrome is not available.')
+      }
+
+      console.log(`Using Chrome executable: ${chromeExecutablePath}`)
       
       // Launch browser with optimized settings for image generation
       const browser = await puppeteer.default.launch({
         headless: true,
+        executablePath: chromeExecutablePath,
         args: [
           '--no-sandbox', 
           '--disable-setuid-sandbox',
@@ -87,12 +216,19 @@ export async function GET(
           '--disable-sync',
           '--no-default-browser-check',
           '--disable-translate',
-          '--disable-plugins'
+          '--disable-plugins',
+          '--disable-background-networking',
+          '--disable-background-media',
+          '--disable-client-side-phishing-detection',
+          '--disable-component-update',
+          '--disable-hang-monitor',
+          '--disable-prompt-on-repost',
+          '--disable-domain-reliability',
+          '--disable-features=TranslateUI',
+          '--disable-features=BlinkGenPropertyTrees'
         ],
         defaultViewport: null,
-        ignoreDefaultArgs: ['--disable-extensions'],
-        // Try to use system Chrome first, fallback to bundled Chrome
-        executablePath: process.env.CHROME_EXECUTABLE_PATH || undefined
+        ignoreDefaultArgs: ['--disable-extensions']
       })
       
       // Generate HTML for the receipt (simplified for image generation)
