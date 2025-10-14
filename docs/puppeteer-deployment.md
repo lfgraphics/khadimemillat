@@ -1,135 +1,130 @@
-# Puppeteer Deployment Guide
+# Puppeteer Deployment Guide - Serverless Solution
 
 ## Overview
-This guide covers deploying the application with Puppeteer for receipt image generation in production environments.
+This guide covers deploying the application with Puppeteer for receipt image generation using `@sparticuz/chromium` for serverless environments.
 
 ## The Problem
-Puppeteer requires Chrome/Chromium to be installed, but most serverless platforms (Vercel, AWS Lambda, etc.) don't include Chrome by default.
+Puppeteer requires Chrome/Chromium to be installed, but:
+1. Most serverless platforms (Vercel, AWS Lambda, etc.) don't include Chrome by default
+2. Bundling Chrome with serverless functions exceeds size limits (250MB on Vercel)
+3. The Chrome binary is ~300MB+ which is too large for serverless deployments
 
-## Solutions Implemented
+## Solution: @sparticuz/chromium
 
-### 1. Puppeteer Configuration
-- Added `.puppeteerrc.cjs` for local cache configuration
-- This ensures browsers are cached locally in the project
+We use `@sparticuz/chromium` which provides a pre-built, optimized Chromium binary specifically designed for serverless environments.
 
-### 2. Automatic Browser Installation
-- Added `postinstall` script in `package.json`
-- Runs `npx puppeteer browsers install chrome` after package installation
-- Ensures Chrome is available in production builds
+### Benefits:
+- **Smaller size**: Optimized for serverless
+- **No bundling issues**: Downloads at runtime
+- **Serverless-optimized**: Built for AWS Lambda/Vercel
+- **Reliable**: Maintained specifically for this use case
 
-### 3. Environment Variable Support
-- Added `CHROME_EXECUTABLE_PATH` environment variable
-- Allows specifying custom Chrome path for different platforms
+## Implementation Details
 
-### 4. Enhanced Launch Arguments
-- Added serverless-friendly Puppeteer launch options
-- Includes `--single-process` and other stability flags
+### 1. Package Dependencies
+```json
+{
+  "dependencies": {
+    "puppeteer": "^24.24.1",
+    "@sparticuz/chromium": "^141.0.0"
+  }
+}
+```
 
-## Platform-Specific Setup
+### 2. Vercel Configuration
+```json
+{
+  "functions": {
+    "app/api/**/*.ts": {
+      "excludeFiles": [
+        ".cache/**",
+        "node_modules/puppeteer/.local-chromium/**"
+      ]
+    }
+  },
+  "build": {
+    "env": {
+      "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": "true"
+    }
+  }
+}
+```
+
+### 3. Runtime Implementation
+The API route uses `@sparticuz/chromium` directly without trying to bundle Chrome:
+
+```typescript
+const chromium = await import('@sparticuz/chromium')
+const browser = await puppeteer.launch({
+  args: chromium.default.args,
+  defaultViewport: { width: 1280, height: 720 },
+  executablePath: await chromium.default.executablePath(),
+  headless: true,
+})
+```
+
+## Platform-Specific Notes
 
 ### Vercel
-1. Chrome should be automatically installed via postinstall script
-2. If issues persist, consider using `@sparticuz/chromium` package:
-   ```bash
-   npm install @sparticuz/chromium
-   ```
+- Chrome is downloaded at runtime by `@sparticuz/chromium`
+- No build-time Chrome installation needed
+- Function size stays within 250MB limit
 
 ### AWS Lambda
-- Use AWS Lambda layers with Chrome/Chromium
-- Set `CHROME_EXECUTABLE_PATH` to the layer's Chrome path
+- `@sparticuz/chromium` is specifically designed for Lambda
+- Works out of the box with this package
 
-### Docker
-Add to your Dockerfile:
-```dockerfile
-RUN apt-get update && apt-get install -y \
-    fonts-liberation \
-    libasound2 \
-    libatk-bridge2.0-0 \
-    libatk1.0-0 \
-    libc6 \
-    libcairo2 \
-    libcups2 \
-    libdbus-1-3 \
-    libdrm2 \
-    libexpat1 \
-    libfontconfig1 \
-    libgbm1 \
-    libgcc1 \
-    libglib2.0-0 \
-    libgtk-3-0 \
-    libnspr4 \
-    libnss3 \
-    libpango-1.0-0 \
-    libpangocairo-1.0-0 \
-    libstdc++6 \
-    libx11-6 \
-    libx11-xcb1 \
-    libxcb1 \
-    libxcomposite1 \
-    libxcursor1 \
-    libxdamage1 \
-    libxext6 \
-    libxfixes3 \
-    libxi6 \
-    libxrandr2 \
-    libxrender1 \
-    libxss1 \
-    libxtst6 \
-    lsb-release \
-    wget \
-    xdg-utils
-```
-
-## Testing
-
-To test Puppeteer installation locally:
-```bash
-# Install browsers
-npx puppeteer browsers install chrome
-
-# Test in Node.js
-node -e "
-const puppeteer = require('puppeteer');
-(async () => {
-  const browser = await puppeteer.launch({ headless: true });
-  console.log('Puppeteer working!');
-  await browser.close();
-})();
-"
-```
-
-## Troubleshooting
-
-### Error: Could not find Chrome
-1. Ensure `postinstall` script ran successfully
-2. Check if `.cache/puppeteer` directory exists
-3. Verify Chrome executable path
-
-### Memory Issues
-- Add `--single-process` flag (already included)
-- Increase serverless function memory limits
-- Consider using smaller viewport sizes
-
-### Timeout Issues
-- Increase `timeout` in `page.setContent()`
-- Add more time for `waitUntil: 'networkidle0'`
-- Consider using `waitUntil: 'domcontentloaded'` instead
-
-## Alternative Solutions
-
-If Puppeteer continues to cause issues:
-
-1. **Use a PDF generation service**: Switch to server-side PDF generation
-2. **External API**: Use services like HTMLCSStoImage API
-3. **Client-side generation**: Generate receipts in the browser (less reliable)
-4. **Microservice**: Deploy Puppeteer as a separate service with proper Chrome support
+### Other Platforms
+- Should work on most serverless platforms
+- May need platform-specific `@sparticuz/chromium` alternatives
 
 ## Environment Variables
 
-```bash
-# Optional: Custom Chrome path
-CHROME_EXECUTABLE_PATH=/path/to/chrome
+No special environment variables needed! The package handles everything automatically.
 
-# For Vercel with chromium package
-CHROME_EXECUTABLE_PATH=/var/task/node_modules/@sparticuz/chromium/bin
+## Troubleshooting
+
+### Error: Function size exceeded
+- Ensure `vercel.json` excludes Chrome cache
+- Verify `PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true` in build env
+
+### Chrome not found
+- The package downloads Chrome at runtime
+- Check network connectivity in serverless environment
+- Verify `@sparticuz/chromium` package is installed
+
+### Memory issues
+- Consider reducing image quality/size
+- Use smaller viewport dimensions
+- Implement timeout limits
+
+## Cost Considerations
+
+- **Cold starts**: First execution may be slower due to Chrome download
+- **Memory usage**: Increase serverless function memory if needed
+- **Execution time**: Factor in Chrome download time
+
+## Alternative Approaches
+
+If `@sparticuz/chromium` doesn't work:
+
+1. **HTML-to-Image Service**: Use external APIs like HTMLCSStoImage
+2. **PDF Generation**: Switch to PDF receipts using libraries like Puppeteer-PDF
+3. **Client-side Generation**: Generate images in the browser
+4. **Dedicated Service**: Deploy Puppeteer as a separate microservice
+
+## Testing
+
+To test locally:
+```bash
+npm install @sparticuz/chromium
+# Test the API endpoint
+curl https://your-app.com/api/receipts/[donationId]/image
 ```
+
+## Performance Optimization
+
+1. **Function warming**: Implement keep-alive for frequently used functions
+2. **Caching**: Cache generated images if appropriate
+3. **Lazy loading**: Only import Chromium when needed
+4. **Timeout handling**: Set appropriate timeouts for image generation
