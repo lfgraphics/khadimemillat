@@ -119,7 +119,7 @@ export async function GET(
           type: 'png',
           fullPage: true,
           omitBackground: false,
-          quality: 90,
+          // quality: 90,
           encoding: 'binary'
         })
         
