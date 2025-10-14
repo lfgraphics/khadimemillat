@@ -55,29 +55,76 @@ export async function GET(
       year: 'numeric'
     })
     
-    // Try @sparticuz/chromium for serverless environments
+    // Try @sparticuz/chromium-min for serverless environments
     try {
       // Dynamic import with error handling
       const puppeteer = await import('puppeteer').catch(() => null)
-      const chromium = await import('@sparticuz/chromium').catch(() => null)
       
       if (!puppeteer) {
         throw new Error('Puppeteer not available')
       }
 
-      if (!chromium) {
-        throw new Error('@sparticuz/chromium not available')
-      }
-
-      console.log('Using @sparticuz/chromium for serverless environment')
+      console.log('Using @sparticuz/chromium-min for serverless environment')
       
-      // Launch browser with @sparticuz/chromium
-      const browser = await puppeteer.default.launch({
-        args: chromium.default.args,
-        defaultViewport: { width: 1280, height: 720 },
-        executablePath: await chromium.default.executablePath(),
-        headless: true,
-      })
+      // Try to use @sparticuz/chromium-min with remote pack
+      let browser;
+      try {
+        const chromium = await import('@sparticuz/chromium-min')
+        
+        console.log('Attempting to get Chrome executable from @sparticuz/chromium-min...')
+        
+        // Use remote URL for chromium pack (from GitHub releases)
+        const chromiumPackUrl = 'https://github.com/Sparticuz/chromium/releases/download/v141.0.0/chromium-v141.0.0-pack.tar'
+        
+        const executablePath = await chromium.default.executablePath(chromiumPackUrl).catch((error) => {
+          console.log('Failed to get executablePath from @sparticuz/chromium-min:', error.message)
+          return null
+        })
+
+        if (!executablePath) {
+          throw new Error('Could not determine Chrome executable path from @sparticuz/chromium-min')
+        }
+
+        console.log('Chrome executable path:', executablePath)
+        
+        browser = await puppeteer.default.launch({
+          args: [
+            ...chromium.default.args,
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+            '--single-process',
+            '--no-zygote',
+            '--disable-web-security'
+          ],
+          defaultViewport: { width: 1280, height: 720 },
+          executablePath,
+          headless: true,
+        })
+      } catch (chromiumError) {
+        console.log('Chromium-min package failed:', chromiumError instanceof Error ? chromiumError.message : String(chromiumError))
+        
+        // Fallback to system Chrome or bundled Puppeteer
+        console.log('Attempting fallback to system Chrome or bundled Puppeteer...')
+        
+        browser = await puppeteer.default.launch({
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox', 
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+            '--single-process',
+            '--no-zygote',
+            '--disable-web-security',
+            '--disable-extensions',
+            '--disable-default-apps',
+            '--disable-sync'
+          ],
+          defaultViewport: { width: 1280, height: 720 },
+          headless: true,
+        })
+      }
       
       // Generate HTML for the receipt (simplified for image generation)
       const receiptHTML = generateReceiptImageHTML({
