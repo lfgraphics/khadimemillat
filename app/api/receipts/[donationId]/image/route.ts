@@ -74,7 +74,7 @@ export async function GET(
         console.log('Attempting to get Chrome executable from @sparticuz/chromium-min...')
         
         // Use remote URL for chromium pack (from GitHub releases)
-        const chromiumPackUrl = 'https://github.com/Sparticuz/chromium/releases/download/v141.0.0/chromium-v141.0.0-pack.tar'
+        const chromiumPackUrl = 'https://github.com/Sparticuz/chromium/releases/download/v141.0.0/chromium-v141.0.0-pack.x64.tar'
         
         const executablePath = await chromium.default.executablePath(chromiumPackUrl).catch((error) => {
           console.log('Failed to get executablePath from @sparticuz/chromium-min:', error.message)
