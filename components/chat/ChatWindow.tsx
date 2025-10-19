@@ -40,17 +40,15 @@ export default function ChatWindow({ id }: { id: string }) {
         const markActive = () => {
             fetch(`/api/protected/conversations/${id}/activity`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ active: true })
+                headers: { 'Content-Type': 'application/json' }
             }).catch(() => { }) // Silent fail
         }
 
         // Mark user as inactive when leaving
         const markInactive = () => {
             fetch(`/api/protected/conversations/${id}/activity`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ active: false })
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
             }).catch(() => { }) // Silent fail
         }
 

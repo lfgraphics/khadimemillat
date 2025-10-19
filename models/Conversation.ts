@@ -6,6 +6,8 @@ export interface IConversation extends Document {
   participants: string[]
   status: 'active' | 'completed' | 'cancelled'
   lastMessageAt?: Date
+  requestedQuantity?: number
+  totalAmount?: number
   metadata?: { purchaseIntentPrice?: number; notes?: string }
 }
 
@@ -15,6 +17,8 @@ const conversationSchema = new Schema<IConversation>({
   participants: { type: [String], default: [] },
   status: { type: String, enum: ['active', 'completed', 'cancelled'], default: 'active' },
   lastMessageAt: { type: Date },
+  requestedQuantity: { type: Number, default: 1, min: 1 },
+  totalAmount: { type: Number, default: 0, min: 0 },
   metadata: {
     purchaseIntentPrice: { type: Number },
     notes: { type: String }

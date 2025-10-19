@@ -48,9 +48,9 @@ export async function POST(req: NextRequest) {
     if (role !== 'admin' && role !== 'moderator') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const body = await req.json()
-    const { scrapItemId, salePrice, buyerName, buyerId, notes } = body || {}
-    if (!scrapItemId || typeof salePrice !== 'number') return NextResponse.json({ error: 'scrapItemId and salePrice are required' }, { status: 400 })
-    const purchase = await markItemSoldOffline({ scrapItemId, salePrice, soldBy: userId, buyerName, buyerId, notes })
+    const { scrapItemId, unitPrice, quantity = 1, buyerName, buyerId, notes } = body || {}
+    if (!scrapItemId || typeof unitPrice !== 'number') return NextResponse.json({ error: 'scrapItemId and unitPrice are required' }, { status: 400 })
+    const purchase = await markItemSoldOffline({ scrapItemId, unitPrice, quantity, soldBy: userId, buyerName, buyerId, notes })
     return NextResponse.json({ success: true, purchase })
   } catch (e: any) {
     console.error('[PURCHASES_POST]', e)

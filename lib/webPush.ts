@@ -9,10 +9,8 @@ if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
       process.env.VAPID_PRIVATE_KEY
     )
   } catch (e) {
-    console.warn('[webPush] Failed to set VAPID details', e)
+    // Failed to set VAPID details
   }
-} else {
-  console.warn('[webPush] VAPID keys missing in environment variables')
 }
 
 export interface PushPayload {
@@ -32,7 +30,6 @@ export async function sendWebPushNotification(subscription: PushSubscription, pa
     })
     return { success: true }
   } catch (error: any) {
-    console.error('[webPush] send error', error?.statusCode, error?.body || error)
     return { success: false, error }
   }
 }

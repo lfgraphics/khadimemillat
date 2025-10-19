@@ -798,8 +798,8 @@ function AdminDashboardClientContent() {
         onItemAdd={() => { }} // Not used in edit mode
         onItemUpdate={handleItemUpdate}
         donor={dashboardState.selectedDonation?.donor || null}
-        currentRole="admin" // TODO: Get from user context
-        presetItems={[]} // TODO: Get preset items
+        currentRole="admin"
+        presetItems={[]}
         editingItem={itemDialogState.editingItem}
         mode={itemDialogState.mode}
       />

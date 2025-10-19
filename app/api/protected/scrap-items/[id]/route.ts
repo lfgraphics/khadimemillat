@@ -7,6 +7,35 @@ import { purchaseService } from '@/lib/services/purchase.service'
 import { closeConversation } from '@/lib/services/conversation.service'
 import Conversation from '@/models/Conversation'
 
+// GET: get individual scrap item details
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    await connectDB()
+    const { id } = await params
+    const { sessionClaims }: any = getAuth(req)
+    const role = sessionClaims?.metadata?.role as string | undefined
+    
+    if (role !== 'admin' && role !== 'moderator') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const item = await ScrapItem.findById(id)
+      .populate({
+        path: 'scrapEntry',
+        select: 'collectionRequestId donor donorDetails createdAt'
+      })
+      .lean()
+
+    if (!item) {
+      return NextResponse.json({ error: 'Item not found' }, { status: 404 })
+    }
+
+    return NextResponse.json({ success: true, item })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
 // PATCH: update scrap item (after photos, condition, marketplaceListing, repairingCost, sold state)
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -21,7 +50,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     if (typeof json.name === 'string' && json.name.trim()) update.name = json.name.trim()
+    if (typeof json.description === 'string') update.description = json.description.trim()
     if (json.condition) update.condition = json.condition
+    if (typeof json.quantity === 'number' && json.quantity > 0) update.quantity = json.quantity
+    if (typeof json.availableQuantity === 'number' && json.availableQuantity >= 0) update.availableQuantity = json.availableQuantity
     if (typeof json.repairingCost === 'number') update.repairingCost = json.repairingCost
     if (json.marketplaceListing) {
       update['marketplaceListing.listed'] = !!json.marketplaceListing.listed
@@ -48,6 +80,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         }
         if (sale.soldVia === 'online') {
           return NextResponse.json({ error: 'Online sales must be completed via Razorpay checkout and verification' }, { status: 400 })
+        }
+        // Validate quantity if provided
+        const quantity = sale.quantity || 1
+        const item = await ScrapItem.findById(id).lean() as any
+        if (!item) {
+          return NextResponse.json({ error: 'Item not found' }, { status: 404 })
+        }
+        if (quantity > (item.availableQuantity || 0)) {
+          return NextResponse.json({ error: `Only ${item.availableQuantity || 0} items available` }, { status: 400 })
         }
         // Do not set sold fields directly here; handled by purchase service below based on soldVia
       }
@@ -102,7 +143,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         if (sale.soldVia === 'offline') {
           await purchaseService.markItemSoldOffline({
             scrapItemId: id,
-            salePrice: sale.salePrice,
+            unitPrice: sale.salePrice,
+            quantity: sale.quantity || 1,
             soldBy: (getAuth(req) as any)?.sessionClaims?.sub,
             buyerName: sale.soldToName,
             buyerId: sale.soldToUserId
@@ -130,7 +172,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
             if (!buyerNameToUse) buyerNameToUse = 'Chat Buyer'
             await purchaseService.markItemSoldOffline({
               scrapItemId: id,
-              salePrice: sale.salePrice,
+              unitPrice: sale.salePrice,
+              quantity: sale.quantity || 1,
               soldBy: (getAuth(req) as any)?.sessionClaims?.sub,
               buyerName: buyerNameToUse,
               buyerId: buyerIdToUse,
@@ -139,14 +182,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           }
         }
       } catch (err) {
-        console.error('[CREATE_OFFLINE_PURCHASE_ERROR]', err)
+        // Purchase creation failed, continue with item update
       }
     }
     // Return latest item state from DB
     const fresh = await ScrapItem.findById(id).lean()
     return NextResponse.json({ success: true, item: fresh })
   } catch (e: any) {
-    console.error('[SCRAP_ITEM_PATCH_ERROR]', e)
     return NextResponse.json({ error: e.message }, { status: 400 })
   }
 }

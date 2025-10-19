@@ -29,10 +29,16 @@ export async function POST(req: NextRequest) {
     const { sessionClaims } = getAuth(req) as any
     const userId = sessionClaims?.sub
     const body = await req.json()
-    const { scrapItemId, buyerName } = body || {}
+    const { scrapItemId, buyerName, requestedQuantity, totalAmount } = body || {}
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (!scrapItemId) return NextResponse.json({ error: 'scrapItemId is required' }, { status: 400 })
-    const convo = await createOrGetConversation({ scrapItemId, buyerId: userId, buyerName: buyerName || 'Buyer' })
+    const convo = await createOrGetConversation({ 
+      scrapItemId, 
+      buyerId: userId, 
+      buyerName: buyerName || 'Buyer',
+      requestedQuantity: requestedQuantity || 1,
+      totalAmount: totalAmount || 0
+    })
     return NextResponse.json({ success: true, conversation: convo })
   } catch (e: any) {
     console.error('[CONVERSATIONS_POST]', e)

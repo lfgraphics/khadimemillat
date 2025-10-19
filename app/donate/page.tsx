@@ -796,7 +796,6 @@ export default function DonationPage() {
                       onChange={e => setDonationAmount(e.target.value)}
                       placeholder='25'
                       min='1'
-                      step='0.01'
                     />
                   </div>
                   <div className='space-y-1'>

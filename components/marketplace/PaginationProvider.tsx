@@ -8,6 +8,7 @@ interface PaginationContextValue {
     isLoading: boolean
     isReachingEnd?: boolean
     error?: string
+    refresh: () => void
 }
 
 const PaginationContext = createContext<PaginationContextValue | null>(null)
@@ -33,6 +34,7 @@ export function PaginationProvider({ children }: { children: React.ReactNode }) 
         setSize,
         isLoading,
         error,
+        mutate
     } = useSWRInfinite(
         (index, previousPageData) => {
             // stop fetching if no more data
@@ -40,7 +42,11 @@ export function PaginationProvider({ children }: { children: React.ReactNode }) 
             return `/api/public/items?page=${index + 1}`
         },
         fetcher,
-        { revalidateOnFocus: false }
+        { 
+            revalidateOnFocus: false,
+            refreshInterval: 30000, // Refresh every 30 seconds
+            revalidateOnMount: true
+        }
     )
 
     const loaderRef = useRef<HTMLDivElement | null>(null)
@@ -63,8 +69,12 @@ export function PaginationProvider({ children }: { children: React.ReactNode }) 
         return () => observer.disconnect()
     }, [isReachingEnd, setSize])
 
+    const refresh = () => {
+        mutate()
+    }
+
     return (
-        <PaginationContext.Provider value={{ items, isLoading, isReachingEnd, error: error ? String(error.message || error) : undefined }}>
+        <PaginationContext.Provider value={{ items, isLoading, isReachingEnd, error: error ? String(error.message || error) : undefined, refresh }}>
             {children}
             {!isReachingEnd && <div ref={loaderRef} className="h-10" />}
         </PaginationContext.Provider>

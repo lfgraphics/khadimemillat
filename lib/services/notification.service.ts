@@ -956,21 +956,62 @@ export class NotificationService {
         }
       }
 
-      // Use the main sendNotification method with user roles
-      const userRoles = [...new Set(users.map(u => u.role))]
-      
-      return await this.sendNotification({
-        title: payload.title,
-        message: payload.body,
-        channels: ['web_push', 'email'],
-        targetRoles: userRoles,
-        sentBy: 'system',
-        metadata: {
-          type: payload.type || 'notification',
-          url: payload.url,
-          specificUserIds: userIds
+      // Send notifications directly to specific users
+      const results = {
+        webPush: { sent: 0, failed: 0 },
+        email: { sent: 0, failed: 0 },
+        whatsapp: { sent: 0, failed: 0 },
+        sms: { sent: 0, failed: 0 }
+      }
+
+      for (const user of users) {
+        // Send web push notification
+        try {
+          const webPushResult = await this.sendWebPushToUser(user.clerkUserId, {
+            title: payload.title,
+            body: payload.body,
+            url: payload.url,
+            data: { type: payload.type }
+          })
+          if (webPushResult.success) {
+            results.webPush.sent++
+          } else {
+            results.webPush.failed++
+          }
+        } catch (error) {
+          results.webPush.failed++
         }
-      })
+
+        // Send email notification
+        if (user.email) {
+          try {
+            const html = emailService.generateDefaultBrandedEmail({
+              title: payload.title,
+              message: payload.body,
+              greetingName: user.name
+            })
+            const emailResult = await emailService.sendEmail({
+              to: user.email,
+              subject: payload.title,
+              html
+            })
+            if (emailResult.success) {
+              results.email.sent++
+            } else {
+              results.email.failed++
+            }
+          } catch (error) {
+            results.email.failed++
+          }
+        }
+      }
+
+      const totalSent = results.webPush.sent + results.email.sent
+      return {
+        success: totalSent > 0,
+        results,
+        totalUsers: users.length
+      }
     } catch (error) {
       console.error('Failed to notify users:', error)
       return {
@@ -1012,21 +1053,37 @@ export class NotificationService {
         }
       }
 
-      // Use the main sendNotification method with only web push
-      const userRoles = [...new Set(users.map(u => u.role))]
-      
-      return await this.sendNotification({
-        title: payload.title,
-        message: payload.body,
-        channels: ['web_push'], // Only web push, no email
-        targetRoles: userRoles,
-        sentBy: 'system',
-        metadata: {
-          type: payload.type || 'chat_message',
-          url: payload.url,
-          specificUserIds: userIds
+      // Send only web push notifications to specific users
+      const results = {
+        webPush: { sent: 0, failed: 0 },
+        email: { sent: 0, failed: 0 },
+        whatsapp: { sent: 0, failed: 0 },
+        sms: { sent: 0, failed: 0 }
+      }
+
+      for (const user of users) {
+        try {
+          const webPushResult = await this.sendWebPushToUser(user.clerkUserId, {
+            title: payload.title,
+            body: payload.body,
+            url: payload.url,
+            data: { type: payload.type }
+          })
+          if (webPushResult.success) {
+            results.webPush.sent++
+          } else {
+            results.webPush.failed++
+          }
+        } catch (error) {
+          results.webPush.failed++
         }
-      })
+      }
+
+      return {
+        success: results.webPush.sent > 0,
+        results,
+        totalUsers: users.length
+      }
     } catch (error) {
       console.error('Failed to notify users with web push:', error)
       return {

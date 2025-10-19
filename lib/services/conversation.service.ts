@@ -19,7 +19,7 @@ async function getModeratorIds(): Promise<string[]> {
   return modCache.ids
 }
 
-export async function createOrGetConversation({ scrapItemId, buyerId, buyerName }: { scrapItemId: string; buyerId: string; buyerName: string }) {
+export async function createOrGetConversation({ scrapItemId, buyerId, buyerName, requestedQuantity = 1, totalAmount = 0 }: { scrapItemId: string; buyerId: string; buyerName: string; requestedQuantity?: number; totalAmount?: number }) {
   await connectDB()
   if (!Types.ObjectId.isValid(scrapItemId)) throw new Error('Invalid scrapItemId')
 
@@ -35,7 +35,8 @@ export async function createOrGetConversation({ scrapItemId, buyerId, buyerName 
 
   const item = await ScrapItem.findById(scrapItemId)
   if (!item) throw new Error('Item not found')
-  if (item.marketplaceListing?.sold) throw new Error('Item already sold')
+  if (item.availableQuantity === 0) throw new Error('Item sold out')
+  if (requestedQuantity > item.availableQuantity) throw new Error(`Only ${item.availableQuantity} items available`)
 
   const moderatorIds = await getModeratorIds()
   const participants = Array.from(new Set([buyerId, ...moderatorIds]))
@@ -45,29 +46,57 @@ export async function createOrGetConversation({ scrapItemId, buyerId, buyerName 
     buyerId,
     participants,
     status: 'active',
-    lastMessageAt: new Date()
+    lastMessageAt: new Date(),
+    requestedQuantity,
+    totalAmount
   })
 
+  const quantityText = requestedQuantity > 1 ? `${requestedQuantity} items` : 'this item'
+  const priceText = totalAmount > 0 ? ` for ₹${totalAmount.toLocaleString()}` : ''
+  
   await Message.create({
     conversationId: convo._id,
     senderId: 'system',
     senderName: 'System',
     senderRole: 'system',
-    content: `${buyerName} is interested in purchasing this item`,
+    content: `${buyerName} is interested in purchasing ${quantityText}${priceText}`,
     type: 'system',
     readBy: []
   })
 
-  // Notify moderators/admins of purchase inquiry
+  // Notify moderators/admins of purchase inquiry (email + web push for initial inquiry only)
   try {
     const moderatorIds = await getModeratorIds()
-    await notificationService.purchaseInquiry({
-      moderatorIds,
-      itemName: item.name,
-      scrapItemId: String(item._id),
-      conversationId: String(convo._id),
-      buyerName
-    })
+    
+    // Check which moderators are currently active in any conversation
+    const ConversationActivity = (await import('@/models/ConversationActivity')).default
+    const activeModerators = await ConversationActivity.find({
+      userId: { $in: moderatorIds },
+      isActive: true,
+      lastActiveAt: { $gte: new Date(Date.now() - 2 * 60 * 1000) } // Active within last 2 minutes
+    }).select('userId').lean()
+
+    const activeModeratorIds = activeModerators.map((a: any) => a.userId)
+    const inactiveModerators = moderatorIds.filter((id: string) => !activeModeratorIds.includes(id))
+
+    // Send email + web push to inactive moderators, only web push to active ones
+    if (inactiveModerators.length > 0) {
+      await notificationService.notifyUsers(inactiveModerators, {
+        title: 'New purchase inquiry',
+        body: `${buyerName} is interested in purchasing ${item.name}`,
+        url: `/conversations/${convo._id}`,
+        type: 'purchase_inquiry'
+      })
+    }
+
+    if (activeModeratorIds.length > 0) {
+      await notificationService.notifyUsersWebPushOnly(activeModeratorIds, {
+        title: 'New purchase inquiry',
+        body: `${buyerName} is interested in purchasing ${item.name}`,
+        url: `/conversations/${convo._id}`,
+        type: 'purchase_inquiry'
+      })
+    }
   } catch (e) {
     console.warn('[NOTIFY_PURCHASE_INQUIRY_FAILED]', e)
   }

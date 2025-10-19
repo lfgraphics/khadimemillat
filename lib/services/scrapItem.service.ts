@@ -12,7 +12,9 @@ export async function listPublicItems(opts: PaginateOpts = {}) {
     const limit = Math.min(100, opts.limit || 20);
     const skip = (page - 1) * limit;
 
-    const query: any = { 'marketplaceListing.listed': true, 'marketplaceListing.sold': false };
+    const query: any = { 
+        'marketplaceListing.listed': true
+    };
     if (opts.search) {
         query.name = { $regex: opts.search, $options: "i" };
     }
@@ -22,7 +24,7 @@ export async function listPublicItems(opts: PaginateOpts = {}) {
 
     const [items, total] = await Promise.all([
         ScrapItem.find(query)
-            .select("name _id photos marketplaceListing condition createdAt")
+            .select("name _id photos marketplaceListing condition quantity availableQuantity createdAt description")
             .populate('scrapEntry', 'donor status createdAt')
             .sort({ createdAt: -1 })
             .skip(skip)

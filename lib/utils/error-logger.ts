@@ -36,13 +36,15 @@ export class ErrorLogger {
     // Add to in-memory logs
     this.logs.push(logEntry);
 
-    // Console log for development
-    console.error(`[${logEntry.component}] ${logEntry.action}:`, {
-      error: logEntry.error,
-      userId: logEntry.userId,
-      metadata: logEntry.metadata,
-      timestamp: logEntry.timestamp.toISOString(),
-    });
+    // Log error details in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`[${logEntry.component}] ${logEntry.action}:`, {
+        error: logEntry.error,
+        userId: logEntry.userId,
+        metadata: logEntry.metadata,
+        timestamp: logEntry.timestamp.toISOString(),
+      });
+    }
 
     // In production, you might want to send to external logging service
     if (process.env.NODE_ENV === 'production') {

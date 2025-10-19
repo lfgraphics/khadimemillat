@@ -8,13 +8,17 @@ import { closeConversation, sendSystemMessage } from './conversation.service'
 import Conversation from '@/models/Conversation'
 import { notificationService } from './notification.service'
 
-export async function createPurchase(params: { scrapItemId: string; buyerId: string; buyerName: string; buyerEmail?: string; buyerPhone?: string; salePrice: number; paymentMethod: 'online' | 'cash' | 'offline'; conversationId?: string; razorpayOrderId?: string }) {
+export async function createPurchase(params: { scrapItemId: string; buyerId: string; buyerName: string; buyerEmail?: string; buyerPhone?: string; quantity?: number; unitPrice: number; paymentMethod: 'online' | 'cash' | 'offline'; conversationId?: string; razorpayOrderId?: string }) {
   await connectDB()
-  const { scrapItemId, buyerId, buyerName, buyerEmail, buyerPhone, salePrice, paymentMethod, conversationId, razorpayOrderId } = params
+  const { scrapItemId, buyerId, buyerName, buyerEmail, buyerPhone, quantity = 1, unitPrice, paymentMethod, conversationId, razorpayOrderId } = params
   if (!Types.ObjectId.isValid(scrapItemId)) throw new Error('Invalid scrapItemId')
+  
   const item = await ScrapItem.findById(scrapItemId)
   if (!item) throw new Error('Item not found')
-  if (item.marketplaceListing?.sold) throw new Error('Item already sold')
+  if (item.availableQuantity < quantity) throw new Error(`Only ${item.availableQuantity} items available`)
+  if (item.marketplaceListing?.sold && item.availableQuantity === 0) throw new Error('Item completely sold out')
+
+  const totalAmount = unitPrice * quantity
 
   const purchase = await Purchase.create({
     scrapItemId: new Types.ObjectId(scrapItemId),
@@ -22,11 +26,13 @@ export async function createPurchase(params: { scrapItemId: string; buyerId: str
     buyerName,
     buyerEmail,
     buyerPhone,
-    salePrice,
+    quantity,
+    unitPrice,
+    totalAmount,
     paymentMethod,
     conversationId: conversationId && Types.ObjectId.isValid(conversationId) ? new Types.ObjectId(conversationId) : undefined,
     razorpayOrderId,
-    status: 'pending'
+    paymentStatus: 'pending'
   })
   return purchase
 }
@@ -35,14 +41,22 @@ export async function completePurchase(params: { purchaseId: string; razorpayPay
   await connectDB()
   const { purchaseId, razorpayPaymentId, razorpaySignature, completedBy } = params
   if (!Types.ObjectId.isValid(purchaseId)) throw new Error('Invalid purchaseId')
-  // Atomic claim using lock fields to prevent duplicates without violating status enum
+  
+  // Atomic claim using lock fields to prevent duplicates
   const claim = await Purchase.findOneAndUpdate(
-    { _id: purchaseId, status: 'pending', lockedAt: { $exists: false } },
+    { _id: purchaseId, paymentStatus: 'pending', lockedAt: { $exists: false } },
     { $set: { lockedAt: new Date(), lockedBy: completedBy } },
     { new: true }
   )
   const purchase = claim
   if (!purchase) throw new Error('Purchase already processed or not found')
+
+  // Verify item availability before completing
+  const item = await ScrapItem.findById(purchase.scrapItemId)
+  if (!item) throw new Error('Item not found')
+  if (item.availableQuantity < purchase.quantity) {
+    throw new Error(`Insufficient quantity available. Only ${item.availableQuantity} items left`)
+  }
 
   if (purchase.paymentMethod === 'online') {
     // If webhook already marked the payment as verified, skip HMAC enforcement
@@ -60,41 +74,54 @@ export async function completePurchase(params: { purchaseId: string; razorpayPay
     }
   }
 
-  purchase.status = 'completed'
+  purchase.paymentStatus = 'completed'
   purchase.completedAt = new Date()
   purchase.completedBy = completedBy
   await purchase.save()
 
-  // Update item
-  const itemDoc: any = await ScrapItem.findById(purchase.scrapItemId).lean()
+  // Update item quantity atomically
+  const newAvailableQuantity = item.availableQuantity - purchase.quantity
   const update: any = {
-    'marketplaceListing.sold': true,
-    'marketplaceListing.salePrice': purchase.salePrice,
-    'marketplaceListing.soldAt': new Date(),
-    'marketplaceListing.soldBy': completedBy,
-    ...(purchase.conversationId ? { 'marketplaceListing.conversationId': purchase.conversationId } : {}),
-    // Populate buyer info on the item for online sales
-    'marketplaceListing.soldToUserId': purchase.buyerId,
-    'marketplaceListing.soldToName': purchase.buyerName
+    availableQuantity: newAvailableQuantity
   }
-  // Preserve existing soldVia if already set (e.g., 'chat')
-  if (!itemDoc?.marketplaceListing?.soldVia) {
+
+  // If this was the last item, mark as sold
+  if (newAvailableQuantity === 0) {
+    update['marketplaceListing.sold'] = true
+    update['marketplaceListing.soldAt'] = new Date()
+    update['marketplaceListing.soldBy'] = completedBy
+  }
+
+  // Update sale price and buyer info for the latest purchase
+  update['marketplaceListing.salePrice'] = purchase.unitPrice
+  update['marketplaceListing.soldToUserId'] = purchase.buyerId
+  update['marketplaceListing.soldToName'] = purchase.buyerName
+
+  // Set soldVia if not already set
+  if (!item.marketplaceListing?.soldVia) {
     update['marketplaceListing.soldVia'] = purchase.paymentMethod === 'online' ? 'online' : 'offline'
   }
+
+  if (purchase.conversationId) {
+    update['marketplaceListing.conversationId'] = purchase.conversationId
+  }
+
   await ScrapItem.findByIdAndUpdate(purchase.scrapItemId, { $set: update })
 
   // Add to user purchases (if exists in our User cache)
   await User.findOneAndUpdate({ clerkUserId: purchase.buyerId }, { $addToSet: { purchases: purchase._id } })
 
-  // Close any active conversations for this item
-  try {
-    const convos = await Conversation.find({ scrapItemId: purchase.scrapItemId, status: 'active' }).lean()
-    for (const c of convos) {
-      await closeConversation({ conversationId: String((c as any)._id), userId: completedBy, status: 'completed' })
-    }
-  } catch (e) { console.warn('[CLOSE_CONVERSATIONS_FAILED]', e) }
+  // Close conversations only if item is completely sold
+  if (newAvailableQuantity === 0) {
+    try {
+      const convos = await Conversation.find({ scrapItemId: purchase.scrapItemId, status: 'active' }).lean()
+      for (const c of convos) {
+        await closeConversation({ conversationId: String((c as any)._id), userId: completedBy, status: 'completed' })
+      }
+    } catch (e) { console.warn('[CLOSE_CONVERSATIONS_FAILED]', e) }
+  }
 
-  // Emit one payment completed chat message if a conversation is available
+  // Emit payment completed chat message if a conversation is available
   try {
     let convoId: string | undefined
     if ((purchase as any).conversationId) {
@@ -107,17 +134,17 @@ export async function completePurchase(params: { purchaseId: string; razorpayPay
       const buyerName = purchase.buyerId ? (await User.findOne({ clerkUserId: purchase.buyerId }))?.name || 'Buyer' : 'Buyer'
       await sendSystemMessage({ 
         conversationId: convoId, 
-        content: `${buyerName} has completed the purchase of ${(purchase as any).scrapItemId?.name || 'item'} for ₹${purchase.salePrice}. Thank you!`, 
-        metadata: { type: 'payment_completed', purchaseId: String(purchase._id), scrapItemId: String(purchase.scrapItemId), amount: purchase.salePrice } 
+        content: `${buyerName} has completed the purchase of ${purchase.quantity}x ${item.name} for ₹${purchase.totalAmount}. Thank you!`, 
+        metadata: { type: 'payment_completed', purchaseId: String(purchase._id), scrapItemId: String(purchase.scrapItemId), amount: purchase.totalAmount, quantity: purchase.quantity } 
       })
     }
   } catch (e) { console.warn('[SEND_PAYMENT_COMPLETED_MESSAGE_FAILED]', e) }
 
   // Notify buyer about payment completion
   try {
-    await notificationService.paymentCompleted({ buyerId: purchase.buyerId, purchaseId: purchase._id.toString(), scrapItemId: String(purchase.scrapItemId), amount: purchase.salePrice })
+    await notificationService.paymentCompleted({ buyerId: purchase.buyerId, purchaseId: purchase._id.toString(), scrapItemId: String(purchase.scrapItemId), amount: purchase.totalAmount })
     if (purchase.paymentMethod === 'online') {
-      await notificationService.itemSoldToBuyer({ buyerId: purchase.buyerId, scrapItemId: String(purchase.scrapItemId), salePrice: purchase.salePrice })
+      await notificationService.itemSoldToBuyer({ buyerId: purchase.buyerId, scrapItemId: String(purchase.scrapItemId), salePrice: purchase.totalAmount })
     }
   } catch (e) { console.warn('[NOTIFY_PAYMENT_COMPLETED_FAILED]', e) }
 
@@ -130,7 +157,7 @@ export async function completePurchaseFromWebhook(params: { scrapItemId: string;
   const { scrapItemId, razorpayOrderId, razorpayPaymentId, completedBy = 'system' } = params
   if (!Types.ObjectId.isValid(scrapItemId)) throw new Error('Invalid scrapItemId')
   // Prefer the pending purchase for this item to avoid selecting historical records
-  const purchase = await Purchase.findOne({ scrapItemId, status: 'pending' })
+  const purchase = await Purchase.findOne({ scrapItemId, paymentStatus: 'pending' })
   if (!purchase) {
     console.warn('[WEBHOOK_NO_PENDING_PURCHASE]', { scrapItemId, razorpayOrderId, razorpayPaymentId })
     // Notify staff for manual reconciliation
@@ -142,7 +169,7 @@ export async function completePurchaseFromWebhook(params: { scrapItemId: string;
     return null as any
   }
   // Idempotency: if already verified/completed, no-op
-  if (purchase.status !== 'pending') return purchase
+  if (purchase.paymentStatus !== 'pending') return purchase
 
   // Set payment refs if provided
   if (razorpayOrderId && !purchase.razorpayOrderId) purchase.razorpayOrderId = razorpayOrderId
@@ -171,18 +198,30 @@ export async function cancelPurchase({ purchaseId, reason }: { purchaseId: strin
   return purchase
 }
 
-export async function markItemSoldOffline(params: { scrapItemId: string; salePrice: number; soldBy: string; buyerName?: string; buyerId?: string; notes?: string; conversationId?: string }) {
-    await connectDB()
-    const { scrapItemId, salePrice, soldBy, buyerName = 'Offline Buyer', buyerId = 'offline', notes, conversationId } = params
+export async function markItemSoldOffline(params: { scrapItemId: string; unitPrice: number; quantity?: number; soldBy: string; buyerName?: string; buyerId?: string; notes?: string; conversationId?: string }) {
+  await connectDB()
+  const { scrapItemId, unitPrice, quantity = 1, soldBy, buyerName = 'Offline Buyer', buyerId = 'offline', notes, conversationId } = params
+  
+  // Verify item availability
+  const item = await ScrapItem.findById(scrapItemId)
+  if (!item) throw new Error('Item not found')
+  if (item.availableQuantity < quantity) {
+    throw new Error(`Only ${item.availableQuantity} items available`)
+  }
+
+  const totalAmount = unitPrice * quantity
+
   const purchase = await Purchase.create({
     scrapItemId: new Types.ObjectId(scrapItemId),
     buyerId,
     buyerName,
-    salePrice,
+    quantity,
+    unitPrice,
+    totalAmount,
     paymentMethod: 'offline',
-        status: 'pending',
-        notes,
-        ...(conversationId && Types.ObjectId.isValid(conversationId) ? { conversationId: new Types.ObjectId(conversationId) } : {})
+    paymentStatus: 'pending',
+    notes,
+    ...(conversationId && Types.ObjectId.isValid(conversationId) ? { conversationId: new Types.ObjectId(conversationId) } : {})
   })
 
   const completed = await completePurchase({ purchaseId: purchase._id.toString(), completedBy: soldBy })
@@ -190,7 +229,7 @@ export async function markItemSoldOffline(params: { scrapItemId: string; salePri
   // Notify staff about item sold (admins/moderators)
   try {
     const staff = await User.find({ role: { $in: ['admin', 'moderator'] } }).select('clerkUserId').lean()
-    await notificationService.itemSold({ staffIds: staff.map(s => s.clerkUserId), scrapItemId, salePrice })
+    await notificationService.itemSold({ staffIds: staff.map(s => s.clerkUserId), scrapItemId, salePrice: totalAmount })
   } catch (e) { console.warn('[NOTIFY_ITEM_SOLD_FAILED]', e) }
   return completed
 }

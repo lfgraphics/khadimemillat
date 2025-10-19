@@ -26,7 +26,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     try {
       donorDetails = await getClerkUserWithSupplementaryData(doc.donor)
     } catch (e) {
-      console.warn('[ENRICH_SINGLE_DONOR_FAIL]', e)
+      // Failed to enrich donor details, continue without
     }
     // Resolve donor's Mongo _id mapping if available (help client-side auto-fill)
     try {
@@ -34,10 +34,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       const donorDoc: any = await User.findOne({ clerkUserId: doc.donor }).select('_id').lean()
       if (donorDoc?._id) donorMongoId = donorDoc._id.toString()
     } catch (e) {
-      console.warn('[ENRICH_SINGLE_DONOR_MONGO_LOOKUP_FAIL]', e)
+      // Failed to lookup donor in MongoDB, continue without
     }
     if (Array.isArray(doc.assignedScrappers) && doc.assignedScrappers.length > 0) {
-      assignedDetails = await Promise.all(doc.assignedScrappers.map((sid: string) => getClerkUserWithSupplementaryData(sid).catch(()=>null)))
+      assignedDetails = await Promise.all(doc.assignedScrappers.map((sid: string) => getClerkUserWithSupplementaryData(sid).catch(() => null)))
     }
     if (doc.status === 'collected' || doc.status === 'completed') {
       try {
@@ -52,16 +52,15 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         if (donationEntry) {
           donationEntryId = donationEntry._id.toString()
           if (donationEntry.collectedBy) {
-            try { collectedByDetails = await getClerkUserWithSupplementaryData(donationEntry.collectedBy) } catch {}
+            try { collectedByDetails = await getClerkUserWithSupplementaryData(donationEntry.collectedBy) } catch { }
           }
         }
       } catch (e) {
-        console.warn('[ENRICH_SINGLE_DONATION_LOOKUP_FAIL]', e)
+        // Failed to lookup donation entry, continue without
       }
     }
     return NextResponse.json({ request: { ...doc, donorDetails, donorMongoId, assignedDetails, collectedByDetails, donationEntryId } })
   } catch (e) {
-    console.error(e)
     return new NextResponse('Server error', { status: 500 })
   }
 }
@@ -76,7 +75,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     // VERIFY (auto-assign all scrappers)
     if (body.action === 'verify') {
-      if (!['admin','moderator'].includes(role)) return new NextResponse('Forbidden', { status: 403 })
+      if (!['admin', 'moderator'].includes(role)) return new NextResponse('Forbidden', { status: 403 })
       const updated = await assignScrappers(id) // no list => auto assign
       return NextResponse.json({ success: true, request: updated })
     }
@@ -96,7 +95,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     // Assign scrappers (admin/moderator)
     if (body.action === 'assign') {
-      if (!['admin','moderator'].includes(role)) return new NextResponse('Forbidden', { status: 403 })
+      if (!['admin', 'moderator'].includes(role)) return new NextResponse('Forbidden', { status: 403 })
       const parsed = assignScrappersSchema.safeParse({ scrapperIds: body.scrapperIds })
       if (!parsed.success) return NextResponse.json({ error: parsed.error.format() }, { status: 400 })
       const updated = await assignScrappers(id, parsed.data.scrapperIds)
@@ -104,7 +103,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     // General update (admin/moderator)
-    if (!['admin','moderator'].includes(role)) return new NextResponse('Forbidden', { status: 403 })
+    if (!['admin', 'moderator'].includes(role)) return new NextResponse('Forbidden', { status: 403 })
     const currentRequest = await getCollectionRequestById(id)
     if (!currentRequest) return new NextResponse('Not found', { status: 404 })
     const parsed = updateCollectionRequestSchema.safeParse(body)
@@ -121,7 +120,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         await connectDB()
         const donorUser = await User.findOne({ clerkUserId: (currentRequest as any).donor }).lean() as any
         const donorRole = donorUser?.role || 'user'
-        
+
         await notificationService.sendNotification({
           title: 'Collection Completed',
           message: 'Your donation has been processed and completed. Thank you for your contribution!',
@@ -135,12 +134,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           }
         })
       } catch (e) {
-        console.warn('[NOTIFY_COMPLETED_FAIL]', e)
+        // Failed to send completion notification, continue
       }
     }
     return NextResponse.json({ success: true, request: updated })
   } catch (e) {
-    console.error(e)
     return new NextResponse('Server error', { status: 500 })
   }
 }

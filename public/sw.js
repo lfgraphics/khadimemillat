@@ -4,10 +4,8 @@ self.addEventListener('push', function (event) {
     try {
         data = event.data.json();
     } catch (e) {
-        console.error('[SW] Failed to parse push payload', e);
         return;
     }
-    console.log('[SW] Push received:', data);
 
     const actions = data.actions || [] // e.g. [{action:'open', title:'Open'}]
     const options = {
@@ -29,7 +27,7 @@ self.addEventListener('push', function (event) {
             try {
                 await self.registration.showNotification(data.title || 'Notification', options);
             } catch (err) {
-                console.error('[SW] Error handling push:', err);
+                // Error handling push notification
             }
         })()
     );
@@ -37,7 +35,6 @@ self.addEventListener('push', function (event) {
 
 
 self.addEventListener('notificationclick', function (event) {
-    console.log('[SW] Notification click:', event);
     event.notification.close();
     const targetUrl = event.notification.data?.url || '/';
     event.waitUntil(
@@ -61,5 +58,5 @@ self.addEventListener('notificationclick', function (event) {
 });
 
 self.addEventListener('notificationclose', function (event) {
-    console.log('[SW] Notification closed', event.notification?.data?.primaryKey);
+    // Notification closed
 });

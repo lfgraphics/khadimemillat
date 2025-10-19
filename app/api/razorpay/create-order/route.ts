@@ -162,7 +162,23 @@ export async function POST(req: NextRequest) {
                     }
                     if (cid2) convoIdToSet = cid2
                 }
-                const created = await purchaseService.createPurchase({ scrapItemId, buyerId: userId, buyerName: sessionClaims?.name || 'Buyer', buyerEmail, buyerPhone: phone, salePrice: amount, paymentMethod: 'online', conversationId: convoIdToSet, razorpayOrderId: order.id })
+                // Get item details to calculate unit price and quantity
+                const item = await ScrapItem.findById(scrapItemId).select('marketplaceListing').lean() as { marketplaceListing?: { demandedPrice?: number } } | null
+                const unitPrice = item?.marketplaceListing?.demandedPrice || (amount / 1) // fallback to total amount if no unit price
+                const quantity = Math.round(amount / unitPrice) || 1
+                
+                const created = await purchaseService.createPurchase({ 
+                    scrapItemId, 
+                    buyerId: userId, 
+                    buyerName: sessionClaims?.name || 'Buyer', 
+                    buyerEmail, 
+                    buyerPhone: phone, 
+                    quantity,
+                    unitPrice, 
+                    paymentMethod: 'online', 
+                    conversationId: convoIdToSet, 
+                    razorpayOrderId: order.id 
+                })
                 addBreadcrumb({ category: 'payments', message: 'purchase created and linked', level: 'info', data: { purchaseId: String(created._id), orderId: order.id } })
             }
         } else {
