@@ -198,7 +198,7 @@ export async function sendDonationThankYouNotifications(donation: any) {
                 if (phoneToUse) {
                     // Send donation confirmation with receipt image using our enhanced service
                     const whatsappResult = await whatsappService.sendDonationConfirmation(
-                        whatsappService.formatPhoneNumber(phoneToUse),
+                        whatsappService.formatPhoneNumber(phoneToUse).replace(/[^\d]/g, ''),
                         {
                             donationId: donationId.toString(),
                             donorName,

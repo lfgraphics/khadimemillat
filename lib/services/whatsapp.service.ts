@@ -82,7 +82,7 @@ class WhatsAppService {
       // Enhanced error logging
       console.error('📱 WhatsApp sending failed:', {
         error: errorMessage,
-        to: options.to,
+        to: options.to.replace(/[^\d]/g, ''),
         messageType: options.type || 'text',
         messageLength: options.message?.length || 0,
         provider: this.provider,
@@ -252,7 +252,7 @@ class WhatsAppService {
         status: response.status,
         statusText: response.statusText,
         error: result,
-        to: cleanPhone,
+        to: cleanPhone.replace(/[^\d]/g, ''),
         messageLength: options.message?.length || 0,
         messageType: options.type || 'text',
         apiUrl: apiUrl,
@@ -293,7 +293,7 @@ class WhatsAppService {
   private async sendMetaMessage(cleanPhone: string, options: WhatsAppMessage) {
     let messageData: any = {
       messaging_product: 'whatsapp',
-      to: cleanPhone
+      to: cleanPhone.replace(/[^\d]/g, '')
     }
 
     // Handle different message types
@@ -334,7 +334,7 @@ class WhatsAppService {
         status: response.status,
         statusText: response.statusText,
         error: result.error,
-        to: cleanPhone,
+        to: cleanPhone.replace(/[^\d]/g, ''),
         messageType: options.type || 'text',
         messageLength: options.message?.length || 0,
         hasMedia: !!(options.imageUrl || options.documentUrl)
@@ -434,7 +434,7 @@ class WhatsAppService {
       const approvedMessage = sanitizedParams.join('|')
 
       return await this.sendMessage({
-        to: phone,
+        to: phone.replace(/[^\d]/g, ''),
         type: 'image',
         message: approvedMessage,
         imageUrl: receiptImageUrl,
@@ -517,7 +517,7 @@ class WhatsAppService {
       })
 
       return await this.sendMessage({
-        to: phone,
+        to: phone.replace(/[^\d]/g, ''),
         type: 'image',
         message: approvedMessage,
         imageUrl: receiptImageUrl,
@@ -577,7 +577,7 @@ class WhatsAppService {
       const approvedMessage = sanitizedParams.join('|')
 
       return await this.sendMessage({
-        to: phone,
+        to: phone.replace(/[^\d]/g, ''),
         type: 'image',
         message: approvedMessage,
         imageUrl: receiptImageUrl,
