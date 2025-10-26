@@ -62,7 +62,7 @@ Welcome to our community! 🤲🏻`;
 
   const handleWhatsAppShare = () => {
     const message = generateWhatsAppMessage();
-    const phoneNumber = user.phone.replace(/\D/g, ''); // Remove non-digits
+    const phoneNumber = user.phone.replace(/[^\d]/g, ''); // Remove non-digits
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
     window.open(whatsappUrl, '_blank');
   };

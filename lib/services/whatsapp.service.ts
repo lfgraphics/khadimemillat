@@ -67,8 +67,7 @@ class WhatsAppService {
         throw new Error('WhatsApp API not configured. Please set WHATSAPP_ACCESS_TOKEN and WHATSAPP_PHONE_NUMBER_ID')
       }
 
-      // Clean phone number (remove any non-digits except +)
-      const cleanPhone = options.to.replace(/[^\d+]/g, '')
+      const cleanPhone = options.to.replace(/[^\d]/g, '')
 
       if (this.provider === 'aisensy') {
         return await this.sendAiSensyMessage(cleanPhone, options)
@@ -105,10 +104,10 @@ class WhatsAppService {
     // Use your approved "Donation Confirmation" campaign for all message types
     // For simple text messages, we can use a basic text campaign
     const campaignName = options.type === 'image' ? "Donation Confirmation" : "api_text_campaign" // Your approved campaigns
-    
+
     // Extract template parameters from the message if it contains donation data
     let templateParams: string[] = []
-    
+
     // Check if message contains template parameters (separated by |)
     if (options.message.includes('|')) {
       // Message contains template parameters separated by |
@@ -142,12 +141,12 @@ class WhatsAppService {
         params: requestBody.templateParams,
         campaignName: campaignName
       })
-      
+
       // Pad with empty strings if too few parameters
       while (requestBody.templateParams.length < 10) {
         requestBody.templateParams.push('')
       }
-      
+
       // Truncate if too many parameters
       if (requestBody.templateParams.length > 10) {
         requestBody.templateParams = requestBody.templateParams.slice(0, 10)
@@ -380,7 +379,7 @@ class WhatsAppService {
 
   formatPhoneNumber(phone: string): string {
     // Remove all non-digits
-    const cleaned = phone.replace(/\D/g, '')
+    const cleaned = phone.replace(/[^\d]/g, '')
 
     // If it starts with 91 (India) and has 12 digits, add +
     if (cleaned.startsWith('91') && cleaned.length === 12) {
@@ -413,10 +412,10 @@ class WhatsAppService {
    * Send donation receipt with image using approved template
    */
   async sendDonationReceipt(
-    phone: string, 
-    donationId: string, 
-    donorName: string, 
-    amount: number, 
+    phone: string,
+    donationId: string,
+    donorName: string,
+    amount: number,
     campaignName?: string
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
@@ -424,7 +423,7 @@ class WhatsAppService {
       // Use PNG image endpoint (publicly accessible via middleware)
       const receiptImageUrl = `${baseUrl}/api/receipts/${donationId}/image`
       const thankYouPageUrl = `${baseUrl}/thank-you?donationId=${donationId}`
-      
+
       // Create template parameters for AiSensy template
       const templateParams = [
         donorName || 'Valued Donor', // {{1}}
@@ -442,17 +441,17 @@ class WhatsAppService {
       // Ensure all parameters are strings and not empty
       const sanitizedParams = templateParams.map((param, index) => {
         const sanitized = String(param || '').trim()
-        return sanitized || (index === 0 ? 'Valued Donor' : 
-                            index === 1 || index === 3 ? '₹' :
-                            index === 2 || index === 4 ? '0' :
-                            index === 5 ? 'General Donation' :
-                            index === 6 ? new Date().toLocaleDateString('en-IN') :
-                            index === 7 || index === 8 ? donationId.slice(-8) :
-                            thankYouPageUrl)
+        return sanitized || (index === 0 ? 'Valued Donor' :
+          index === 1 || index === 3 ? '₹' :
+            index === 2 || index === 4 ? '0' :
+              index === 5 ? 'General Donation' :
+                index === 6 ? new Date().toLocaleDateString('en-IN') :
+                  index === 7 || index === 8 ? donationId.slice(-8) :
+                    thankYouPageUrl)
       })
 
       const approvedMessage = sanitizedParams.join('|')
-      
+
       return await this.sendMessage({
         to: phone,
         type: 'image',
@@ -490,7 +489,7 @@ class WhatsAppService {
       // Use PNG image endpoint (publicly accessible via middleware)
       const receiptImageUrl = `${baseUrl}/api/receipts/${donationData.donationId}/image`
       const thankYouPageUrl = `${baseUrl}/thank-you?donationId=${donationData.donationId}`
-      
+
       // Create template parameters for AiSensy template
       // Template: {{1}} = donorName, {{2}} = currency, {{3}} = amount, {{4}} = currency, {{5}} = amount, 
       // {{6}} = program, {{7}} = date, {{8}} = receiptId, {{9}} = transactionId, {{10}} = thankYouUrl
@@ -512,20 +511,20 @@ class WhatsAppService {
         const sanitized = String(param || '').trim()
         if (!sanitized) {
           console.warn(`⚠️ Empty template parameter at index ${index + 1}:`, param)
-          return index === 0 ? 'Valued Donor' : 
-                 index === 1 || index === 3 ? 'INR' :
-                 index === 2 || index === 4 ? '0' :
-                 index === 5 ? 'General Donation' :
-                 index === 6 ? new Date().toLocaleDateString('en-IN') :
-                 index === 7 || index === 8 ? donationData.donationId.slice(-8) :
-                 thankYouPageUrl
+          return index === 0 ? 'Valued Donor' :
+            index === 1 || index === 3 ? 'INR' :
+              index === 2 || index === 4 ? '0' :
+                index === 5 ? 'General Donation' :
+                  index === 6 ? new Date().toLocaleDateString('en-IN') :
+                    index === 7 || index === 8 ? donationData.donationId.slice(-8) :
+                      thankYouPageUrl
         }
         return sanitized
       })
 
       // For AiSensy, we need to send template parameters, not the full message
       const approvedMessage = sanitizedParams.join('|')
-      
+
       console.log('🔄 Sending donation confirmation WhatsApp:', {
         phone,
         donationId: donationData.donationId,
@@ -535,7 +534,7 @@ class WhatsAppService {
         programName: donationData.programName,
         campaignName: donationData.campaignName
       })
-      
+
       return await this.sendMessage({
         to: phone,
         type: 'image',
@@ -567,7 +566,7 @@ class WhatsAppService {
       // Use PNG image endpoint (publicly accessible via middleware)
       const receiptImageUrl = `${baseUrl}/api/receipts/${donationId}/image`
       const thankYouPageUrl = `${baseUrl}/thank-you?donationId=${donationId}`
-      
+
       // Create template parameters for AiSensy template
       const templateParams = [
         donorName || 'Valued Donor', // {{1}}
@@ -585,17 +584,17 @@ class WhatsAppService {
       // Ensure all parameters are strings and not empty
       const sanitizedParams = templateParams.map((param, index) => {
         const sanitized = String(param || '').trim()
-        return sanitized || (index === 0 ? 'Valued Donor' : 
-                            index === 1 || index === 3 ? '₹' :
-                            index === 2 || index === 4 ? '0' :
-                            index === 5 ? 'General Donation' :
-                            index === 6 ? new Date().toLocaleDateString('en-IN') :
-                            index === 7 || index === 8 ? donationId.slice(-8) :
-                            thankYouPageUrl)
+        return sanitized || (index === 0 ? 'Valued Donor' :
+          index === 1 || index === 3 ? '₹' :
+            index === 2 || index === 4 ? '0' :
+              index === 5 ? 'General Donation' :
+                index === 6 ? new Date().toLocaleDateString('en-IN') :
+                  index === 7 || index === 8 ? donationId.slice(-8) :
+                    thankYouPageUrl)
       })
 
       const approvedMessage = sanitizedParams.join('|')
-      
+
       return await this.sendMessage({
         to: phone,
         type: 'image',
