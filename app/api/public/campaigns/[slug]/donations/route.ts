@@ -130,13 +130,17 @@ export async function POST(
 
         const { userId } = await auth()
 
+        // Normalize phone number before saving
+        const { normalizePhoneNumber } = await import('@/lib/utils/phone')
+        const normalizedPhone = normalizePhoneNumber(donorPhone)
+
         const donation = new CampaignDonation({
             campaignId: (campaign as any)._id,
             programId: (campaign as any).programId,
             donorId: userId || undefined,
             donorName,
             donorEmail,
-            donorPhone,
+            donorPhone: normalizedPhone,
             donorAddress: wants80GReceipt ? donorAddress : undefined,
             donorCity: wants80GReceipt ? donorCity : undefined,
             donorState: wants80GReceipt ? donorState : undefined,

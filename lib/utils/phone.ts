@@ -19,6 +19,12 @@ export function normalizePhoneNumber(input: string, defaultCountryCode = getDefa
     console.log('[PHONE_NORMALIZE] stripped 91 prefix from 12-digit number')
   }
   
+  // Special case: If it's an 11-digit number starting with 0 (Indian local format), strip the 0
+  if (digits.length === 11 && digits.startsWith('0') && defaultCountryCode === '91') {
+    digits = digits.slice(1) // Remove the leading 0
+    console.log('[PHONE_NORMALIZE] stripped leading 0 from 11-digit Indian number')
+  }
+  
   // If looks like an E.164-ish number (11-15 digits), assume it's already with country code; do not prefix
   if (digits.length >= 11 && digits.length <= 15) {
     // prevent leading zero immediately after country code (e.g., 91 0xxxxxxxxx)

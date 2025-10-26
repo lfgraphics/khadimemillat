@@ -95,12 +95,16 @@ export async function POST(request: NextRequest) {
             }, { status: 500 })
         }
 
+        // Normalize phone number before saving
+        const { normalizePhoneNumber } = await import('@/lib/utils/phone')
+        const normalizedPhone = donorPhone ? normalizePhoneNumber(donorPhone.trim()) : undefined
+
         const donationData: any = {
             programId: (program as any)._id,
             donorId: userId || undefined,
             donorName: donorName.trim(),
             donorEmail: donorEmail?.trim() || `${donorName.replace(/\s+/g, '-').toLowerCase()}${donorPhone?.replace(/\D/g, '').slice(-4) || Date.now()}@khadimemillat.org`,
-            donorPhone: donorPhone.trim(),
+            donorPhone: normalizedPhone,
             amount: parseFloat(amount.toString()),
             message: message?.trim() || undefined,
             paymentMethod: paymentMethod || 'online',

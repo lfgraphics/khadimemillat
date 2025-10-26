@@ -59,7 +59,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     // Optional: mirror to Mongo as cache (non-authoritative)
     if (phone !== undefined || address !== undefined) {
       const patch: any = {}
-      if (phone !== undefined) patch.phone = phone
+      if (phone !== undefined) {
+        const { normalizePhoneNumber } = await import('@/lib/utils/phone')
+        patch.phone = phone ? normalizePhoneNumber(phone) : phone
+      }
       if (address !== undefined) patch.address = address
       await User.updateOne({ clerkUserId: clerkTargetId }, { $set: patch })
     }

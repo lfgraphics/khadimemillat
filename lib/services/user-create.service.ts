@@ -112,6 +112,10 @@ export async function createUserRobust(input: CreateUserInput): Promise<CreatedU
 
     const clerkUser = await client.users.createUser(minimalUserData)
 
+    // Normalize phone number before saving
+    const { normalizePhoneNumber } = await import('@/lib/utils/phone')
+    const normalizedPhone = normalizePhoneNumber(input.phone)
+
     // Update metadata separately if user creation succeeds
     if (input.role || input.address || input.phone) {
       try {
@@ -120,7 +124,7 @@ export async function createUserRobust(input: CreateUserInput): Promise<CreatedU
             role: input.role || 'user',
             ...(input.address && { address: input.address })
           },
-          privateMetadata: { phone: input.phone }
+          privateMetadata: { phone: normalizedPhone }
         })
       } catch (metadataError) {
         console.warn('[METADATA_UPDATE_FAILED]', metadataError)
@@ -133,7 +137,7 @@ export async function createUserRobust(input: CreateUserInput): Promise<CreatedU
       clerkUserId: clerkUser.id,
       name,
       email: emailUsed,
-      phone: input.phone,
+      phone: normalizedPhone,
       address: input.address,
       role: input.role || 'user'
     }).catch(err => console.warn('[USER_SYNC_FAILED]', err))

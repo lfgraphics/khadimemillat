@@ -227,7 +227,10 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
         const updateData: any = {}
         
         // Check if profile fields have been modified
-        if (donorPhone.trim()) updateData.phone = donorPhone.trim()
+        if (donorPhone.trim()) {
+          const { normalizePhoneNumber } = await import('@/lib/utils/phone')
+          updateData.phone = normalizePhoneNumber(donorPhone.trim())
+        }
         if (donorAddress.trim()) updateData.address = donorAddress.trim()
         if (donorCity.trim()) updateData.city = donorCity.trim()
         if (donorState.trim()) updateData.state = donorState.trim()
