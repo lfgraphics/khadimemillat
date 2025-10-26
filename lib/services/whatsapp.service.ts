@@ -12,6 +12,8 @@
  * - Service will use Meta WhatsApp Business API
  */
 
+import { formatForWhatsApp } from '@/lib/utils/phone'
+
 interface WhatsAppMessage {
   to: string // Phone number in international format
   message: string
@@ -378,30 +380,9 @@ class WhatsAppService {
   }
 
   formatPhoneNumber(phone: string): string {
-    // Remove all non-digits
-    const cleaned = phone.replace(/[^\d]/g, '')
-
-    // If it starts with 91 (India) and has 12 digits, add +
-    if (cleaned.startsWith('91') && cleaned.length === 12) {
-      return `+${cleaned}`
-    }
-
-    // If it starts with 0 and has 11 digits (local Indian number), replace 0 with +91
-    if (cleaned.startsWith('0') && cleaned.length === 11) {
-      return `+91${cleaned.substring(1)}`
-    }
-
-    // If it has 10 digits (Indian mobile without country code), add +91
-    if (cleaned.length === 10) {
-      return `+91${cleaned}`
-    }
-
-    // If it doesn't start with +, add it
-    if (!phone.startsWith('+')) {
-      return `+${cleaned}`
-    }
-
-    return phone
+    // Use the centralized phone formatting utility
+    // This returns the phone number in the correct format for WhatsApp API (digits only, with country code)
+    return formatForWhatsApp(phone)
   }
 
   generateCustomNotification(title: string, message: string): string {

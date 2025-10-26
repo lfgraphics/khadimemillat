@@ -47,6 +47,15 @@ export async function POST(req: NextRequest) {
           donation.processedAt = donation.processedAt || new Date()
           await donation.save()
           addBreadcrumb({ category: 'payments', message: 'donation marked completed via webhook', level: 'info', data: { donationId } })
+          
+          // Send thank you notifications after successful donation
+          try {
+            const { sendDonationThankYouNotifications } = await import('@/lib/services/donation-notification.service')
+            await sendDonationThankYouNotifications(donation)
+          } catch (notifyError) {
+            console.warn('[DONATION_NOTIFICATION_FAILED_WEBHOOK]', notifyError)
+            // Don't fail the webhook processing if notifications fail
+          }
         }
       } else if (receipt?.startsWith('scrap_')) {
         const scrapItemId = receipt.replace('scrap_', '')

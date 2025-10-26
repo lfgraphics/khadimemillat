@@ -154,7 +154,7 @@ export async function createUserRobust(input: CreateUserInput): Promise<CreatedU
     }
 
     if (wantWhatsApp) {
-      try { await whatsappService.sendMessage({ to: input.phone, message: `KM Welfare account created.\nUsername: ${username}\nPassword: ${password}\nSign in: ${signInUrl}` }) } catch { }
+      try { await whatsappService.sendMessage({ to: whatsappService.formatPhoneNumber(input.phone), message: `KM Welfare account created.\nUsername: ${username}\nPassword: ${password}\nSign in: ${signInUrl}` }) } catch { }
     }
 
     if (wantSMS) {
