@@ -5,9 +5,7 @@ import { collectionRequestService } from '@/lib/services/collectionRequest.servi
 import { notificationService } from '@/lib/services/notification.service'
 import { clerkClient } from '@clerk/nextjs/server'
 
-async function getClerkClient() {
-  return typeof clerkClient === 'function' ? await (clerkClient as any)() : clerkClient
-}
+// Remove wrapper function - clerkClient is ready to use directly
 
 // Schema for creating donation request for a specific user
 const createDonationRequestForUserSchema = z.object({
@@ -32,7 +30,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const client = await getClerkClient()
+    const client = await clerkClient()
     const currentUser = await client.users.getUser(clerkUserId)
     const role = currentUser.publicMetadata?.role as string
 

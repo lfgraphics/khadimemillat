@@ -106,8 +106,8 @@ export async function sendDonationThankYouNotifications(donation: any) {
         }
 
         const emailSubject = wants80G ?
-            `🙏 Thank you for your donation - 80G Certificate #${certificate80GInfo?.certificateNumber || donationId.toString().slice(-8)}` :
-            `🙏 Thank you for your donation - Receipt #${donationId.toString().slice(-8)}`
+            `🤲 Thank you for your donation - 80G Certificate #${certificate80GInfo?.certificateNumber || donationId.toString().slice(-8)}` :
+            `🤲 Thank you for your donation - Receipt #${donationId.toString().slice(-8)}`
 
         // Send email notification if email provided
         if (donorEmail && userNotificationPrefs.email) {
@@ -169,7 +169,7 @@ export async function sendDonationThankYouNotifications(donation: any) {
   Registered Office: New Delhi, India | Charitable Trust Registration: DL/2019/123456
 </div>`
 
-                const emailTitle = wants80G ? '🏛️ Thank You for Your Donation - 80G Certificate Included!' : '🙏 Thank You for Your Donation!'
+                const emailTitle = wants80G ? '🏛️ Thank You for Your Donation - 80G Certificate Included!' : '🤲 Thank You for Your Donation!'
 
                 const emailHtml = emailService.generateDefaultBrandedEmail({
                     title: emailTitle,
@@ -212,21 +212,32 @@ export async function sendDonationThankYouNotifications(donation: any) {
                     )
 
                     if (whatsappResult.success) {
-                        console.log(`[DONATION_WHATSAPP_WITH_IMAGE_SENT] ${phoneToUse} - ${donationId} - MessageId: ${whatsappResult.messageId}`)
+                        console.log(`[DONATION_WHATSAPP_WITH_IMAGE_SENT] ${phoneToUse} - ${donationId} - MessageId: ${whatsappResult.messageId} - 80G: ${wants80G}`)
                         
                         // Note: 80G certificate info is included in the same receipt image, no separate message needed
                     } else {
                         console.error('[DONATION_WHATSAPP_WITH_IMAGE_FAILED]', whatsappResult.error)
                         
-                        // Fallback to text-only message if image sending fails
-                        const fallbackMessage = `🙏 *Assalamu Alaikum ${donorName}*\n\nThank you for your generous donation of *${currency} ${amount.toLocaleString('en-IN')}*\n\n📋 Receipt ID: ${donationId.toString().slice(-8)}\n🔗 Details: ${process.env.NEXT_PUBLIC_APP_URL || 'https://khadimemillat.org'}/thank-you?donationId=${donationId}\n\nMay Allah bless you!\n\n_Khadim-e-Millat Welfare Foundation_`
+                        // Enhanced fallback message with 80G information if applicable
+                        let fallbackMessage = `🤲 *Assalamu Alaikum ${donorName}*\n\nAlhamdulillah! Your generous donation has been received successfully.\n\n💰 *Amount:* ${currency} ${amount.toLocaleString('en-IN')}\n📋 *Receipt ID:* ${donationId.toString().slice(-8)}\n🏛️ *Program:* ${programName || campaignName || 'General Donation'}\n📅 *Date:* ${new Date().toLocaleDateString('en-IN')}`
                         
-                        await whatsappService.sendMessage({
+                        if (wants80G) {
+                            fallbackMessage += `\n\n🏛️ *80G Tax Certificate:* Will be generated and sent separately\n💳 *PAN Required:* Yes (for tax exemption)`
+                        }
+                        
+                        fallbackMessage += `\n\n🔗 *View Details:* ${process.env.NEXT_PUBLIC_APP_URL || 'https://khadimemillat.org'}/thank-you?donationId=${donationId}\n\nJazakallahu Khairan! May Allah accept your donation and bless you abundantly.\n\n_Khadim-e-Millat Welfare Foundation_\n📞 +91 80817 47259`
+                        
+                        const fallbackResult = await whatsappService.sendMessage({
                             to: whatsappService.formatPhoneNumber(phoneToUse),
-                            message: fallbackMessage
+                            message: fallbackMessage,
+                            userName: donorName
                         })
                         
-                        console.log(`[DONATION_WHATSAPP_FALLBACK_SENT] ${phoneToUse} - ${donationId}`)
+                        if (fallbackResult.success) {
+                            console.log(`[DONATION_WHATSAPP_FALLBACK_SENT] ${phoneToUse} - ${donationId} - 80G: ${wants80G}`)
+                        } else {
+                            console.error(`[DONATION_WHATSAPP_FALLBACK_FAILED] ${phoneToUse} - ${donationId} - Error: ${fallbackResult.error}`)
+                        }
                     }
                 }
             } catch (whatsappError) {
@@ -255,7 +266,7 @@ export async function sendDonationThankYouNotifications(donation: any) {
             const user = await User.findOne({ email: donorEmail }).select('clerkUserId').lean()
             if (user && (user as any).clerkUserId) {
                 await notificationService.notifyUsers([(user as any).clerkUserId], {
-                    title: '🙏 Thank You for Your Donation!',
+                    title: '🤲 Thank You for Your Donation!',
                     body: `Your donation of ${currency} ${amount} has been received successfully. Receipt ID: ${donationId.toString().slice(-8)}`,
                     url: `/donations/${donationId}`,
                     type: 'donation_success'

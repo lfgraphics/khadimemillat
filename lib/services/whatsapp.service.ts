@@ -103,7 +103,8 @@ class WhatsAppService {
     const apiUrl = 'https://backend.aisensy.com/campaign/t1/api/v2'
 
     // Use your approved "Donation Confirmation" campaign for all message types
-    const campaignName = "Donation Confirmation" // Your approved campaign that supports images
+    // For simple text messages, we can use a basic text campaign
+    const campaignName = options.type === 'image' ? "Donation Confirmation" : "api_text_campaign" // Your approved campaigns
     
     // Extract template parameters from the message if it contains donation data
     let templateParams: string[] = []
@@ -124,9 +125,33 @@ class WhatsAppService {
       "userName": options.userName || "User" // Name of the message recipient
     }
 
-    // Add templateParams only if template has parameters
-    if (templateParams.length > 1 || !templateParams[0].includes('Thank you for your donation!')) {
+    // Always add templateParams for donation confirmation messages
+    // The template expects exactly 10 parameters for donation confirmations
+    if (templateParams.length > 1) {
       requestBody.templateParams = templateParams
+    } else if (templateParams[0] && templateParams[0].includes('|')) {
+      // If single message contains pipe-separated parameters, split them
+      requestBody.templateParams = templateParams[0].split('|')
+    }
+
+    // Validate template parameters for donation confirmations
+    if (requestBody.templateParams && requestBody.templateParams.length !== 10) {
+      console.warn('⚠️ Template parameter count mismatch:', {
+        expected: 10,
+        actual: requestBody.templateParams.length,
+        params: requestBody.templateParams,
+        campaignName: campaignName
+      })
+      
+      // Pad with empty strings if too few parameters
+      while (requestBody.templateParams.length < 10) {
+        requestBody.templateParams.push('')
+      }
+      
+      // Truncate if too many parameters
+      if (requestBody.templateParams.length > 10) {
+        requestBody.templateParams = requestBody.templateParams.slice(0, 10)
+      }
     }
 
     // Add optional source field
@@ -230,14 +255,21 @@ class WhatsAppService {
         messageLength: options.message?.length || 0,
         messageType: options.type || 'text',
         apiUrl: apiUrl,
-        campaignName: requestBody.campaignName
+        campaignName: requestBody.campaignName,
+        templateParamsCount: requestBody.templateParams?.length || 0,
+        templateParams: requestBody.templateParams
       })
 
       // Provide specific error guidance based on AiSensy documentation
       let errorMessage = result.message || result.error || `AiSensy API error: ${response.status} - ${response.statusText}`
 
       if (response.status === 400) {
-        errorMessage += ". Please check: 1) API campaign 'api_text_campaign' exists and is Live, 2) Template is approved, 3) All required fields are provided."
+        // Check if it's a template parameter mismatch
+        if (errorMessage.toLowerCase().includes('template') || errorMessage.toLowerCase().includes('parameter')) {
+          errorMessage += ". Template parameter mismatch detected. Expected 10 parameters for donation confirmation template."
+        } else {
+          errorMessage += ". Please check: 1) API campaign 'Donation Confirmation' exists and is Live, 2) Template is approved, 3) All required fields are provided."
+        }
       } else if (response.status === 401) {
         errorMessage += ". Please verify your API key in AiSensy dashboard: Manage > API Key"
       }
@@ -395,11 +427,11 @@ class WhatsAppService {
       
       // Create template parameters for AiSensy template
       const templateParams = [
-        donorName, // {{1}}
+        donorName || 'Valued Donor', // {{1}}
         '₹', // {{2}}
-        amount.toString(), // {{3}}
+        amount.toString() || '0', // {{3}}
         '₹', // {{4}}
-        amount.toString(), // {{5}}
+        amount.toString() || '0', // {{5}}
         campaignName || 'General Donation', // {{6}}
         new Date().toLocaleDateString('en-IN'), // {{7}}
         donationId.slice(-8), // {{8}}
@@ -407,7 +439,19 @@ class WhatsAppService {
         thankYouPageUrl // {{10}}
       ]
 
-      const approvedMessage = templateParams.join('|')
+      // Ensure all parameters are strings and not empty
+      const sanitizedParams = templateParams.map((param, index) => {
+        const sanitized = String(param || '').trim()
+        return sanitized || (index === 0 ? 'Valued Donor' : 
+                            index === 1 || index === 3 ? '₹' :
+                            index === 2 || index === 4 ? '0' :
+                            index === 5 ? 'General Donation' :
+                            index === 6 ? new Date().toLocaleDateString('en-IN') :
+                            index === 7 || index === 8 ? donationId.slice(-8) :
+                            thankYouPageUrl)
+      })
+
+      const approvedMessage = sanitizedParams.join('|')
       
       return await this.sendMessage({
         to: phone,
@@ -451,11 +495,11 @@ class WhatsAppService {
       // Template: {{1}} = donorName, {{2}} = currency, {{3}} = amount, {{4}} = currency, {{5}} = amount, 
       // {{6}} = program, {{7}} = date, {{8}} = receiptId, {{9}} = transactionId, {{10}} = thankYouUrl
       const templateParams = [
-        donationData.donorName, // {{1}}
-        donationData.currency, // {{2}}
-        donationData.amount.toString(), // {{3}}
-        donationData.currency, // {{4}}
-        donationData.amount.toString(), // {{5}}
+        donationData.donorName || 'Valued Donor', // {{1}}
+        donationData.currency || 'INR', // {{2}}
+        donationData.amount.toString() || '0', // {{3}}
+        donationData.currency || 'INR', // {{4}}
+        donationData.amount.toString() || '0', // {{5}}
         donationData.programName || donationData.campaignName || 'General Donation', // {{6}}
         new Date().toLocaleDateString('en-IN'), // {{7}}
         donationData.donationId.slice(-8), // {{8}}
@@ -463,8 +507,34 @@ class WhatsAppService {
         thankYouPageUrl // {{10}}
       ]
 
+      // Ensure all parameters are strings and not empty
+      const sanitizedParams = templateParams.map((param, index) => {
+        const sanitized = String(param || '').trim()
+        if (!sanitized) {
+          console.warn(`⚠️ Empty template parameter at index ${index + 1}:`, param)
+          return index === 0 ? 'Valued Donor' : 
+                 index === 1 || index === 3 ? 'INR' :
+                 index === 2 || index === 4 ? '0' :
+                 index === 5 ? 'General Donation' :
+                 index === 6 ? new Date().toLocaleDateString('en-IN') :
+                 index === 7 || index === 8 ? donationData.donationId.slice(-8) :
+                 thankYouPageUrl
+        }
+        return sanitized
+      })
+
       // For AiSensy, we need to send template parameters, not the full message
-      const approvedMessage = templateParams.join('|')
+      const approvedMessage = sanitizedParams.join('|')
+      
+      console.log('🔄 Sending donation confirmation WhatsApp:', {
+        phone,
+        donationId: donationData.donationId,
+        wants80G: donationData.wants80G,
+        templateParamsCount: templateParams.length,
+        razorpayPaymentId: donationData.razorpayPaymentId,
+        programName: donationData.programName,
+        campaignName: donationData.campaignName
+      })
       
       return await this.sendMessage({
         to: phone,
@@ -500,11 +570,11 @@ class WhatsAppService {
       
       // Create template parameters for AiSensy template
       const templateParams = [
-        donorName, // {{1}}
+        donorName || 'Valued Donor', // {{1}}
         '₹', // {{2}}
-        amount.toString(), // {{3}}
+        amount.toString() || '0', // {{3}}
         '₹', // {{4}}
-        amount.toString(), // {{5}}
+        amount.toString() || '0', // {{5}}
         'General Donation', // {{6}}
         new Date().toLocaleDateString('en-IN'), // {{7}}
         donationId.slice(-8), // {{8}}
@@ -512,7 +582,19 @@ class WhatsAppService {
         thankYouPageUrl // {{10}}
       ]
 
-      const approvedMessage = templateParams.join('|')
+      // Ensure all parameters are strings and not empty
+      const sanitizedParams = templateParams.map((param, index) => {
+        const sanitized = String(param || '').trim()
+        return sanitized || (index === 0 ? 'Valued Donor' : 
+                            index === 1 || index === 3 ? '₹' :
+                            index === 2 || index === 4 ? '0' :
+                            index === 5 ? 'General Donation' :
+                            index === 6 ? new Date().toLocaleDateString('en-IN') :
+                            index === 7 || index === 8 ? donationId.slice(-8) :
+                            thankYouPageUrl)
+      })
+
+      const approvedMessage = sanitizedParams.join('|')
       
       return await this.sendMessage({
         to: phone,

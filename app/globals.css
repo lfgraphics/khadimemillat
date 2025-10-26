@@ -542,4 +542,18 @@ textarea:focus-visible {
 .dark .rich-text-editor .ql-editor h2,
 .dark .rich-text-editor .ql-editor h3 {
   color: hsl(var(--foreground));
+}/* Hid
+e scrollbars for activities carousel */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Smooth scrolling for activities carousel */
+.scrollbar-hide {
+  scroll-behavior: smooth;
 }

@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       }
       // Backfill publicMetadata.mongoUserId if absent
       try {
-        const client: any = typeof clerkClient === 'function' ? await (clerkClient as any)() : clerkClient;
+        const client = await clerkClient();
         const clerkUser = await client.users.getUser(clerkUserId)
         const currentMongoLink = (clerkUser.publicMetadata as any)?.mongoUserId
         if (!currentMongoLink) {

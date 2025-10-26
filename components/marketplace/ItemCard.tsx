@@ -1,6 +1,8 @@
 "use client"
 import { IScrapItem } from '@/models/ScrapItem';
-import { ClickableImage } from '@/components/ui/clickable-image';
+import { useImageModal } from './ImageModalProvider';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,6 +25,13 @@ export function ItemCard({ item }: ItemCardProps) {
     const [loading, setLoading] = useState(false);
     const [selectedQuantity, setSelectedQuantity] = useState(1);
     const [showQuantitySelector, setShowQuantitySelector] = useState(false);
+    
+    // Fallback modal state in case ImageModalProvider is not available
+    const [fallbackModalOpen, setFallbackModalOpen] = useState(false);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    
+    // Get the modal from context
+    const { openModal } = useImageModal();
 
     // Handle legacy items that don't have availableQuantity field
     const rawAvailableQuantity = (item as any).availableQuantity;
@@ -42,6 +51,31 @@ export function ItemCard({ item }: ItemCardProps) {
     const userRole = user?.publicMetadata?.role as string;
     const isAdminOrModerator = userRole === 'admin' || userRole === 'moderator';
 
+    // Get all available images for the carousel
+    const allImages = [
+        ...(item.photos?.before || []),
+        ...(item.photos?.after || [])
+    ].filter(Boolean);
+
+    const handleImageClick = () => {
+        if (allImages.length > 0) {
+            if (typeof openModal === 'function') {
+                openModal(allImages, 0);
+            } else {
+                setCurrentImageIndex(0);
+                setFallbackModalOpen(true);
+            }
+        }
+    };
+
+    const navigateImage = (direction: 'prev' | 'next') => {
+        if (direction === 'prev') {
+            setCurrentImageIndex(currentImageIndex > 0 ? currentImageIndex - 1 : allImages.length - 1);
+        } else {
+            setCurrentImageIndex(currentImageIndex < allImages.length - 1 ? currentImageIndex + 1 : 0);
+        }
+    };
+
     const handleQuantityChange = (newQuantity: number) => {
         if (newQuantity >= 1 && newQuantity <= availableQuantity) {
             setSelectedQuantity(newQuantity);
@@ -58,7 +92,7 @@ export function ItemCard({ item }: ItemCardProps) {
 
     const handlePurchase = async () => {
         if (!user) {
-            router.push('/sign-in?redirect_url=/marketplace');
+            router.push('/sign-in?redirectTo=' + encodeURIComponent('/marketplace'));
             return;
         }
         try {
@@ -88,13 +122,31 @@ export function ItemCard({ item }: ItemCardProps) {
         <div className="rounded-2xl shadow-md p-4 bg-card hover:shadow-lg transition">
             {/* Image */}
             {item.photos?.before?.[0] ? (
-                <ClickableImage
-                    src={item.photos.before[0]}
-                    alt={item.name}
-                    className="w-full h-48 object-cover rounded-lg"
-                    caption={item.name}
-                    transform={{ width: 600, height: 400, crop: 'fill' }}
-                />
+                <div 
+                    className="relative cursor-zoom-in"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Container click handler');
+                        handleImageClick();
+                    }}
+                >
+                    <img
+                        src={item.photos.before[0]}
+                        alt={item.name}
+                        className="w-full h-48 object-cover rounded-lg hover:opacity-90 transition-opacity pointer-events-none"
+                    />
+                    {allImages.length > 1 && (
+                        <div className="absolute top-2 right-2 bg-black/50 text-white px-2 py-1 rounded-full text-xs pointer-events-none">
+                            +{allImages.length - 1} more
+                        </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors rounded-lg flex items-center justify-center opacity-0 hover:opacity-100 pointer-events-none">
+                        <div className="bg-white/90 text-black px-3 py-1 rounded-full text-sm font-medium">
+                            View {allImages.length} image{allImages.length > 1 ? 's' : ''}
+                        </div>
+                    </div>
+                </div>
             ) : (
                 <div className="w-full h-48 rounded-lg bg-muted flex items-center justify-center text-sm text-muted-foreground">
                     No image
@@ -260,6 +312,64 @@ export function ItemCard({ item }: ItemCardProps) {
                     </div>
                 )}
             </div>
+
+            {/* Fallback Image Modal */}
+            <Dialog open={fallbackModalOpen} onOpenChange={setFallbackModalOpen}>
+                <DialogContent className="max-w-6xl max-h-[95vh] p-0 overflow-hidden bg-black/95 border-0">
+                    <DialogHeader className="p-6 pb-0">
+                        <div className="flex justify-between items-center">
+                            <DialogTitle className="text-white">
+                                Photo {currentImageIndex + 1} of {allImages.length}
+                            </DialogTitle>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-white hover:bg-white/20"
+                                onClick={() => setFallbackModalOpen(false)}
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </DialogHeader>
+                    
+                    {allImages.length > 0 && (
+                        <div className="relative p-6 pt-0">
+                            <img
+                                src={allImages[currentImageIndex]}
+                                alt={`${item.name} - Photo ${currentImageIndex + 1}`}
+                                className="w-full h-auto max-h-[75vh] object-contain rounded-lg"
+                            />
+                            
+                            {/* Navigation Buttons */}
+                            {allImages.length > 1 && (
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="absolute left-8 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white"
+                                        onClick={() => navigateImage('prev')}
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="absolute right-8 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white"
+                                        onClick={() => navigateImage('next')}
+                                    >
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                </>
+                            )}
+                            
+                            {/* Image Counter */}
+                            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                                {currentImageIndex + 1} / {allImages.length}
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

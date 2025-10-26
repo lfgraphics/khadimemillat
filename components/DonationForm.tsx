@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Heart, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useUser } from '@clerk/nextjs'
@@ -111,10 +112,10 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
       const cleanPhone = phone.replace(/[^0-9]/g, '')
       username = username ? `${username}${cleanPhone.slice(-4)}` : cleanPhone.slice(-4)
     }
-    const host = typeof window !== 'undefined' ? window.location.host.replace('www.', '') : 'example.com'
+    const host = typeof window !== 'undefined' ? window.location.host.replace('www.', '') : 'khadimemillat.org'
     const candidate = username ? `${username}@${host}` : ''
     if (candidate && isValidEmail(candidate)) return candidate
-    return `donor-${Date.now()}@example.com`
+    return `donor-${Date.now()}@khadimemillat.org`
   }
 
   const handlePresetAmount = (presetAmount: number) => {
@@ -423,11 +424,10 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
           <Label htmlFor="donorPhone" className="text-sm font-medium text-foreground">
             Phone Number *
           </Label>
-          <Input
+          <PhoneInput
             id="donorPhone"
-            type="tel"
             value={donorPhone}
-            onChange={(e) => handlePhoneChange(e.target.value)}
+            onChange={(value) => handlePhoneChange(value)}
             placeholder="Enter your phone number"
             required
             disabled={!!user && !allowEditProfileFields}

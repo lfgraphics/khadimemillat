@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
+import { redirectToSignIn } from '@/lib/auth-redirect'
 import NotificationDashboard from '@/components/admin/NotificationDashboard'
 
 export const metadata: Metadata = {
@@ -12,7 +12,7 @@ export default async function AdminNotificationsPage() {
   const { userId } = await auth()
   
   if (!userId) {
-    redirect('/sign-in')
+    redirectToSignIn('/admin/notifications')
   }
 
   // In a real implementation, you would check user role from Clerk metadata

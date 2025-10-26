@@ -236,12 +236,19 @@ export function sanitizeString(input: string): string {
     .trim();
 }
 
-// Validate phone number format
+// Validate phone number format (with country code)
 function validatePhone(phone: string): string | undefined {
   if (!phone || !phone.trim()) {
     return 'Phone number is required';
   }
   
+  // Check if phone number has country code format (+XX XXXXXXXXXX)
+  const countryCodeFormat = /^\+\d{1,4}\s\d{4,15}$/;
+  if (countryCodeFormat.test(phone.trim())) {
+    return undefined; // Valid format with country code
+  }
+  
+  // Fallback: check if it's just digits (legacy format)
   const cleanPhone = phone.replace(/\D/g, '');
   
   if (cleanPhone.length < 10) {
@@ -250,11 +257,6 @@ function validatePhone(phone: string): string | undefined {
   
   if (cleanPhone.length > 15) {
     return 'Phone number cannot exceed 15 digits';
-  }
-  
-  // Basic format validation for Indian phone numbers
-  if (cleanPhone.length === 10 && !cleanPhone.match(/^[6-9]\d{9}$/)) {
-    return 'Invalid phone number format';
   }
   
   return undefined;

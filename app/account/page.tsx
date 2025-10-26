@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { PhoneInput } from '@/components/ui/phone-input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -81,7 +82,7 @@ export default function AccountPage() {
             <form onSubmit={onSubmit} className='space-y-5'>
               <div className='space-y-1'>
                 <label className='text-xs font-medium'>Phone</label>
-                <Input value={state.phone} onChange={e => setState(s => ({ ...s, phone: e.target.value }))} placeholder='+15551234567' />
+                <PhoneInput value={state.phone} onChange={value => setState(s => ({ ...s, phone: value }))} placeholder='Enter phone number' />
               </div>
               <div className='space-y-1'>
                 <label className='text-xs font-medium'>Address</label>

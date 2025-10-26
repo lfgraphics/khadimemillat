@@ -55,7 +55,7 @@ ${user.address ? `• *Address:* ${user.address}` : ''}
 - You can now log in to the system
 - Change your password after first login if needed
 
-Welcome to our community! 🙏🏻`;
+Welcome to our community! 🤲🏻`;
 
     return message;
   };

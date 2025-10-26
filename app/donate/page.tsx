@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { PhoneInput } from '@/components/ui/phone-input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -691,7 +692,7 @@ export default function DonationPage() {
                   </div>
                   <div className='space-y-1'>
                     <Label className='text-xs font-semibold'>Phone {!profile.phone && <span className='text-red-600'>(required)</span>}</Label>
-                    <Input value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} placeholder='+15551234567' />
+                    <PhoneInput value={profile.phone} onChange={value => setProfile(p => ({ ...p, phone: value }))} placeholder='Enter phone number' />
                   </div>
                   <div className='md:col-span-2 space-y-1'>
                     <Label className='text-xs font-semibold'>Address {!profile.address && <span className='text-red-600'>(required)</span>}</Label>
@@ -832,11 +833,10 @@ export default function DonationPage() {
                   </div>
                   <div className='space-y-1'>
                     <Label className='text-xs font-semibold'>Phone Number</Label>
-                    <Input
-                      type='tel'
+                    <PhoneInput
                       value={donorPhone}
-                      onChange={e => setDonorPhone(e.target.value)}
-                      placeholder='+1234567890'
+                      onChange={value => setDonorPhone(value)}
+                      placeholder='Enter phone number'
                     />
                   </div>
                   <div className='space-y-1'>

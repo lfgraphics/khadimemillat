@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { PhoneInput } from '@/components/ui/phone-input'
 import ScrapperAssignmentModal from '@/components/ScrapperAssignmentModal'
 import { Loader2, Phone, MapPin, Calendar, User } from 'lucide-react'
 import { toast } from 'sonner'
@@ -182,7 +183,7 @@ export default function VerifyRequestsPage() {
             </div>
             <div>
               <label className='block mb-1 font-medium'>Phone</label>
-              <input className='w-full border rounded px-2 py-1 bg-background' value={editForm.phone} onChange={e=> setEditForm(f=> ({...f, phone: e.target.value}))} />
+              <PhoneInput value={editForm.phone} onChange={value => setEditForm(f => ({...f, phone: value}))} className="text-sm" />
             </div>
             <div>
               <label className='block mb-1 font-medium'>Requested Pickup</label>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Calendar, MapPin, Phone, FileText, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -349,14 +350,12 @@ const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> 
               Contact Phone
               <span className="text-destructive">*</span>
             </Label>
-            <Input
+            <PhoneInput
               id="phone"
-              type="tel"
               value={formData.phone}
-              onChange={(e) => handleInputChange('phone', e.target.value)}
+              onChange={(value) => handleInputChange('phone', value)}
               placeholder="Enter contact phone number"
               disabled={disabled || isSubmitting}
-              aria-invalid={!!validationErrors.phone}
               className={cn(validationErrors.phone && "border-destructive")}
             />
             {validationErrors.phone && (

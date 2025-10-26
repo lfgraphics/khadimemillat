@@ -8,10 +8,15 @@ const isPublicRoute = createRouteMatcher([
     '/campaign(.*)',
     '/welfare-programs(.*)',
     '/donors',
+    '/about',
+    '/activities(.*)',
+    '/thank-you(.*)',
+    '/thank-you',
     '/donate(.*)',
     '/our-services(.*)',
     '/api/public(.*)',
-    '/api/receipts(.*)'
+    '/api/receipts(.*)',
+    '/api/upload/cloudinary(.*)'
 ])
 
 // Define protected routes and their allowed roles

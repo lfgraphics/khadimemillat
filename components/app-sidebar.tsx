@@ -19,7 +19,9 @@ import {
     BellDot,
     MessageSquare,
     ScanLine as Scan,
-    ShoppingBag
+    ShoppingBag,
+    Info,
+    Image as ImageIcon
 } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
@@ -143,6 +145,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild tooltip="Activities">
+                                    <Link href="/admin/activities">
+                                        <ImageIcon className="h-4 w-4" />
+                                        <span>Manage Activities</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
                         </SidebarMenu>
                     </SidebarGroup>
                 </RoleGuard>
@@ -214,6 +224,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 <Link href="/marketplace">
                                     <Store className="h-4 w-4" />
                                     <span>Marketplace</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild tooltip="About Us">
+                                <Link href="/about">
+                                    <Info className="h-4 w-4" />
+                                    <span>About Us</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild tooltip="Activities">
+                                <Link href="/activities">
+                                    <ImageIcon className="h-4 w-4" />
+                                    <span>Activities</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>

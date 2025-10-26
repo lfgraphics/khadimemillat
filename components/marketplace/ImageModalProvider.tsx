@@ -72,7 +72,7 @@ export function ImageModalProvider({ children }: { children: React.ReactNode }) 
         <ImageModalContext.Provider value={{ openModal }}>
             {children}
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogContent className="max-w-4xl max-h-[90vh] w-[95vw] p-0 overflow-hidden bg-black/95 border-0">
+                <DialogContent className="max-w-6xl max-h-[95vh] w-[95vw] p-0 overflow-hidden border-0">
                     {images.length > 0 && (
                         <div className="relative w-full h-full flex items-center justify-center">
                             {/* Main Image */}
@@ -132,13 +132,20 @@ export function ImageModalProvider({ children }: { children: React.ReactNode }) 
                                     </>
                                 )}
                             </div>
-                            
+
                             {/* Image Counter */}
                             {images.length > 1 && (
                                 <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
                                     {currentIndex + 1} / {images.length}
                                 </div>
                             )}
+
+                            {/* Keyboard Navigation Hint */}
+                            {/* {images.length > 1 && (
+                                <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-xs opacity-75">
+                                    Use ← → keys or swipe to navigate
+                                </div>
+                            )} */}
                             
                             {/* Thumbnail Navigation */}
                             {images.length > 1 && (
@@ -176,6 +183,9 @@ export function ImageModalProvider({ children }: { children: React.ReactNode }) 
 
 export function useImageModal() {
     const ctx = useContext(ImageModalContext)
-    if (!ctx) throw new Error("useImageModal must be used inside ImageModalProvider")
+    if (!ctx) {
+        console.warn("useImageModal must be used inside ImageModalProvider")
+        return { openModal: () => {} }
+    }
     return ctx
 }

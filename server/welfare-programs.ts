@@ -40,13 +40,22 @@ export interface CampaignWithStats {
   updatedAt: string
 }
 
-export async function getWelfarePrograms(includeStats = false): Promise<WelfareProgramWithStats[]> {
+export async function getWelfarePrograms(includeStats = false, limit?: number, skip?: number): Promise<WelfareProgramWithStats[]> {
   try {
     await connectDB()
-    
-    const programs = await WelfareProgram.find({ isActive: true })
+
+    let query = WelfareProgram.find({ isActive: true })
       .sort({ displayOrder: 1, createdAt: -1 })
-      .lean()
+
+    if (skip !== undefined) {
+      query = query.skip(skip)
+    }
+
+    if (limit !== undefined) {
+      query = query.limit(limit)
+    }
+
+    const programs = await query.lean()
 
     if (!includeStats) {
       return programs.map(program => ({
@@ -61,16 +70,16 @@ export async function getWelfarePrograms(includeStats = false): Promise<WelfareP
     // Get aggregated stats for each program
     const programsWithStats = await Promise.all(
       programs.map(async (program) => {
-        const campaigns = await Campaign.find({ 
-          programId: (program as any)._id, 
-          isActive: true 
+        const campaigns = await Campaign.find({
+          programId: (program as any)._id,
+          isActive: true
         }).lean()
-        
-        const donations = await CampaignDonation.find({ 
-          programId: (program as any)._id, 
-          status: 'completed' 
+
+        const donations = await CampaignDonation.find({
+          programId: (program as any)._id,
+          status: 'completed'
         }).lean()
-        
+
         const totalRaised = donations.reduce((sum, donation) => sum + donation.amount, 0)
         // Count unique supporters by donorId (for logged in users) and donorEmail (for logged out users)
         const uniqueSupporters = new Set()
@@ -82,7 +91,7 @@ export async function getWelfarePrograms(includeStats = false): Promise<WelfareP
           }
         })
         const totalSupporters = uniqueSupporters.size
-        
+
         return {
           ...(program as any),
           _id: (program as any)._id.toString(),
@@ -92,7 +101,7 @@ export async function getWelfarePrograms(includeStats = false): Promise<WelfareP
         }
       })
     )
-    
+
     return programsWithStats
   } catch (error) {
     console.error('Error fetching welfare programs:', error)
@@ -100,24 +109,34 @@ export async function getWelfarePrograms(includeStats = false): Promise<WelfareP
   }
 }
 
+export async function getTotalWelfareProgramsCount(): Promise<number> {
+  try {
+    await connectDB()
+    return await WelfareProgram.countDocuments({ isActive: true })
+  } catch (error) {
+    console.error('Error counting welfare programs:', error)
+    return 0
+  }
+}
+
 export async function getWelfareProgramBySlug(slug: string): Promise<WelfareProgramWithStats | null> {
   try {
     await connectDB()
-    
+
     const program = await WelfareProgram.findOne({ slug, isActive: true }).lean()
     if (!program) return null
-    
+
     // Get stats
-    const campaigns = await Campaign.find({ 
-      programId: (program as any)._id, 
-      isActive: true 
+    const campaigns = await Campaign.find({
+      programId: (program as any)._id,
+      isActive: true
     }).lean()
-    
-    const donations = await CampaignDonation.find({ 
-      programId: (program as any)._id, 
-      status: 'completed' 
+
+    const donations = await CampaignDonation.find({
+      programId: (program as any)._id,
+      status: 'completed'
     }).lean()
-    
+
     const totalRaised = donations.reduce((sum, donation) => sum + donation.amount, 0)
     // Count unique supporters by donorId (for logged in users) and donorEmail (for logged out users)
     const uniqueSupporters = new Set()
@@ -129,7 +148,7 @@ export async function getWelfareProgramBySlug(slug: string): Promise<WelfareProg
       }
     })
     const totalSupporters = uniqueSupporters.size
-    
+
     return {
       ...(program as any),
       _id: (program as any)._id.toString(),
@@ -146,17 +165,17 @@ export async function getWelfareProgramBySlug(slug: string): Promise<WelfareProg
 export async function getCampaignsByProgramSlug(programSlug: string, includeStats = false): Promise<CampaignWithStats[]> {
   try {
     await connectDB()
-    
+
     // First find the program by slug
     const program = await WelfareProgram.findOne({ slug: programSlug, isActive: true }).lean()
     if (!program) return []
-    
-    const campaigns = await Campaign.find({ 
-      programId: (program as any)._id, 
-      isActive: true 
+
+    const campaigns = await Campaign.find({
+      programId: (program as any)._id,
+      isActive: true
     })
-    .sort({ isFeatured: -1, startDate: -1 })
-    .lean()
+      .sort({ isFeatured: -1, startDate: -1 })
+      .lean()
 
     if (!includeStats) {
       return campaigns.map(campaign => ({
@@ -171,11 +190,11 @@ export async function getCampaignsByProgramSlug(programSlug: string, includeStat
 
     const campaignsWithStats = await Promise.all(
       campaigns.map(async (campaign) => {
-        const donations = await CampaignDonation.find({ 
-          campaignId: (campaign as any)._id, 
-          status: 'completed' 
+        const donations = await CampaignDonation.find({
+          campaignId: (campaign as any)._id,
+          status: 'completed'
         }).lean()
-        
+
         const raised = donations.reduce((sum, donation) => sum + donation.amount, 0)
         // Count unique supporters properly
         const uniqueSupporters = new Set()
@@ -188,7 +207,7 @@ export async function getCampaignsByProgramSlug(programSlug: string, includeStat
         })
         const supportersCount = uniqueSupporters.size
         const progress = campaign.goal > 0 ? (raised / campaign.goal) * 100 : 0
-        
+
         return {
           ...(campaign as any),
           _id: (campaign as any)._id.toString(),
@@ -199,7 +218,7 @@ export async function getCampaignsByProgramSlug(programSlug: string, includeStat
         }
       })
     )
-    
+
     return campaignsWithStats
   } catch (error) {
     console.error('Error fetching campaigns:', error)

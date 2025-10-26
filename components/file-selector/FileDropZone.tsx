@@ -271,7 +271,7 @@ export function FileDropZone({
                         <svg
                             className={cn(
                                 "mx-auto transition-all duration-200",
-                                "h-8 w-full sm:h-10 sm:w-10 md:h-12 md:w-12", // Responsive icon size
+                                "h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12", // Responsive icon size
                                 isDragOver ? "text-blue-500 scale-110" : "text-gray-400"
                             )}
                             stroke="currentColor"

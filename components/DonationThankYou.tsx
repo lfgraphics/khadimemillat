@@ -39,7 +39,7 @@ export default function DonationThankYou({
     // Create a new window with only the receipt content
     const receiptContent = generateReceiptContent()
     const printWindow = window.open('', '_blank', 'width=800,height=600')
-    
+
     if (printWindow) {
       printWindow.document.write(`
         <!DOCTYPE html>
@@ -84,16 +84,16 @@ export default function DonationThankYou({
   const handleDownload = async () => {
     try {
       toast.info('Generating receipt image...')
-      
+
       // Download receipt image from server-side API (PNG only)
       const imageResponse = await fetch(`/api/receipts/${donationId}/image`)
-      
+
       console.log('PNG endpoint response:', imageResponse.status, imageResponse.headers.get('content-type'))
-      
+
       if (imageResponse.ok) {
         const blob = await imageResponse.blob()
         console.log('Downloaded blob type:', blob.type, 'size:', blob.size)
-        
+
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
@@ -102,7 +102,7 @@ export default function DonationThankYou({
         a.click()
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
-        
+
         toast.success('Receipt downloaded successfully as PNG!')
       } else {
         // Fallback: Download HTML receipt
@@ -116,7 +116,7 @@ export default function DonationThankYou({
         a.click()
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
-        
+
         toast.success('Receipt downloaded as HTML!')
       }
     } catch (error) {
@@ -129,17 +129,17 @@ export default function DonationThankYou({
     setIsSharing(true)
     try {
       const shareText = `I just donated ${currency} ${amount.toLocaleString('en-IN')} to Khadim-e-Millat Welfare Foundation for ${programName}. Join me in supporting this noble cause!`
-      
+
       // Generate receipt image via server-side API (PNG only)
       toast.info('Generating receipt image...')
       const imageResponse = await fetch(`/api/receipts/${donationId}/image`)
-      
+
       console.log('PNG endpoint response:', imageResponse.status, imageResponse.headers.get('content-type'))
-      
+
       if (imageResponse.ok) {
         const blob = await imageResponse.blob()
         console.log('Downloaded blob type:', blob.type, 'size:', blob.size)
-        
+
         // Check if Web Share API is supported and can share files
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], 'receipt.png')] })) {
           const file = new File([blob], `donation-receipt-${receiptId}.png`, { type: 'image/png' })
@@ -209,7 +209,7 @@ export default function DonationThankYou({
 
   const handleWhatsAppShare = () => {
     const text = encodeURIComponent(
-      `🙏 Alhamdulillah! I just donated ${currency} ${amount.toLocaleString('en-IN')} to Khadim-e-Millat Welfare Foundation for ${programName}. ` +
+      `🤲 Alhamdulillah! I just donated ${currency} ${amount.toLocaleString('en-IN')} to Khadim-e-Millat Welfare Foundation for ${programName}. ` +
       `${wants80G ? 'Also received 80G tax exemption certificate. ' : ''}` +
       `May Allah accept our contributions and help those in need. 🤲`
     )
@@ -443,7 +443,7 @@ export default function DonationThankYou({
             <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            Donation Successful! 🙏
+            Donation Successful! 🤲
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
             Jazakallahu Khairan for your generous contribution
@@ -505,7 +505,7 @@ export default function DonationThankYou({
 
         {/* Action Buttons */}
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Button onClick={handlePrint} variant="outline" className="flex items-center gap-2">
               <Printer className="w-4 h-4" />
               Print Receipt
@@ -515,26 +515,22 @@ export default function DonationThankYou({
               Download
             </Button>
           </div>
-          
-          <div className="grid grid-cols-2 gap-4">
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Button onClick={handleEmailReceipt} variant="outline" className="flex items-center gap-2">
               <Mail className="w-4 h-4" />
               Email Receipt
             </Button>
-            <Button onClick={handleWhatsAppShare} variant="outline" className="flex items-center gap-2 bg-green-50 text-green-700 border-green-200 hover:bg-green-100">
-              <MessageSquare className="w-4 h-4" />
-              Share on WhatsApp
+            <Button
+              onClick={handleShare}
+              disabled={isSharing}
+              className="w-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center gap-2"
+            >
+              <Share2 className="w-4 h-4" />
+              {isSharing ? 'Sharing...' : 'Share Your Good Deed'}
             </Button>
           </div>
 
-          <Button
-            onClick={handleShare}
-            disabled={isSharing}
-            className="w-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center gap-2"
-          >
-            <Share2 className="w-4 h-4" />
-            {isSharing ? 'Sharing...' : 'Share Your Good Deed'}
-          </Button>
         </div>
 
         {/* Inspiring Message */}

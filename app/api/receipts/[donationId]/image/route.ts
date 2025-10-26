@@ -76,16 +76,23 @@ export async function GET(
         // Use remote URL for chromium pack (from GitHub releases)
         const chromiumPackUrl = 'https://github.com/Sparticuz/chromium/releases/download/v141.0.0/chromium-v141.0.0-pack.x64.tar'
         
+        console.log('Chromium pack URL:', chromiumPackUrl)
+        console.log('Starting executablePath call...')
+        
         const executablePath = await chromium.default.executablePath(chromiumPackUrl).catch((error) => {
           console.log('Failed to get executablePath from @sparticuz/chromium-min:', error.message)
+          console.log('Error details:', error)
           return null
         })
+        
+        console.log('executablePath call completed, result:', executablePath)
 
         if (!executablePath) {
           throw new Error('Could not determine Chrome executable path from @sparticuz/chromium-min')
         }
 
         console.log('Chrome executable path:', executablePath)
+        console.log('Launching browser with chromium args...')
         
         browser = await puppeteer.default.launch({
           args: [
@@ -102,8 +109,11 @@ export async function GET(
           executablePath,
           headless: true,
         })
+        
+        console.log('Browser launched successfully with chromium')
       } catch (chromiumError) {
         console.log('Chromium-min package failed:', chromiumError instanceof Error ? chromiumError.message : String(chromiumError))
+        console.log('Full chromium error:', chromiumError)
         
         // Fallback to system Chrome or bundled Puppeteer
         console.log('Attempting fallback to system Chrome or bundled Puppeteer...')
@@ -124,6 +134,8 @@ export async function GET(
           defaultViewport: { width: 1280, height: 720 },
           headless: true,
         })
+        
+        console.log('Fallback browser launched successfully')
       }
       
       // Generate HTML for the receipt (simplified for image generation)
@@ -146,15 +158,20 @@ export async function GET(
         razorpayPaymentId: donationData.razorpayPaymentId
       })
 
+      console.log('Creating new page...')
       const page = await browser.newPage()
       
       try {
+        console.log('Setting viewport...')
         await page.setViewport({ width: 800, height: 1200, deviceScaleFactor: 2 })
+        
+        console.log('Setting page content...')
         await page.setContent(receiptHTML, { 
           waitUntil: 'networkidle0',
           timeout: 15000
         })
         
+        console.log('Taking screenshot...')
         const imageBuffer = await page.screenshot({
           type: 'png',
           fullPage: true,
@@ -163,7 +180,9 @@ export async function GET(
           encoding: 'binary'
         })
         
+        console.log('Screenshot taken, closing browser...')
         await browser.close()
+        console.log('Browser closed successfully')
 
         // Ensure proper buffer handling and validate image
         const validImageBuffer = Buffer.isBuffer(imageBuffer) ? imageBuffer : Buffer.from(imageBuffer)

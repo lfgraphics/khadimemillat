@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export function Footer() {
     return (
-        <footer className="bg-card border-t border-border mt-16" data-testid="footer">
+        <footer className="bg-card border-t border-border" data-testid="footer">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <div className="grid md:grid-cols-4 gap-8">
                     {/* Foundation Info */}
@@ -57,11 +57,16 @@ export function Footer() {
                                     Donate
                                 </Link>
                             </li>
-                            {/* <li>
+                            <li>
                                 <Link href="/about" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-link-about">
                                     About Us
                                 </Link>
-                            </li> */}
+                            </li>
+                            <li>
+                                <Link href="/activities" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-link-activities">
+                                    Activities
+                                </Link>
+                            </li>
                         </ul>
                     </div>
 
@@ -89,9 +94,11 @@ export function Footer() {
                             </li>
                             <li className="flex items-center text-sm" data-testid="contact-email">
                                 <MapPin className="h-4 w-4 mr-2" />
-                                <span>
-                                    Gorakhpur, Uttar Pradesh, India
-                                </span>
+                                <Link href="https://share.google/iBzqMXM0KkT4DHKF3" target="_blank" className="hover:text-primary transition-colors">
+                                    <span>
+                                        Gorakhpur, Uttar Pradesh, India
+                                    </span>
+                                </Link>
                             </li>
                         </ul>
                     </div>

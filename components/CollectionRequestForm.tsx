@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { cn, safeJson } from "@/lib/utils";
 import { EnhancedFileSelector } from "@/components/file-selector";
 import { FileUploadError, UploadResult } from "@/components/file-selector/types";
@@ -203,13 +204,12 @@ export const CollectionRequestForm: React.FC<CollectionRequestFormProps> = ({
       </div>
       <div className="space-y-1">
         <label className="block text-sm font-medium">Phone<span className="text-red-500">*</span></label>
-        <input
-          type="tel"
-          className="w-full border rounded-md px-3 py-2 text-sm"
+        <PhoneInput
           value={form.phone}
-          onChange={(e) => updateField("phone", e.target.value)}
+          onChange={(value) => updateField("phone", value)}
           placeholder="Contact number"
           required
+          className="text-sm"
         />
       </div>
       

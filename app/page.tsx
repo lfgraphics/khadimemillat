@@ -5,6 +5,9 @@ import Loading from "@/components/Loading";
 import { AnimatedSection, AnimatedButton, AnimatedProcessSteps } from '@/components/animations';
 import WelfareProgramsSection from '@/components/WelfareProgramsSection';
 import DynamicHomeCounters from '@/components/DynamicHomeCounters';
+import HomeActivitiesServer from '@/components/HomeActivitiesServer';
+import { Button } from "@/components/ui";
+import Image from "next/image";
 
 export default function Home() {
   return (
@@ -15,20 +18,21 @@ export default function Home() {
           {/* <div className="absolute inset-0 bg-gradient-to-br from-[#0d89d7] to-[#001018]"></div> */}
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20" data-testid="hero-section">
             <div className="text-center">
-              <AnimatedSection 
-                variant="fade" 
-                delay={0.1} 
+              <AnimatedSection
+                variant="fade"
+                delay={0.1}
                 duration={0.6}
                 threshold={0.1}
               >
+                {/* <Image src="/android-chrome-512x512.png" width={250} height={250} alt="Logo" className="block mx-auto rounded-lg mb-4"></Image> */}
                 <h1 className="text-4xl md:text-6xl font-bold mb-6" data-testid="hero-title">
                   Transforming Communities
                 </h1>
               </AnimatedSection>
-              
-              <AnimatedSection 
-                variant="fade" 
-                delay={0.3} 
+
+              <AnimatedSection
+                variant="fade"
+                delay={0.3}
                 duration={0.6}
                 threshold={0.1}
               >
@@ -36,43 +40,46 @@ export default function Home() {
                   Established in 2021 in Gorakhpur, Uttar Pradesh. Through sustainable scrap collection and redistribution, we create opportunities and support those in need
                 </p>
               </AnimatedSection>
-              
-              <AnimatedSection 
+
+              {/* <AnimatedSection 
                 variant="slideUp" 
                 delay={0.5} 
                 duration={0.6}
                 threshold={0.1}
-              >
-                <div className="flex flex-row gap-4 justify-center">
-                  <Link href="/donate" data-testid="donate-button">
-                    <AnimatedButton 
-                      hoverScale={1.05}
-                      clickScale={0.95}
-                      className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-lg font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-11 px-8 py-4"
-                    >
-                      <Heart className="mr-2 h-5 w-5" />
-                      Donate
-                    </AnimatedButton>
-                  </Link>
-                  <Link href="/marketplace" data-testid="marketplace-button">
-                    <AnimatedButton 
-                      hoverScale={1.05}
-                      clickScale={0.95}
-                      className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-lg font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8 py-4 border border-primary-foreground/20"
-                    >
-                      <ShoppingBag className="mr-2 h-5 w-5" />
-                      Browse Marketplace
-                    </AnimatedButton>
-                  </Link>
-                </div>
-              </AnimatedSection>
+               >
+                  </AnimatedSection> */}
+              <div className="flex flex-row gap-4 justify-center">
+                <Link href="/donate" data-testid="donate-button">
+                  <Button
+                    variant="default"
+                    className="cursor-pointer h-10 inline-flex items-center justify-center whitespace-nowrap rounded-md text-lg font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80 px-8 py-4"
+                  >
+                    <Heart className="mr-2 h-5 w-5" />
+                    Donate
+                  </Button>
+                </Link>
+                <Link href="/marketplace">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-primary-foreground text-primary dark:text-popover-foreground hover:bg-primary-foreground">
+                    <ShoppingBag className="mr-2 h-5 w-5" />
+                    Browse Marketplace
+                  </Button>
+                </Link>
+                {/* <Link href="/about" data-testid="about-button">
+                  <Button
+                    variant="outline"
+                    className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-lg font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground hover:text-primary h-11 px-8 py-4"
+                  >
+                    Learn More
+                  </Button>
+                </Link> */}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Stats Section (suspense localized) */}
-      <section className="bg-card py-16" data-testid="stats-section">
+      <section className="bg-bg-background py-16" data-testid="stats-section">
         <SuspenseSection
           fallback={<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><Loading inline={false} label="Loading stats" /></div>}
         >
@@ -82,15 +89,25 @@ export default function Home() {
         </SuspenseSection>
       </section>
 
+
+      {/* Activities Section */}
+      <SuspenseSection
+        fallback={<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16"><Loading inline={false} label="Loading activities" /></div>}
+      >
+        <HomeActivitiesServer />
+      </SuspenseSection>
+
+
+
       {/* How It Works Section (suspense) */}
       <section className="bg-background py-16" data-testid="how-it-works-section">
         <SuspenseSection
           fallback={<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><Loading inline={false} label="Loading process" /></div>}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <AnimatedSection 
-              variant="fade" 
-              delay={0.1} 
+            <AnimatedSection
+              variant="fade"
+              delay={0.1}
               duration={0.5}
               threshold={0.2}
             >
@@ -114,7 +131,7 @@ export default function Home() {
                 },
                 {
                   icon: <Truck className="h-8 w-8 text-primary" />,
-                  title: "2. Verification & Collection", 
+                  title: "2. Verification & Collection",
                   description: "Our team verifies and collects your items, processing them for maximum utility",
                   testId: "step-collection"
                 },
@@ -146,9 +163,9 @@ export default function Home() {
       {/* Contact Section */}
       <section className="bg-background py-16" data-testid="contact-section">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <AnimatedSection 
-            variant="fade" 
-            delay={0.1} 
+          <AnimatedSection
+            variant="fade"
+            delay={0.1}
             duration={0.5}
             threshold={0.2}
           >
@@ -163,9 +180,9 @@ export default function Home() {
           </AnimatedSection>
 
           <div className="grid md:grid-cols-3 gap-8">
-            <AnimatedSection 
-              variant="slideUp" 
-              delay={0.2} 
+            <AnimatedSection
+              variant="slideUp"
+              delay={0.2}
               duration={0.5}
               threshold={0.2}
               className="h-full"
@@ -177,17 +194,23 @@ export default function Home() {
                   </div>
                   <h3 className="font-semibold mb-2 text-foreground">Phone</h3>
                 </div>
-                <div className="text-muted-foreground">
-                  <p>8081747259</p>
-                  <p>9935904289</p>
-                  <p>9839353055</p>
+                <div className="text-muted-foreground flex flex-col">
+                  <Link href="tel:+918081747259" className="hover:text-primary transition-colors">
+                    +91 80817 47259
+                  </Link>
+                  <Link href="tel:+919935904289" className="hover:text-primary transition-colors">
+                    +91 99359 04289
+                  </Link>
+                  <Link href="tel:+919839353055" className="hover:text-primary transition-colors">
+                    +91 98393 53055
+                  </Link>
                 </div>
               </div>
             </AnimatedSection>
 
-            <AnimatedSection 
-              variant="slideUp" 
-              delay={0.35} 
+            <AnimatedSection
+              variant="slideUp"
+              delay={0.35}
               duration={0.5}
               threshold={0.2}
               className="h-full"
@@ -200,14 +223,16 @@ export default function Home() {
                   <h3 className="font-semibold mb-2 text-foreground">Email</h3>
                 </div>
                 <div className="text-muted-foreground">
-                  <p>info@khadimemillat.org</p>
+                  <Link href="mailto:support@khadimemillat.org" className="hover:text-primary transition-colors">
+                    <p>support@khadimemillat.org</p>
+                  </Link>
                 </div>
               </div>
             </AnimatedSection>
 
-            <AnimatedSection 
-              variant="slideUp" 
-              delay={0.5} 
+            <AnimatedSection
+              variant="slideUp"
+              delay={0.5}
               duration={0.5}
               threshold={0.2}
               className="h-full"

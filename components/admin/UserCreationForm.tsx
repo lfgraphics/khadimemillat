@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -228,11 +229,10 @@ export const UserCreationForm: React.FC<UserCreationFormProps> = ({
               <Phone className="h-4 w-4" />
               Phone Number <span className="text-red-500">*</span>
             </Label>
-            <Input
+            <PhoneInput
               id="phone"
-              type="tel"
               value={form.phone}
-              onChange={(e) => updateField("phone", e.target.value)}
+              onChange={(value) => updateField("phone", value)}
               placeholder="Enter phone number"
               className={cn(fieldErrors.phone && "border-red-500")}
               disabled={loading}

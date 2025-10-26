@@ -56,11 +56,27 @@ export function validateUsername(username: string): boolean {
  */
 export async function checkUsernameAvailability(username: string): Promise<boolean> {
   try {
-    // Get the Clerk client instance with proper initialization
-    const client = typeof clerkClient === 'function' ? await (clerkClient as any)() : clerkClient;
+    // Check if Clerk environment variables are set
+    if (!process.env.CLERK_SECRET_KEY) {
+      console.error('CLERK_SECRET_KEY not found in environment variables');
+      // In development, we can skip username uniqueness check
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Skipping username availability check in development mode');
+        return true;
+      }
+      return false;
+    }
+
+    // Use clerkClient directly
+    const client = await clerkClient();
     
     if (!client || !client.users) {
       console.error('Clerk client not properly initialized');
+      // In development, we can skip username uniqueness check
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Skipping username availability check due to client initialization issue');
+        return true;
+      }
       return false;
     }
 
@@ -74,6 +90,11 @@ export async function checkUsernameAvailability(username: string): Promise<boole
     return users.data.length === 0;
   } catch (error) {
     console.error('Error checking username availability:', error);
+    // In development mode, assume username is available to allow testing
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Assuming username is available due to error in development mode');
+      return true;
+    }
     // If there's an error, assume username is not available to be safe
     return false;
   }
@@ -89,6 +110,20 @@ export async function generateUniqueUsername(options: GenerateUsernameOptions): 
   // Validate the base username format
   if (!validateUsername(baseUsername)) {
     throw new Error(`Generated username "${baseUsername}" does not meet format requirements`);
+  }
+
+  // In development mode or if Clerk is not available, add a random suffix to ensure uniqueness
+  if (process.env.NODE_ENV === 'development' || !process.env.CLERK_SECRET_KEY) {
+    const randomSuffix = Math.floor(Math.random() * 10000);
+    const fallbackUsername = generateUsername({
+      ...options,
+      suffix: randomSuffix.toString()
+    });
+    
+    if (validateUsername(fallbackUsername)) {
+      console.warn(`Using fallback username generation: ${fallbackUsername}`);
+      return fallbackUsername;
+    }
   }
 
   // Check if base username is available
@@ -129,7 +164,13 @@ export async function generateUniqueUsername(options: GenerateUsernameOptions): 
  * Utility function to extract phone digits and validate minimum length
  */
 export function extractPhoneDigits(phone: string): string {
-  const digits = phone.replace(/\D/g, '');
+  let digits = phone.replace(/\D/g, '');
+  
+  // Special case: If it's a 12-digit number starting with 91, strip the 91 prefix
+  if (digits.length === 12 && digits.startsWith('91')) {
+    digits = digits.slice(2); // Remove the first two digits (91)
+  }
+  
   if (digits.length < 4) {
     throw new Error('Phone number must contain at least 4 digits');
   }

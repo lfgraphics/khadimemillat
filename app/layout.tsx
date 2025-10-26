@@ -9,6 +9,8 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { Footer } from "@/components/footer";
 import WebPushManager from "@/components/WebPushManager";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import ClearRedirectCookie from "@/components/ClearRedirectCookie";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "Khadim-e-Millat Welfare Foundation",
@@ -87,7 +89,17 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <head />
+        <head>
+
+          <Script
+            type="text/javascript"
+            src="https://d3mkw6s8thqya7.cloudfront.net/integration-plugin.js"
+            id="aisensy-wa-widget"
+            widget-id="aaaose"
+          /
+          >
+
+        </head>
         <body>
           <ThemeProvider
             attribute="class"
@@ -100,8 +112,9 @@ export default function RootLayout({
                 <AppSidebar />
                 <SidebarInset>
                   <main className="min-h-screen">
-                    <SidebarTrigger className="fixed top-0 z-50" />
+                    <SidebarTrigger className="fixed top-0 z-50 scale-150" />
                     <WebPushManager />
+                    <ClearRedirectCookie />
                     {children}
                     <Toaster richColors closeButton />
                   </main>

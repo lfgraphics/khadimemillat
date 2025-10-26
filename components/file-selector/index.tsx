@@ -380,7 +380,7 @@ export function EnhancedFileSelector({
   }, [fileState.previewUrl, fileState.selectedFile?.name])
 
   return (
-    <div className={cn("w-full max-w-full", className)}>
+    <div className={cn("w-full max-w-full overflow-hidden", className)}>
       {/* Main file selector area - mobile-first responsive */}
       <div className="space-y-3 sm:space-y-4">
         {/* Enhanced File Drop Zone with drag-and-drop functionality */}

@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
+import { redirectToSignIn } from '@/lib/auth-redirect'
 import NotificationForm from '@/app/admin/notifications/NotificationForm'
 
 export const metadata: Metadata = {
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default async function ComposeNotificationPage() {
   const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
+  if (!userId) redirectToSignIn('/admin/notifications/compose')
 
   return (
     <div className="container mx-auto p-6">

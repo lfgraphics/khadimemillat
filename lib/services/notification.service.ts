@@ -15,7 +15,7 @@ import { log } from '../utils/logger'
 
 // Configure web-push with VAPID keys
 webpush.setVapidDetails(
-  `mailto:${process.env.SMTP_USER || 'noreply@example.com'}`,
+  `mailto:${process.env.SMTP_USER || 'support@khadimemillat.org'}`,
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
   process.env.VAPID_PRIVATE_KEY!
 )
