@@ -32,8 +32,7 @@ const collectionRequestSchema = new Schema<ICollectionRequest>({
   location: {
     type: {
       type: String,
-      enum: ['Point'],
-      default: 'Point'
+      enum: ['Point']
     },
     coordinates: {
       type: [Number], // [longitude, latitude]

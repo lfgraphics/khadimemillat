@@ -9,10 +9,22 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { PhoneInput } from '@/components/ui/phone-input'
 import ScrapperAssignmentModal from '@/components/ScrapperAssignmentModal'
-import { Loader2, Phone, MapPin, Calendar, User } from 'lucide-react'
+import { Loader2, Phone, MapPin, Calendar, User, Navigation } from 'lucide-react'
 import { toast } from 'sonner'
 
-interface RequestItem { _id: string; donor?: any; phone: string; address: string; requestedPickupTime: string; status: string; notes?: string }
+interface RequestItem { 
+  _id: string; 
+  donor?: any; 
+  phone: string; 
+  address: string; 
+  requestedPickupTime: string; 
+  status: string; 
+  notes?: string;
+  location?: {
+    type: 'Point';
+    coordinates: [number, number]; // [longitude, latitude]
+  }
+}
 
 export default function VerifyRequestsPage() {
   const [items, setItems] = useState<RequestItem[]>([])
@@ -144,6 +156,12 @@ export default function VerifyRequestsPage() {
               <p className='flex items-center gap-1'><Phone className='h-3 w-3' /> <a href={`tel:${r.phone}`} className='text-blue-600'>{r.phone}</a></p>
               <p className='flex items-center gap-1'><MapPin className='h-3 w-3' /> {r.address}</p>
               <p className='flex items-center gap-1'><Calendar className='h-3 w-3' /> {new Date(r.requestedPickupTime).toLocaleString()}</p>
+              {r.location && (
+                <div className='flex items-center gap-1 text-green-600 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded text-xs'>
+                  <Navigation className='h-3 w-3' /> 
+                  <span>GPS location available</span>
+                </div>
+              )}
               {r.notes && <p className='italic text-[11px]'>{r.notes}</p>}
             </div>
             <div className='mt-auto pt-2 flex gap-2 flex-wrap'>

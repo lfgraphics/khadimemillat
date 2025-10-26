@@ -6,14 +6,15 @@ import { safeJson } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Loader2, Phone, MapPin, Calendar, User, Navigation } from 'lucide-react'
+import { toast } from 'sonner'
 
-interface RequestItem { 
-  _id: string; 
-  donor?: any; 
-  donorDetails?: { name?: string; phone?: string }; 
-  phone: string; 
-  address: string; 
-  requestedPickupTime: string; 
+interface RequestItem {
+  _id: string;
+  donor?: any;
+  donorDetails?: { name?: string; phone?: string };
+  phone: string;
+  address: string;
+  requestedPickupTime: string;
   status: string;
   location?: {
     type: 'Point';
@@ -71,11 +72,25 @@ export default function ScrapperAssignedPage() {
   }
 
   const openMapsRoute = (request: RequestItem) => {
-    const destination = request.location?.coordinates 
-      ? `${request.location.coordinates[1]},${request.location.coordinates[0]}` // lat,lng format for Google Maps
-      : encodeURIComponent(request.address)
-    
-    const url = `https://maps.google.com/maps?q=${destination}&navigation=1`
+    let destination: string
+    let url: string
+
+    console.log(request._id)
+
+    if (request.location?.coordinates) {
+      // Use precise GPS coordinates if available - much more accurate!
+      const [lng, lat] = request.location.coordinates
+      destination = `${lat},${lng}`
+      console.log(destination)
+      url = `https://www.google.com/maps/dir//${destination}`
+      toast.success('Opening route to precise GPS location!' + destination)
+    } else {
+      // Fallback to address-based routing when GPS coordinates aren't available
+      destination = encodeURIComponent(request.address)
+      url = `https://www.google.com/maps/dir//${destination}`
+      toast.success('Opening route to address!')
+    }
+
     window.open(url, '_blank')
   }
 
@@ -103,20 +118,24 @@ export default function ScrapperAssignedPage() {
               <p className='flex items-center gap-1'><MapPin className='h-3 w-3' /> {r.address}</p>
               <p className='flex items-center gap-1'><Calendar className='h-3 w-3' /> {new Date(r.requestedPickupTime).toLocaleString()}</p>
               {r.location && (
-                <p className='flex items-center gap-1 text-green-600'>
-                  <Navigation className='h-3 w-3' /> Location available
-                </p>
+                <div className='flex items-center gap-1 text-green-600 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded text-xs'>
+                  <Navigation className='h-3 w-3' />
+                  <span>GPS location shared</span>
+                  <span className='text-muted-foreground'>
+                    ({r.location.coordinates[1].toFixed(4)}, {r.location.coordinates[0].toFixed(4)})
+                  </span>
+                </div>
               )}
             </div>
             <div className='mt-auto pt-2 space-y-2'>
-              <Button 
-                size='sm' 
-                variant='outline' 
-                className='w-full' 
+              <Button
+                size='sm'
+                variant={r.location ? 'default' : 'outline'}
+                className={`w-full ${r.location ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
                 onClick={() => openMapsRoute(r)}
               >
                 <Navigation className='h-3 w-3 mr-1' />
-                Navigate
+                Get Route
               </Button>
               <Dialog open={collectingId === r._id} onOpenChange={(o) => setCollectingId(o ? r._id : null)}>
                 <DialogTrigger asChild>

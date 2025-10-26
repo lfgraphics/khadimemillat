@@ -36,6 +36,11 @@ export default function DonationPage() {
   const [uploadedImages, setUploadedImages] = useState<UploadResult[]>([])
   const [fileUploadError, setFileUploadError] = useState<string | null>(null)
 
+  // Location sharing states
+  const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number; accuracy?: number } | null>(null)
+  const [locationLoading, setLocationLoading] = useState(false)
+  const [locationError, setLocationError] = useState<string | null>(null)
+
   // Money donation states
   const [donationAmount, setDonationAmount] = useState('')
   const [donorName, setDonorName] = useState('')
@@ -208,6 +213,58 @@ export default function DonationPage() {
     toast.success('Image removed')
   }
 
+  // Location sharing function
+  const shareCurrentLocation = async () => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by this browser')
+      toast.error('Location sharing not supported on this device')
+      return
+    }
+
+    setLocationLoading(true)
+    setLocationError(null)
+
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          reject,
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 300000 // 5 minutes
+          }
+        )
+      })
+
+      const location = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy
+      }
+
+      setCurrentLocation(location)
+      setLocationError(null)
+      toast.success('Location shared successfully! This will help our team find you.')
+    } catch (error: any) {
+      console.error('[LOCATION_ERROR]', error)
+      let errorMessage = 'Failed to get location'
+      
+      if (error.code === 1) {
+        errorMessage = 'Location access denied. Please enable location permissions.'
+      } else if (error.code === 2) {
+        errorMessage = 'Location unavailable. Please try again.'
+      } else if (error.code === 3) {
+        errorMessage = 'Location request timed out. Please try again.'
+      }
+      
+      setLocationError(errorMessage)
+      toast.error(errorMessage)
+    } finally {
+      setLocationLoading(false)
+    }
+  }
+
   const submitScrapRequest = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -242,12 +299,14 @@ export default function DonationPage() {
     try {
       await updateProfileIfMissing()
 
-      // Prepare request data with uploaded images
+      // Prepare request data with uploaded images and location
       const requestData = {
         requestedPickupTime: pickupTime,
         address: profile.address,
         phone: profile.phone,
         notes: notes,
+        // Include current location if available
+        ...(currentLocation && { currentLocation }),
         // Include uploaded image URLs and metadata
         images: uploadedImages.map(img => ({
           url: img.secureUrl,
@@ -279,6 +338,8 @@ export default function DonationPage() {
       setNotes('')
       setUploadedImages([])
       setPickupTime('')
+      setCurrentLocation(null)
+      setLocationError(null)
       toast.success('Collection request submitted successfully! You will receive confirmation shortly.')
 
       // Optionally show request ID if available
@@ -697,6 +758,53 @@ export default function DonationPage() {
                   <div className='md:col-span-2 space-y-1'>
                     <Label className='text-xs font-semibold'>Address {!profile.address && <span className='text-red-600'>(required)</span>}</Label>
                     <Textarea value={profile.address} onChange={e => setProfile(p => ({ ...p, address: e.target.value }))} placeholder='Street, City, ...' className='min-h-24' />
+                    
+                    {/* Location sharing section */}
+                    <div className='mt-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-700'>
+                      <div className='flex items-center justify-between mb-2'>
+                        <Label className='text-xs font-semibold text-blue-900 dark:text-blue-100'>📍 Share Current Location (Optional)</Label>
+                        <Button
+                          type='button'
+                          variant='outline'
+                          size='sm'
+                          onClick={shareCurrentLocation}
+                          disabled={locationLoading}
+                          className='text-xs h-7'
+                        >
+                          {locationLoading ? (
+                            <>
+                              <Loader2 className='h-3 w-3 animate-spin mr-1' />
+                              Getting...
+                            </>
+                          ) : currentLocation ? (
+                            '✅ Location Shared'
+                          ) : (
+                            '📍 Share Location'
+                          )}
+                        </Button>
+                      </div>
+                      
+                      {currentLocation && (
+                        <div className='text-xs text-green-700 dark:text-green-300 mb-1'>
+                          ✅ Location shared successfully! This will help our team find you more easily.
+                          {currentLocation.accuracy && (
+                            <span className='block text-muted-foreground'>
+                              Accuracy: ±{Math.round(currentLocation.accuracy)}m
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      
+                      {locationError && (
+                        <div className='text-xs text-red-600 mb-1'>
+                          ❌ {locationError}
+                        </div>
+                      )}
+                      
+                      <p className='text-xs text-blue-700 dark:text-blue-300'>
+                        Sharing your location helps our collection team find you faster. This is completely optional and your location is only used for pickup coordination.
+                      </p>
+                    </div>
                   </div>
                   <div className='space-y-1'>
                     <Label className='text-xs font-semibold'>Preferred Pickup Time</Label>

@@ -192,16 +192,20 @@ export async function getUsersByRole(role: string) {
 export async function createCollectionRequest(data: Partial<ICollectionRequest> & { currentLocation?: { latitude: number; longitude: number; accuracy?: number } }) {
   await connectDB()
   
-  // Handle current location if provided
+  // Handle current location if provided and valid
   const requestData: any = { ...data }
-  if (data.currentLocation) {
+  if (data.currentLocation && 
+      typeof data.currentLocation.latitude === 'number' && 
+      typeof data.currentLocation.longitude === 'number' &&
+      data.currentLocation.latitude >= -90 && data.currentLocation.latitude <= 90 &&
+      data.currentLocation.longitude >= -180 && data.currentLocation.longitude <= 180) {
     requestData.location = {
       type: 'Point',
       coordinates: [data.currentLocation.longitude, data.currentLocation.latitude]
     }
-    // Remove currentLocation from the data as it's transformed to location
-    delete requestData.currentLocation
   }
+  // Always remove currentLocation from the data as it's either transformed to location or invalid
+  delete requestData.currentLocation
   
   const doc = await CollectionRequest.create(requestData)
   // Notify admins/moderators new request
