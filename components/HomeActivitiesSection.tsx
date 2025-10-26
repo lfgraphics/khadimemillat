@@ -142,13 +142,6 @@ export default function HomeActivitiesSection({ activities, galleryImages }: Hom
               <DialogTitle>
                 Photo {selectedImageIndex !== null ? selectedImageIndex + 1 : 1} of {allImages.length}
               </DialogTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={closeImageDialog}
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </div>
           </DialogHeader>
           
@@ -185,11 +178,6 @@ export default function HomeActivitiesSection({ activities, galleryImages }: Hom
               {/* Image Counter */}
               <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
                 {selectedImageIndex + 1} / {allImages.length}
-              </div>
-              
-              {/* Keyboard Navigation Hint */}
-              <div className="absolute top-8 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-xs opacity-75">
-                Use ← → keys to navigate
               </div>
             </div>
           )}
