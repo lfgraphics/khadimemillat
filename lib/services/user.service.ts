@@ -70,7 +70,7 @@ export async function enrichClerkUsersWithMongoData(clerkUsers: any[], options?:
     const name = `${cu.firstName || ''} ${cu.lastName || ''}`.trim() || cu.username || cu.id
     const email = cu.primaryEmailAddress?.emailAddress
     const role = cu.publicMetadata?.role || 'user'
-    const phone = includePII ? (cu.privateMetadata as any)?.phone as string | undefined : undefined
+    const phone = includePII ? (cu.privateMetadata as any)?.phone.replace(/[^\d]/g, '') as string | undefined : undefined
     const address = includePII ? (cu.privateMetadata as any)?.address as string | undefined : undefined
     return { id: cu.id, name, email, role, phone, address }
   })

@@ -57,6 +57,9 @@ export default function DonationPage() {
   const [donationCauses, setDonationCauses] = useState<Array<{ value: string, label: string, description?: string }>>([])
   const [causesLoading, setCausesLoading] = useState(true)
 
+  // Form restoration state
+  const [formDataRestored, setFormDataRestored] = useState<{ scrap: boolean, money: boolean }>({ scrap: false, money: false })
+
   // 80G Tax exemption states
   const [wants80GReceipt, setWants80GReceipt] = useState(false)
   const [donorPAN, setDonorPAN] = useState('')
@@ -65,7 +68,66 @@ export default function DonationPage() {
   const [donorState, setDonorState] = useState('')
   const [donorPincode, setDonorPincode] = useState('')
 
+  // Form persistence keys
+  const SCRAP_FORM_KEY = 'kmwf_scrap_form_data'
+  const MONEY_FORM_KEY = 'kmwf_money_form_data'
 
+
+
+  // Load saved form data on page initialization
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.localStorage) return
+
+    try {
+      // Load scrap form data
+      const savedScrapData = localStorage.getItem(SCRAP_FORM_KEY)
+      if (savedScrapData) {
+        const scrapData = JSON.parse(savedScrapData)
+        // Only restore if data is recent (within 7 days)
+        const isRecent = scrapData.timestamp && (Date.now() - scrapData.timestamp) < 7 * 24 * 60 * 60 * 1000
+        if (isRecent) {
+          if (scrapData.pickupTime) setPickupTime(scrapData.pickupTime)
+          if (scrapData.notes) setNotes(scrapData.notes)
+          if (scrapData.profile?.phone) setProfile(p => ({ ...p, phone: scrapData.profile.phone }))
+          if (scrapData.profile?.address) setProfile(p => ({ ...p, address: scrapData.profile.address }))
+          setFormDataRestored(prev => ({ ...prev, scrap: true }))
+          console.log('[FORM_PERSISTENCE] Loaded scrap form data from localStorage')
+        } else {
+          // Clear old data
+          localStorage.removeItem(SCRAP_FORM_KEY)
+        }
+      }
+
+      // Load money form data
+      const savedMoneyData = localStorage.getItem(MONEY_FORM_KEY)
+      if (savedMoneyData) {
+        const moneyData = JSON.parse(savedMoneyData)
+        // Only restore if data is recent (within 7 days)
+        const isRecent = moneyData.timestamp && (Date.now() - moneyData.timestamp) < 7 * 24 * 60 * 60 * 1000
+        if (isRecent) {
+          if (moneyData.donationAmount) setDonationAmount(moneyData.donationAmount)
+          if (moneyData.selectedCause) setSelectedCause(moneyData.selectedCause)
+          if (moneyData.donorName) setDonorName(moneyData.donorName)
+          if (moneyData.donorEmail) setDonorEmail(moneyData.donorEmail)
+          if (moneyData.donorPhone) setDonorPhone(moneyData.donorPhone)
+          if (moneyData.notes) setNotes(moneyData.notes)
+          if (moneyData.wants80GReceipt !== undefined) setWants80GReceipt(moneyData.wants80GReceipt)
+          if (moneyData.donorPAN) setDonorPAN(moneyData.donorPAN)
+          if (moneyData.donorAddress) setDonorAddress(moneyData.donorAddress)
+          if (moneyData.donorCity) setDonorCity(moneyData.donorCity)
+          if (moneyData.donorState) setDonorState(moneyData.donorState)
+          if (moneyData.donorPincode) setDonorPincode(moneyData.donorPincode)
+          setFormDataRestored(prev => ({ ...prev, money: true }))
+          console.log('[FORM_PERSISTENCE] Loaded money form data from localStorage')
+        } else {
+          // Clear old data
+          localStorage.removeItem(MONEY_FORM_KEY)
+        }
+      }
+    } catch (error) {
+      console.error('[FORM_PERSISTENCE] Error loading saved form data:', error)
+    }
+  }, [])
 
   useEffect(() => {
     // Fetch dynamic causes from welfare programs
@@ -180,6 +242,30 @@ export default function DonationPage() {
     }
   }, [searchParams, donationCauses])
 
+  // Auto-save scrap form data when fields change
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (pickupTime || notes || profile.phone || profile.address) {
+        saveScrapFormData()
+      }
+    }, 500) // Debounce to avoid excessive saves
+
+    return () => clearTimeout(timeoutId)
+  }, [pickupTime, notes, profile.phone, profile.address])
+
+  // Auto-save money form data when fields change
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (donationAmount || donorName || donorEmail || donorPhone || notes ||
+        donorPAN || donorAddress || donorCity || donorState || donorPincode) {
+        saveMoneyFormData()
+      }
+    }, 500) // Debounce to avoid excessive saves
+
+    return () => clearTimeout(timeoutId)
+  }, [donationAmount, selectedCause, donorName, donorEmail, donorPhone, notes,
+    wants80GReceipt, donorPAN, donorAddress, donorCity, donorState, donorPincode])
+
   const missingInfo = !profile.phone || !profile.address
 
   const updateProfileIfMissing = async () => {
@@ -189,6 +275,73 @@ export default function DonationPage() {
     try {
       await fetch(`/api/protected/users/${encodeURIComponent(profile.donorId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: profile.phone, address: profile.address }) })
     } catch (e) { console.error(e) }
+  }
+
+  // Form persistence functions
+  const saveScrapFormData = () => {
+    if (typeof window === 'undefined') return
+    try {
+      // Check if localStorage is available
+      if (!window.localStorage) return
+
+      const scrapData = {
+        pickupTime,
+        notes,
+        profile: {
+          phone: profile.phone,
+          address: profile.address
+        },
+        timestamp: Date.now()
+      }
+      localStorage.setItem(SCRAP_FORM_KEY, JSON.stringify(scrapData))
+    } catch (error) {
+      console.error('[FORM_PERSISTENCE] Error saving scrap form data:', error)
+    }
+  }
+
+  const saveMoneyFormData = () => {
+    if (typeof window === 'undefined') return
+    try {
+      // Check if localStorage is available
+      if (!window.localStorage) return
+
+      const moneyData = {
+        donationAmount,
+        selectedCause,
+        donorName,
+        donorEmail,
+        donorPhone,
+        notes,
+        wants80GReceipt,
+        donorPAN,
+        donorAddress,
+        donorCity,
+        donorState,
+        donorPincode,
+        timestamp: Date.now()
+      }
+      localStorage.setItem(MONEY_FORM_KEY, JSON.stringify(moneyData))
+    } catch (error) {
+      console.error('[FORM_PERSISTENCE] Error saving money form data:', error)
+    }
+  }
+
+  const clearFormData = (formType: 'scrap' | 'money' | 'both' = 'both') => {
+    if (typeof window === 'undefined') return
+    try {
+      if (formType === 'scrap' || formType === 'both') {
+        localStorage.removeItem(SCRAP_FORM_KEY)
+        setFormDataRestored(prev => ({ ...prev, scrap: false }))
+        console.log('[FORM_PERSISTENCE] Cleared scrap form data')
+      }
+      if (formType === 'money' || formType === 'both') {
+        localStorage.removeItem(MONEY_FORM_KEY)
+        setFormDataRestored(prev => ({ ...prev, money: false }))
+        console.log('[FORM_PERSISTENCE] Cleared money form data')
+      }
+    } catch (error) {
+      console.error('[FORM_PERSISTENCE] Error clearing form data:', error)
+    }
   }
 
   // File upload handlers
@@ -270,7 +423,24 @@ export default function DonationPage() {
     e.preventDefault()
 
     if (!isSignedIn) {
-      toast.error('Please sign in to submit a collection request.')
+      // Save current form data before asking user to sign in
+      saveScrapFormData()
+      toast.info('Form data saved. Please sign in to continue.')
+
+      const wantsLogin = typeof window !== 'undefined'
+        ? window.confirm('Please sign in to submit a collection request. Press OK to sign in now.')
+        : true
+
+      if (wantsLogin) {
+        try {
+          openSignIn?.({})
+          toast.info('Please complete sign in to continue with your collection request')
+        } catch (signInError) {
+          console.error('[SIGN_IN_ERROR]', signInError)
+          toast.error('Failed to open sign in. Please try again.')
+        }
+      }
+
       setError('Please sign in to submit a collection request.')
       return
     }
@@ -341,6 +511,10 @@ export default function DonationPage() {
       setPickupTime('')
       setCurrentLocation(null)
       setLocationError(null)
+
+      // Clear saved form data on successful submission
+      clearFormData('scrap')
+
       toast.success('Collection request submitted successfully! You will receive confirmation shortly.')
 
       // Optionally show request ID if available
@@ -438,7 +612,7 @@ export default function DonationPage() {
         // Check if profile fields have been modified
         if (donorPhone.trim()) {
 
-          updateData.phone = normalizePhoneNumber(donorPhone.trim())
+          updateData.phone = normalizePhoneNumber(donorPhone.trim()).replace(/[^\d]/g, '')
         }
         if (donorAddress.trim()) updateData.address = donorAddress.trim()
         if (donorCity.trim()) updateData.city = donorCity.trim()
@@ -470,6 +644,10 @@ export default function DonationPage() {
           : true
         if (wantsLogin) {
           try {
+            // Save current form data before redirecting to login
+            saveMoneyFormData()
+            toast.info('Form data saved. You can continue after signing in.')
+
             openSignIn?.({})
             toast.info('Please complete sign in to continue with your donation')
           } catch (signInError) {
@@ -689,6 +867,10 @@ export default function DonationPage() {
             }
 
             setMoneySuccess(true)
+
+            // Clear saved form data on successful payment
+            clearFormData('money')
+
             toast.success('🎉 Donation completed successfully!')
             toast.success('Thank you for your generous contribution!')
 
@@ -746,6 +928,11 @@ export default function DonationPage() {
           <Card>
             <CardHeader className='pb-3'>
               <CardTitle className='text-base'>Scrap Collection Request</CardTitle>
+              {formDataRestored.scrap && (
+                <div className='text-xs text-green-600 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded border border-green-200 dark:border-green-700'>
+                  ✅ Form data restored from previous session
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               <form onSubmit={submitScrapRequest} className='space-y-5'>
@@ -895,6 +1082,11 @@ export default function DonationPage() {
           <Card>
             <CardHeader className='pb-3'>
               <CardTitle className='text-base'>Monetary Donation</CardTitle>
+              {formDataRestored.money && (
+                <div className='text-xs text-green-600 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded border border-green-200 dark:border-green-700'>
+                  ✅ Form data restored from previous session
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               <form onSubmit={submitMoneyDonation} className='space-y-5'>
