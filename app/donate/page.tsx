@@ -59,6 +59,7 @@ export default function DonationPage() {
 
   // Form restoration state
   const [formDataRestored, setFormDataRestored] = useState<{ scrap: boolean, money: boolean }>({ scrap: false, money: false })
+  const [tabRestored, setTabRestored] = useState(false)
 
   // 80G Tax exemption states
   const [wants80GReceipt, setWants80GReceipt] = useState(false)
@@ -71,6 +72,7 @@ export default function DonationPage() {
   // Form persistence keys
   const SCRAP_FORM_KEY = 'kmwf_scrap_form_data'
   const MONEY_FORM_KEY = 'kmwf_money_form_data'
+  const TAB_STATE_KEY = 'kmwf_donation_tab_state'
 
 
 
@@ -79,6 +81,24 @@ export default function DonationPage() {
     if (typeof window === 'undefined' || !window.localStorage) return
 
     try {
+      // Load saved tab state first
+      const savedTabState = localStorage.getItem(TAB_STATE_KEY)
+      if (savedTabState) {
+        const tabData = JSON.parse(savedTabState)
+        const isRecent = tabData.timestamp && (Date.now() - tabData.timestamp) < 24 * 60 * 60 * 1000 // 24 hours
+        if (isRecent && tabData.tab) {
+          setTab(tabData.tab)
+          setTabRestored(true)
+          console.log('[FORM_PERSISTENCE] Restored tab state:', tabData.tab)
+          // Show a welcome back message
+          setTimeout(() => {
+            toast.success(`Welcome back! Returned to ${tabData.tab === 'money' ? 'Money Donation' : 'Scrap Collection'} tab`)
+          }, 1000)
+        }
+        // Clear tab state after restoration
+        localStorage.removeItem(TAB_STATE_KEY)
+      }
+
       // Load scrap form data
       const savedScrapData = localStorage.getItem(SCRAP_FORM_KEY)
       if (savedScrapData) {
@@ -164,6 +184,15 @@ export default function DonationPage() {
 
     fetchCauses()
   }, [])
+
+  useEffect(() => {
+    // Check if user just signed in and show welcome message
+    if (isSignedIn && (formDataRestored.scrap || formDataRestored.money || tabRestored)) {
+      setTimeout(() => {
+        toast.success('🎉 Successfully signed in! You can now continue with your donation.')
+      }, 1500)
+    }
+  }, [isSignedIn, formDataRestored.scrap, formDataRestored.money, tabRestored])
 
   useEffect(() => {
     // Load current user profile; server reads phone/address from Clerk privateMetadata
@@ -326,6 +355,23 @@ export default function DonationPage() {
     }
   }
 
+  const saveTabState = () => {
+    if (typeof window === 'undefined') return
+    try {
+      // Check if localStorage is available
+      if (!window.localStorage) return
+
+      const tabData = {
+        tab,
+        timestamp: Date.now()
+      }
+      localStorage.setItem(TAB_STATE_KEY, JSON.stringify(tabData))
+      console.log('[FORM_PERSISTENCE] Saved tab state:', tab)
+    } catch (error) {
+      console.error('[FORM_PERSISTENCE] Error saving tab state:', error)
+    }
+  }
+
   const clearFormData = (formType: 'scrap' | 'money' | 'both' = 'both') => {
     if (typeof window === 'undefined') return
     try {
@@ -339,6 +385,8 @@ export default function DonationPage() {
         setFormDataRestored(prev => ({ ...prev, money: false }))
         console.log('[FORM_PERSISTENCE] Cleared money form data')
       }
+      // Always clear tab state when clearing form data
+      localStorage.removeItem(TAB_STATE_KEY)
     } catch (error) {
       console.error('[FORM_PERSISTENCE] Error clearing form data:', error)
     }
@@ -433,7 +481,18 @@ export default function DonationPage() {
 
       if (wantsLogin) {
         try {
-          openSignIn?.({})
+          // Save current tab state before redirecting
+          saveTabState()
+          
+          // Create redirect URL with current search params
+          const currentUrl = new URL(window.location.href)
+          const redirectUrl = `${currentUrl.pathname}${currentUrl.search}`
+          
+          openSignIn?.({
+            redirectUrl: redirectUrl,
+            afterSignInUrl: redirectUrl,
+            afterSignUpUrl: redirectUrl
+          })
           toast.info('Please complete sign in to continue with your collection request')
         } catch (signInError) {
           console.error('[SIGN_IN_ERROR]', signInError)
@@ -646,9 +705,19 @@ export default function DonationPage() {
           try {
             // Save current form data before redirecting to login
             saveMoneyFormData()
+            // Save current tab state before redirecting
+            saveTabState()
             toast.info('Form data saved. You can continue after signing in.')
 
-            openSignIn?.({})
+            // Create redirect URL with current search params
+            const currentUrl = new URL(window.location.href)
+            const redirectUrl = `${currentUrl.pathname}${currentUrl.search}`
+
+            openSignIn?.({
+              redirectUrl: redirectUrl,
+              afterSignInUrl: redirectUrl,
+              afterSignUpUrl: redirectUrl
+            })
             toast.info('Please complete sign in to continue with your donation')
           } catch (signInError) {
             console.error('[SIGN_IN_ERROR]', signInError)
@@ -928,9 +997,11 @@ export default function DonationPage() {
           <Card>
             <CardHeader className='pb-3'>
               <CardTitle className='text-base'>Scrap Collection Request</CardTitle>
-              {formDataRestored.scrap && (
+              {(formDataRestored.scrap || tabRestored) && (
                 <div className='text-xs text-green-600 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded border border-green-200 dark:border-green-700'>
-                  ✅ Form data restored from previous session
+                  ✅ {formDataRestored.scrap && tabRestored ? 'Form data and tab restored from previous session' : 
+                      formDataRestored.scrap ? 'Form data restored from previous session' : 
+                      'Returned to your previous tab'}
                 </div>
               )}
             </CardHeader>
@@ -1082,9 +1153,11 @@ export default function DonationPage() {
           <Card>
             <CardHeader className='pb-3'>
               <CardTitle className='text-base'>Monetary Donation</CardTitle>
-              {formDataRestored.money && (
+              {(formDataRestored.money || tabRestored) && (
                 <div className='text-xs text-green-600 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded border border-green-200 dark:border-green-700'>
-                  ✅ Form data restored from previous session
+                  ✅ {formDataRestored.money && tabRestored ? 'Form data and tab restored from previous session' : 
+                      formDataRestored.money ? 'Form data restored from previous session' : 
+                      'Returned to your previous tab'}
                 </div>
               )}
             </CardHeader>
