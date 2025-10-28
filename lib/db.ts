@@ -2,12 +2,6 @@ import mongoose from "mongoose";
 // Import all models to ensure they are registered
 import "@/models";
 
-const MONGODB_URI = process.env.MONGODB_URI || "";
-
-if (!MONGODB_URI) {
-    throw new Error("Please define the MONGODB_URI environment variable");
-}
-
 type ConnectionObject = {
     isConnected?: number;
 };
@@ -19,6 +13,13 @@ async function connectDB(): Promise<void> {
         console.log("Using existing database connection");
         return;
     }
+
+    const MONGODB_URI = process.env.MONGODB_URI || "";
+    
+    if (!MONGODB_URI) {
+        throw new Error("Please define the MONGODB_URI environment variable");
+    }
+
     try {
         const db = await mongoose.connect(MONGODB_URI, {});
         connection.isConnected = db.connections[0].readyState;
