@@ -55,13 +55,13 @@ export default function Home() {
                     className="cursor-pointer h-10 inline-flex items-center justify-center whitespace-nowrap rounded-md text-lg font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80 px-8 py-4"
                   >
                     <Heart className="mr-2 h-5 w-5" />
-                    Donate
+                    Donate Now
                   </Button>
                 </Link>
                 <Link href="/marketplace">
                   <Button size="lg" variant="outline" className="w-full sm:w-auto border-primary-foreground text-primary dark:text-popover-foreground hover:bg-primary-foreground">
                     <ShoppingBag className="mr-2 h-5 w-5" />
-                    Browse Marketplace
+                    Marketplace
                   </Button>
                 </Link>
                 {/* <Link href="/about" data-testid="about-button">

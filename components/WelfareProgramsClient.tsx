@@ -7,7 +7,9 @@ import { AnimatedSection } from '@/components/animations'
 import { getDynamicIcon } from '@/lib/iconUtils'
 import MarkdownRenderer from '@/components/MarkdownRenderer'
 import { Button } from '@/components/ui/button'
+import { Share2 } from 'lucide-react'
 import { WelfareProgramWithStats } from '@/server/welfare-programs'
+import { toast } from 'sonner'
 
 interface WelfareProgramsClientProps {
     initialPrograms: WelfareProgramWithStats[]
@@ -41,6 +43,34 @@ export default function WelfareProgramsClient({
             console.error('Error loading more programs:', error)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleShare = async (program: WelfareProgramWithStats) => {
+        const shareData = {
+            title: `${program.title} - Khadim-Millat Welfare Foundation`,
+            text: `Support our ${program.title} program. Together we can make a difference in our community.`,
+            url: `${window.location.origin}/welfare-programs/${program.slug}`
+        }
+
+        try {
+            if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+                await navigator.share(shareData)
+            } else {
+                // Fallback: copy to clipboard
+                await navigator.clipboard.writeText(shareData.url)
+                // You might want to show a toast notification here
+                console.log('Program URL copied to clipboard')
+            }
+        } catch (error) {
+            console.error('Error sharing:', error)
+            // Fallback: copy to clipboard
+            try {
+                await navigator.clipboard.writeText(shareData.url)
+                toast.success('Program URL copied to clipboard')
+            } catch (clipboardError) {
+                console.error('Failed to copy to clipboard:', clipboardError)
+            }
         }
     }
 
@@ -134,11 +164,23 @@ export default function WelfareProgramsClient({
                                 </Link>
 
                                 <div className="p-6 pt-0">
-                                    <Button asChild className="w-full" variant="secondary" data-testid={`donate-${program.slug}`}>
-                                        <Link href={`/donate?program=${encodeURIComponent(program.slug)}`}>
-                                            Donate Now
-                                        </Link>
-                                    </Button>
+                                    <div className="flex gap-2">
+                                        <Button asChild className="flex-1" variant="secondary" data-testid={`donate-${program.slug}`}>
+                                            <Link href={`/donate?program=${encodeURIComponent(program.slug)}`}>
+                                                Donate Now
+                                            </Link>
+                                        </Button>
+                                        <Button
+                                            onClick={() => handleShare(program)}
+                                            variant="outline"
+                                            size="icon"
+                                            className="shrink-0"
+                                            data-testid={`share-${program.slug}`}
+                                            title="Share this program"
+                                        >
+                                            <Share2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         </AnimatedSection>
