@@ -273,7 +273,7 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      <Menu className="md:hidden" />
+      <Menu className="md:hidden scale-120 m-2" />
       <PanelLeftIcon className="hidden md:block" />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>

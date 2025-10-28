@@ -1,4 +1,4 @@
-import { Facebook, Twitter, Instagram, Phone, Mail, Globe, MapPin } from "lucide-react";
+import { Facebook, Twitter, Instagram, Phone, Mail, Globe, MapPin, Youtube } from "lucide-react";
 import Link from "next/link";
 
 export function Footer() {
@@ -25,8 +25,11 @@ export function Footer() {
                             Established in 2021 in Gorakhpur, Uttar Pradesh, transforming communities through sustainable scrap collection and welfare programs.
                             Every donation creates opportunities for those in need.
                         </p>
-                        <div className="space-x-4 hidden" data-testid="footer-social-links">
-                            <Link href="#" className="text-muted-foreground hover:text-primary transition-colors" data-testid="social-facebook">
+                        <div className="space-x-4 flex" data-testid="footer-social-links">
+                            <Link href="https://www.youtube.com/@muftidawoodqasmiofficial" className="text-muted-foreground hover:text-primary transition-colors" data-testid="social-facebook">
+                                <Youtube className="h-5 w-5" />
+                            </Link>
+                            <Link href="https://www.facebook.com/p/Khadim-e-Millat-Welfare-Foundation-61557994989166/" className="text-muted-foreground hover:text-primary transition-colors" data-testid="social-facebook">
                                 <Facebook className="h-5 w-5" />
                             </Link>
                             <Link href="#" className="text-muted-foreground hover:text-primary transition-colors" data-testid="social-twitter">
