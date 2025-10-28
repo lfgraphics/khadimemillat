@@ -106,8 +106,8 @@ export async function sendDonationThankYouNotifications(donation: any) {
         }
 
         const emailSubject = wants80G ?
-            `🤲 Thank you for your donation - 80G Certificate #${certificate80GInfo?.certificateNumber || donationId.toString().slice(-8)}` :
-            `🤲 Thank you for your donation - Receipt #${donationId.toString().slice(-8)}`
+            `Thank you for your donation - 80G Certificate #${certificate80GInfo?.certificateNumber || donationId.toString().slice(-8)}` :
+            `Thank you for your donation - Receipt #${donationId.toString().slice(-8)}`
 
         // Send email notification if email provided
         if (donorEmail && userNotificationPrefs.email) {
@@ -169,7 +169,7 @@ export async function sendDonationThankYouNotifications(donation: any) {
   Registered Office: New Delhi, India | Charitable Trust Registration: DL/2019/123456
 </div>`
 
-                const emailTitle = wants80G ? '🏛️ Thank You for Your Donation - 80G Certificate Included!' : '🤲 Thank You for Your Donation!'
+                const emailTitle = wants80G ? '🏛️ Thank You for Your Donation - 80G Certificate Included!' : 'Thank You for Your Donation!'
 
                 const emailHtml = emailService.generateDefaultBrandedEmail({
                     title: emailTitle,
@@ -219,7 +219,7 @@ export async function sendDonationThankYouNotifications(donation: any) {
                         console.error('[DONATION_WHATSAPP_WITH_IMAGE_FAILED]', whatsappResult.error)
                         
                         // Enhanced fallback message with 80G information if applicable
-                        let fallbackMessage = `🤲 *Assalamu Alaikum ${donorName}*\n\nAlhamdulillah! Your generous donation has been received successfully.\n\n💰 *Amount:* ${currency} ${amount.toLocaleString('en-IN')}\n📋 *Receipt ID:* ${donationId.toString().slice(-8)}\n🏛️ *Program:* ${programName || campaignName || 'General Donation'}\n📅 *Date:* ${new Date().toLocaleDateString('en-IN')}`
+                        let fallbackMessage = `*Assalamu Alaikum ${donorName}*\n\nAlhamdulillah! Your generous donation has been received successfully.\n\n💰 *Amount:* ${currency} ${amount.toLocaleString('en-IN')}\n📋 *Receipt ID:* ${donationId.toString().slice(-8)}\n🏛️ *Program:* ${programName || campaignName || 'General Donation'}\n📅 *Date:* ${new Date().toLocaleDateString('en-IN')}`
                         
                         if (wants80G) {
                             fallbackMessage += `\n\n🏛️ *80G Tax Certificate:* Will be generated and sent separately\n💳 *PAN Required:* Yes (for tax exemption)`
@@ -266,7 +266,7 @@ export async function sendDonationThankYouNotifications(donation: any) {
             const user = await User.findOne({ email: donorEmail }).select('clerkUserId').lean()
             if (user && (user as any).clerkUserId) {
                 await notificationService.notifyUsers([(user as any).clerkUserId], {
-                    title: '🤲 Thank You for Your Donation!',
+                    title: 'Thank You for Your Donation!',
                     body: `Your donation of ${currency} ${amount} has been received successfully. Receipt ID: ${donationId.toString().slice(-8)}`,
                     url: `/donations/${donationId}`,
                     type: 'donation_success'

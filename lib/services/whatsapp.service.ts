@@ -105,7 +105,7 @@ class WhatsAppService {
 
     // Use your approved "Donation Confirmation" campaign for all message types
     // For simple text messages, we can use a basic text campaign
-    const campaignName = options.type === 'image' ? "Donation Confirmation" : "api_text_campaign" // Your approved campaigns
+    const campaignName = options.type === 'image' ? "Donation Confirmation Message" : "api_text_campaign" // Your approved campaigns
 
     // Extract template parameters from the message if it contains donation data
     let templateParams: string[] = []

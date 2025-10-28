@@ -1,4 +1,5 @@
 "use client";
+import { normalizePhoneNumber } from '@/lib/utils/phone'
 import React, { useState, useEffect } from 'react';
 import { safeJson } from '@/lib/utils';
 import { useUser, useClerk, useSignIn } from '@clerk/nextjs';
@@ -51,11 +52,11 @@ export default function DonationPage() {
   const [selectedCause, setSelectedCause] = useState('sadqa') // Default to first cause
   const [moneySubmitting, setMoneySubmitting] = useState(false)
   const [moneySuccess, setMoneySuccess] = useState(false)
-  
+
   // Dynamic causes state
-  const [donationCauses, setDonationCauses] = useState<Array<{value: string, label: string, description?: string}>>([])
+  const [donationCauses, setDonationCauses] = useState<Array<{ value: string, label: string, description?: string }>>([])
   const [causesLoading, setCausesLoading] = useState(true)
-  
+
   // 80G Tax exemption states
   const [wants80GReceipt, setWants80GReceipt] = useState(false)
   const [donorPAN, setDonorPAN] = useState('')
@@ -63,7 +64,7 @@ export default function DonationPage() {
   const [donorCity, setDonorCity] = useState('')
   const [donorState, setDonorState] = useState('')
   const [donorPincode, setDonorPincode] = useState('')
-  
+
 
 
   useEffect(() => {
@@ -98,7 +99,7 @@ export default function DonationPage() {
         setCausesLoading(false)
       }
     }
-    
+
     fetchCauses()
   }, [])
 
@@ -149,17 +150,17 @@ export default function DonationPage() {
   useEffect(() => {
     const p = searchParams?.get('program')
     if (!p || donationCauses.length === 0) return
-    
+
     setProgramSlug(p)
     const lower = p.toLowerCase()
-    
+
     // Try to find exact match first
     const exactMatch = donationCauses.find(cause => cause.value === lower)
     if (exactMatch) {
       setSelectedCause(exactMatch.value)
       return
     }
-    
+
     // Fallback to partial matching
     if (lower.includes('zakat')) {
       const zakatCause = donationCauses.find(c => c.value.includes('zakat'))
@@ -249,7 +250,7 @@ export default function DonationPage() {
     } catch (error: any) {
       console.error('[LOCATION_ERROR]', error)
       let errorMessage = 'Failed to get location'
-      
+
       if (error.code === 1) {
         errorMessage = 'Location access denied. Please enable location permissions.'
       } else if (error.code === 2) {
@@ -257,7 +258,7 @@ export default function DonationPage() {
       } else if (error.code === 3) {
         errorMessage = 'Location request timed out. Please try again.'
       }
-      
+
       setLocationError(errorMessage)
       toast.error(errorMessage)
     } finally {
@@ -398,28 +399,27 @@ export default function DonationPage() {
     if (wants80GReceipt) {
       const panValue = donorPAN.trim().toUpperCase()
       console.log('[80G_VALIDATION] PAN value:', panValue, 'Length:', panValue.length)
-      
+
       if (!panValue || !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panValue)) {
-        console.log('[80G_VALIDATION] PAN validation failed for:', panValue)
         toast.error('Please enter a valid PAN number (e.g., ABCDE1234F)');
         return
       }
-      
+
       if (!donorAddress.trim() || donorAddress.trim().length < 5) {
         toast.error('Please enter a complete address for 80G certificate');
         return
       }
-      
+
       if (!donorCity.trim() || donorCity.trim().length < 2) {
         toast.error('Please enter a valid city name');
         return
       }
-      
+
       if (!donorState.trim() || donorState.trim().length < 2) {
         toast.error('Please enter a valid state name');
         return
       }
-      
+
       if (!donorPincode.trim() || !/^[0-9]{6}$/.test(donorPincode.trim())) {
         toast.error('Please enter a valid 6-digit pincode');
         return
@@ -434,17 +434,17 @@ export default function DonationPage() {
       // Update user profile if logged in and details have changed
       if (isSignedIn && user) {
         const updateData: any = {}
-        
+
         // Check if profile fields have been modified
         if (donorPhone.trim()) {
-          const { normalizePhoneNumber } = await import('@/lib/utils/phone')
+
           updateData.phone = normalizePhoneNumber(donorPhone.trim())
         }
         if (donorAddress.trim()) updateData.address = donorAddress.trim()
         if (donorCity.trim()) updateData.city = donorCity.trim()
         if (donorState.trim()) updateData.state = donorState.trim()
         if (donorPincode.trim()) updateData.pincode = donorPincode.trim()
-        
+
         // Update profile if there are changes
         if (Object.keys(updateData).length > 0) {
           try {
@@ -761,7 +761,7 @@ export default function DonationPage() {
                   <div className='md:col-span-2 space-y-1'>
                     <Label className='text-xs font-semibold'>Address {!profile.address && <span className='text-red-600'>(required)</span>}</Label>
                     <Textarea value={profile.address} onChange={e => setProfile(p => ({ ...p, address: e.target.value }))} placeholder='Street, City, ...' className='min-h-24' />
-                    
+
                     {/* Location sharing section */}
                     <div className='mt-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-700'>
                       <div className='flex items-center justify-between mb-2'>
@@ -786,7 +786,7 @@ export default function DonationPage() {
                           )}
                         </Button>
                       </div>
-                      
+
                       {currentLocation && (
                         <div className='text-xs text-green-700 dark:text-green-300 mb-1'>
                           ✅ Location shared successfully! This will help our team find you more easily.
@@ -797,13 +797,13 @@ export default function DonationPage() {
                           )}
                         </div>
                       )}
-                      
+
                       {locationError && (
                         <div className='text-xs text-red-600 mb-1'>
                           ❌ {locationError}
                         </div>
                       )}
-                      
+
                       <p className='text-xs text-blue-700 dark:text-blue-300'>
                         Sharing your location helps our collection team find you faster. This is completely optional and your location is only used for pickup coordination.
                       </p>
@@ -968,7 +968,7 @@ export default function DonationPage() {
                       className='min-h-20'
                     />
                   </div>
-                  
+
                   {/* 80G Tax Exemption Section */}
                   <div className='md:col-span-2 border-t pt-4'>
                     <div className='flex items-center space-x-2 mb-4'>
@@ -982,7 +982,7 @@ export default function DonationPage() {
                         🏛️ I want 80G Tax Exemption Certificate
                       </Label>
                     </div>
-                    
+
                     {wants80GReceipt && (
                       <div className="space-y-4 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-700">
                         <div className="grid md:grid-cols-2 gap-4">
