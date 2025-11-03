@@ -58,7 +58,7 @@ export default function Home() {
       {/* Hero Section */}
       <section
         id="home"
-        className="relative overflow-hidden min-h-[55svh] flex items-center container mx-auto"
+        className="relative overflow-hidden min-h-[55svh] flex items-center"
       >
         {/* Animated Background Elements */}
         <div className="absolute inset-0">
@@ -82,7 +82,7 @@ export default function Home() {
         <div className="container mx-auto px-4 relative z-8">
           <div className="grid lg:grid-cols-2 gap-3 lg:gap-12 items-center">
             {/* Left Content */}
-            <div className="space-y-8 text-center lg:text-left mt-3">
+            <div className="space-y-8 text-center lg:text-left mt-3 order-2 lg:order-1">
               {/* <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full backdrop-blur-sm border border-primary/20">
                   <Sparkles className="w-4 h-4" />
                   <span className="text-sm">
@@ -141,7 +141,7 @@ export default function Home() {
             </div>
 
             {/* Right Content - Hero Image with Floating Cards */}
-            <div className="relative lg:h-[500px] flex items-center justify-center mb-3">
+            <div className="relative lg:h-[500px] flex items-center justify-center mb-3 order-1 lg:order-2">
               <div className="relative w-full max-w-xl">
                 {/* Main Hero Image */}
                 <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-border/50">
