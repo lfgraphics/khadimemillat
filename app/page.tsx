@@ -1,4 +1,4 @@
-import { Headphones, Heart, Mail, Phone, ShoppingBag, Store, Truck, Users } from "lucide-react";
+import { ArrowRight, Badge, Headphones, Heart, Mail, Phone, ShoppingBag, Store, Truck, Users } from "lucide-react";
 import Link from "next/link";
 import SuspenseSection from "@/components/SuspenseSection";
 import Loading from "@/components/Loading";
@@ -8,70 +8,146 @@ import DynamicHomeCounters from '@/components/DynamicHomeCounters';
 import HomeActivitiesServer from '@/components/HomeActivitiesServer';
 import { Button } from "@/components/ui";
 import Image from "next/image";
+import ChatBot from "@/components/BotpressWebChat";
 
 export default function Home() {
   return (
     <div className="min-h-screen">
+      <ChatBot />
       {/* Hero Section */}
-      <section className="relative text-primary-foreground bg-[url('/assets/landing.png')] bg-cover bg-center">
-        <div className="bg-gradient-to-tl from-primary to-primary/40 w-full h-full">
-          {/* <div className="absolute inset-0 bg-gradient-to-br from-[#0d89d7] to-[#001018]"></div> */}
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20" data-testid="hero-section">
-            <div className="text-center">
-              <AnimatedSection
-                variant="fade"
-                delay={0.1}
-                duration={0.6}
-                threshold={0.1}
-              >
-                {/* <Image src="/android-chrome-512x512.png" width={250} height={250} alt="Logo" className="block mx-auto rounded-lg mb-4"></Image> */}
-                <h1 className="text-4xl md:text-6xl font-bold mb-6" data-testid="hero-title">
-                  Transforming Communities
-                </h1>
-              </AnimatedSection>
+      <section
+        id="home"
+        className="relative overflow-hidden min-h-[85vh] flex items-center"
+      >
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-purple-500/5"></div>
+          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-xl animate-pulse delay-1000"></div>
+        </div>
 
-              <AnimatedSection
-                variant="fade"
-                delay={0.3}
-                duration={0.6}
-                threshold={0.1}
-              >
-                <p className="text-xl md:text-2xl mb-8 text-primary-foreground/90 max-w-3xl mx-auto" data-testid="hero-description">
-                  Established in 2021 in Gorakhpur, Uttar Pradesh. Through sustainable scrap collection and redistribution, we create opportunities and support those in need
-                </p>
-              </AnimatedSection>
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-15 dark:opacity-20">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)",
+              backgroundSize: "48px 48px",
+            }}
+          ></div>
+        </div>
 
-              {/* <AnimatedSection 
-                variant="slideUp" 
-                delay={0.5} 
-                duration={0.6}
-                threshold={0.1}
-               >
-                  </AnimatedSection> */}
-              <div className="flex flex-row gap-4 justify-center">
-                <Link href="/donate" data-testid="donate-button">
+        <div className="container mx-auto px-4 relative z-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <div className="space-y-8 text-center lg:text-left mt-3">
+              {/* <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full backdrop-blur-sm border border-primary/20">
+                  <Sparkles className="w-4 h-4" />
+                  <span className="text-sm">
+                    Transforming Lives Since 2021
+                  </span>
+                </div> */}
+
+              <h1 className="text-3xl md:text-4xl lg:text-5xl leading-tight">
+                Bridging
+                <span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
+                  Generosity & Need
+                </span>
+                Through Compassion
+              </h1>
+              <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                We bring compassionate donors together with verified families and individuals in need — supporting them through sponsorships, community drives, and sustainable programs funded by scrap recycling initiatives.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <Link href="/donate">
                   <Button
-                    variant="default"
-                    className="cursor-pointer h-10 inline-flex items-center justify-center whitespace-nowrap rounded-md text-lg font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80 px-8 py-4"
+                    size="lg"
+                    className="bg-primary hover:bg-primary/90 text-base h-14 px-8 group"
                   >
-                    <Heart className="mr-2 h-5 w-5" />
-                    Donate Now
+                    Start Donating
+                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
                 <Link href="/marketplace">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-primary-foreground text-primary dark:text-popover-foreground hover:bg-primary-foreground">
-                    <ShoppingBag className="mr-2 h-5 w-5" />
-                    Marketplace
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="gap-2 text-base h-14 px-8 border-border hover:bg-accent"
+                  >
+                    <ShoppingBag className="w-5 h-5" />
+                    Visit Marketplace
                   </Button>
                 </Link>
-                {/* <Link href="/about" data-testid="about-button">
-                  <Button
-                    variant="outline"
-                    className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-lg font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground hover:text-primary h-11 px-8 py-4"
-                  >
-                    Learn More
-                  </Button>
-                </Link> */}
+              </div>
+
+              {/* Trust Indicators */}
+              <div className="flex flex-wrap gap-6 justify-center lg:justify-start py-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span>100% Transparent</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span>Verified Programs</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span>Real Impact</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Content - Hero Image with Floating Cards */}
+            <div className="relative lg:h-[600px] flex items-center justify-center mb-3">
+              <div className="relative w-full max-w-xl">
+                {/* Main Hero Image */}
+                <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-border/50">
+                  <img
+                    src="assets/hero.png"
+                    alt="Community Impact"
+                    className="w-full h-auto object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent"></div>
+                </div>
+
+                {/* Floating Stats Card - Top Left */}
+                <div className="absolute left-2 md:-left-8 top-8 md:top-12 bg-card/75 backdrop-blur-sm p-3 md:p-5 rounded-2xl shadow-xl border border-border/50 animate-float">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                      <Heart className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+                    </div>
+                    <div>
+                      <div className="text-xl md:text-2xl">25K+</div>
+                      <div className="text-[10px] md:text-xs text-muted-foreground">
+                        Items Collected
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating Stats Card - Bottom Right */}
+                <div className="absolute right-2 md:-right-8 bottom-2 md:-bottom-8 bg-gradient-to-br from-primary to-purple-500 p-3 md:p-5 rounded-2xl shadow-2xl animate-float animation-delay-1000">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center">
+                      <ShoppingBag className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                    </div>
+                    <div className="text-white">
+                      <div className="text-xl md:text-2xl">1.2K+</div>
+                      <div className="text-[10px] md:text-xs opacity-90">
+                        Families Helped
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating Badge */}
+                <div className="absolute top-2 md:-top-4 right-8 md:right-12 animate-bounce-slow rounded-xl overflow-clip">
+                  <span className="bg-green-500 text-white px-3 py-1.5 md:px-4 md:py-2 shadow-lg text-xs md:text-sm">
+                    ✓ Verified Programs
+                  </span>
+                </div>
               </div>
             </div>
           </div>

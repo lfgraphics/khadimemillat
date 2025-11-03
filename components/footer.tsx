@@ -4,7 +4,7 @@ import Link from "next/link";
 export function Footer() {
     return (
         <footer className="bg-card border-t border-border" data-testid="footer">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-2">
                 <div className="grid md:grid-cols-4 gap-8">
                     {/* Foundation Info */}
                     <div className="md:col-span-2" data-testid="footer-foundation-info">

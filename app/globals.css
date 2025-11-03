@@ -347,6 +347,40 @@
     }
   }
 
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+
+  @keyframes bounce-slow {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-bounce-slow {
+    animation: bounce-slow 2s ease-in-out infinite;
+  }
+
+  .animation-delay-1000 {
+    animation-delay: 1s;
+  }
+
   /* Animation utility classes */
   .animate-shake {
     animation: shake 0.5s ease-in-out;
@@ -542,7 +576,9 @@ textarea:focus-visible {
 .dark .rich-text-editor .ql-editor h2,
 .dark .rich-text-editor .ql-editor h3 {
   color: hsl(var(--foreground));
-}/* Hid
+}
+
+/* Hid
 e scrollbars for activities carousel */
 .scrollbar-hide {
   -ms-overflow-style: none;

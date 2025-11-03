@@ -12,7 +12,7 @@ export default function manifest(): MetadataRoute.Manifest {
     return {
         name: 'Khadim-e-Millat Welfare Foundation',
         short_name: 'KMWF',
-        description: 'A community welfare platform facilitating sustainable scrap collection and redistribution to support welfare programs.',
+        description: 'A community welfare platform connects donors with families in need through sponsorships, zakat, and community welfare initiatives. Established in 2021 in Gorakhpur, Uttar Pradesh.',
         start_url: '/',
         scope: '/',
         display: 'standalone',

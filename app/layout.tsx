@@ -11,10 +11,11 @@ import WebPushManager from "@/components/WebPushManager";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import ClearRedirectCookie from "@/components/ClearRedirectCookie";
 import Script from "next/script";
+import TopNav from "@/components/TopNav";
 
 export const metadata: Metadata = {
   title: "Khadim-e-Millat Welfare Foundation",
-  description: "A community welfare platform facilitating sustainable scrap collection and redistribution to support welfare programs. Established in 2021 in Gorakhpur, Uttar Pradesh, helping families through donation management and marketplace services.",
+  description: "Sponsor a family or individual in need with Khadim-e-Millat Welfare Foundation—connecting generous donors with verified families since 2021.",
   keywords: ["welfare", "donation", "scrap collection", "community service", "Gorakhpur", "charity", "marketplace"],
   authors: [{ name: "Cod Vista", url: "https://www.codvista.com" }],
   creator: "Cod Vista",
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://www.khadimemillat.org'),
   openGraph: {
     title: "Khadim-e-Millat Welfare Foundation",
-    description: "A community welfare platform facilitating sustainable scrap collection and redistribution to support welfare programs.",
+    description: "Sponsor a family or individual in need with Khadim-e-Millat Welfare Foundation—connecting generous donors with verified families since 2021.",
     url: "/",
     siteName: "Khadim-e-Millat Welfare Foundation",
     images: [
@@ -45,7 +46,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Khadim-e-Millat Welfare Foundation",
-    description: "A community welfare platform facilitating sustainable scrap collection and redistribution to support welfare programs.",
+    description: "Sponsor a family or individual in need with Khadim-e-Millat Welfare Foundation—connecting generous donors with verified families since 2021.",
     images: ["/android-chrome-512x512.png"],
   },
   icons: {
@@ -111,8 +112,8 @@ export default function RootLayout({
               <SidebarProvider>
                 <AppSidebar />
                 <SidebarInset>
+                  <TopNav />
                   <main className="min-h-screen">
-                    <SidebarTrigger className="fixed top-0 z-50 scale-150" />
                     <WebPushManager />
                     <ClearRedirectCookie />
                     {children}

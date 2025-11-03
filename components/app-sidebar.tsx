@@ -50,7 +50,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const pathname = usePathname()
     
     return (
-        <Sidebar collapsible="icon" {...props}>
+        <Sidebar collapsible="icon" {...props} className="z-[2000]">
             <SidebarHeader>
                 <div className="flex items-center justify-between gap-2">
                     <TeamSwitcher />
