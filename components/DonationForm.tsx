@@ -84,13 +84,13 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
 
   // Load Razorpay script
   useEffect(() => {
-    const existing = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]') as HTMLScriptElement | null
+    const existing = document?.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]') as HTMLScriptElement | null
     if (existing) {
       if ((window as any).Razorpay) setRazorpayReady(true)
       else existing.addEventListener('load', () => setRazorpayReady(true))
       return
     }
-    const script = document.createElement('script')
+    const script = document?.createElement('script')
     script.src = 'https://checkout.razorpay.com/v1/checkout.js'
     script.async = true
     script.onload = () => setRazorpayReady(true)
@@ -98,7 +98,7 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
       console.error('Failed to load Razorpay')
       setRazorpayReady(false)
     }
-    document.body.appendChild(script)
+    document?.body.appendChild(script)
   }, [])
 
   // Generate dynamic email for logged out users based on name and phone

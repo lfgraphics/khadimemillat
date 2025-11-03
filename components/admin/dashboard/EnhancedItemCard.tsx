@@ -117,7 +117,7 @@ export default function EnhancedItemCard({
     if (needsConfirmation(action)) {
       if (action === 'sold') {
         // Open mark-as-sold modal instead of generic confirm
-        ;(document.getElementById(`mark-sold-trigger-${item.id}`) as HTMLButtonElement | null)?.click()
+        ;(document?.getElementById(`mark-sold-trigger-${item.id}`) as HTMLButtonElement | null)?.click()
         return
       }
       setConfirmationDialog({ open: true, action })

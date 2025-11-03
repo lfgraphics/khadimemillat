@@ -76,11 +76,11 @@ export default function DynamicDonationPage({
       if (typeof window !== 'undefined' && !(window as any).Razorpay) {
         toast.info('Loading secure payment gateway...')
         await new Promise<void>((resolve, reject) => {
-          const script = document.createElement('script')
+          const script = document?.createElement('script')
           script.src = 'https://checkout.razorpay.com/v1/checkout.js'
           script.onload = () => resolve()
           script.onerror = () => reject(new Error('Failed to load Razorpay'))
-          document.head.appendChild(script)
+          document?.head.appendChild(script)
         })
       }
 

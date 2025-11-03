@@ -71,7 +71,7 @@ function ChatBot() {
     return (
         <>
             <Container
-                connected={clientState !== 'disconnected'}
+                connected={clientState.toString() !== 'disconnected'}
                 style={{
                     zIndex: 1000,
                     width: '300px',
@@ -105,7 +105,7 @@ function ChatBot() {
                     disableComposer={false}
                     isReadOnly={false}
                     allowFileUpload={false}
-                    connected={clientState !== 'disconnected'}
+                    connected={clientState.toString() !== 'disconnected'}
                     sendMessage={client?.sendMessage}
                     uploadFile={client?.uploadFile}
                     composerPlaceholder="Type a message..."

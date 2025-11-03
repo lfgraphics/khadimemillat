@@ -56,7 +56,7 @@ export default function ChatWindow({ id }: { id: string }) {
 
         // Handle visibility changes
         const handleVisibilityChange = () => {
-            if (document.hidden) {
+            if (document?.hidden) {
                 markInactive()
             } else {
                 markActive()
@@ -68,7 +68,7 @@ export default function ChatWindow({ id }: { id: string }) {
             markInactive()
         }
 
-        document.addEventListener('visibilitychange', handleVisibilityChange)
+        document?.addEventListener('visibilitychange', handleVisibilityChange)
         window.addEventListener('beforeunload', handleBeforeUnload)
 
         // Periodic activity heartbeat
@@ -76,7 +76,7 @@ export default function ChatWindow({ id }: { id: string }) {
 
         return () => {
             markInactive()
-            document.removeEventListener('visibilitychange', handleVisibilityChange)
+            document?.removeEventListener('visibilitychange', handleVisibilityChange)
             window.removeEventListener('beforeunload', handleBeforeUnload)
             clearInterval(activityInterval)
         }
@@ -134,7 +134,7 @@ export default function ChatWindow({ id }: { id: string }) {
         )
 
         // Observe all message elements
-        const messageElements = document.querySelectorAll('[data-message-id]')
+        const messageElements = document?.querySelectorAll('[data-message-id]')
         messageElements.forEach(el => observer.observe(el))
 
         return () => observer.disconnect()
@@ -245,11 +245,11 @@ export default function ChatWindow({ id }: { id: string }) {
             if (!Razorpay) {
                 // load script if not present
                 await new Promise<void>((resolve, reject) => {
-                    const s = document.createElement('script')
+                    const s = document?.createElement('script')
                     s.src = 'https://checkout.razorpay.com/v1/checkout.js'
                     s.onload = () => resolve()
                     s.onerror = () => reject(new Error('Failed to load Razorpay'))
-                    document.body.appendChild(s)
+                    document?.body.appendChild(s)
                 })
             }
             const keyId = order.keyId as string

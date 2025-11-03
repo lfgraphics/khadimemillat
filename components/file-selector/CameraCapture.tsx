@@ -138,7 +138,7 @@ export function CameraCapture({
     if (!videoRef.current || error) return
 
     const video = videoRef.current
-    const canvas = document.createElement('canvas')
+    const canvas = document?.createElement('canvas')
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
 
@@ -205,9 +205,9 @@ export function CameraCapture({
       }
     }
 
-    document.addEventListener('file-selector-escape', handleEscape)
+    document?.addEventListener('file-selector-escape', handleEscape)
     return () => {
-      document.removeEventListener('file-selector-escape', handleEscape)
+      document?.removeEventListener('file-selector-escape', handleEscape)
     }
   }, [handleClose])
 

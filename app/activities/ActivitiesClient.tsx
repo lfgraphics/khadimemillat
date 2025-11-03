@@ -51,8 +51,8 @@ export default function ActivitiesClient({
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document?.addEventListener('keydown', handleKeyDown);
+    return () => document?.removeEventListener('keydown', handleKeyDown);
   }, [imageDialogOpen, selectedImageIndex]);
 
   const handleImageClick = (imagePath: string) => {

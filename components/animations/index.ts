@@ -11,7 +11,7 @@ export { AnimatedStatsSection } from './AnimatedStatsSection';
 export { AnimatedProcessSteps } from './AnimatedProcessSteps';
 export { AnimatedProgramCards } from './AnimatedProgramCards';
 export { AnimatedContactSection } from './AnimatedContactSection';
-export { AnimationPerformanceMonitor } from './AnimationPerformanceMonitor';
+// export { AnimationPerformanceMonitor } from './AnimationPerformanceMonitor';
 
 // Re-export animation utilities and hooks for convenience
 export {

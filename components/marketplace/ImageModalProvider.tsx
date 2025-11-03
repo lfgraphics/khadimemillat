@@ -64,8 +64,8 @@ export function ImageModalProvider({ children }: { children: React.ReactNode }) 
             }
         }
 
-        document.addEventListener('keydown', handleKeyDown)
-        return () => document.removeEventListener('keydown', handleKeyDown)
+        document?.addEventListener('keydown', handleKeyDown)
+        return () => document?.removeEventListener('keydown', handleKeyDown)
     }, [isOpen, images.length])
 
     return (

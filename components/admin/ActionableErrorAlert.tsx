@@ -43,7 +43,7 @@ export const ActionableErrorAlert: React.FC<ActionableErrorAlertProps> = ({
         icon: <Mail className="h-4 w-4" />,
         action: () => {
           // Focus on email field if it exists
-          const emailInput = document.getElementById('email') as HTMLInputElement;
+          const emailInput = document?.getElementById('email') as HTMLInputElement;
           if (emailInput) {
             emailInput.focus();
             emailInput.select();
@@ -59,7 +59,7 @@ export const ActionableErrorAlert: React.FC<ActionableErrorAlertProps> = ({
         icon: <Phone className="h-4 w-4" />,
         action: () => {
           // Focus on phone field if it exists
-          const phoneInput = document.getElementById('phone') as HTMLInputElement;
+          const phoneInput = document?.getElementById('phone') as HTMLInputElement;
           if (phoneInput) {
             phoneInput.focus();
             phoneInput.select();

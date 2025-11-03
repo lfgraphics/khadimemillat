@@ -174,7 +174,7 @@ class WhatsAppService {
       // Add document using AiSensy media object format
       requestBody.media = {
         url: options.documentUrl,
-        filename: options.documentFilename || 'document.pdf'
+        filename: options.documentFilename || 'document?.pdf'
       }
       if (options.documentCaption && options.documentCaption !== options.message) {
         requestBody.caption = options.documentCaption
@@ -307,7 +307,7 @@ class WhatsAppService {
       messageData.type = 'document'
       messageData.document = {
         link: options.documentUrl,
-        filename: options.documentFilename || 'document.pdf',
+        filename: options.documentFilename || 'document?.pdf',
         caption: options.documentCaption || options.message
       }
     } else {

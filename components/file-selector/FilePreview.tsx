@@ -82,12 +82,12 @@ export function FilePreview({
 
   // Download file
   const handleDownload = () => {
-    const link = document.createElement('a')
+    const link = document?.createElement('a')
     link.href = previewUrl
     link.download = file.name
-    document.body.appendChild(link)
+    document?.body.appendChild(link)
     link.click()
-    document.body.removeChild(link)
+    document?.body.removeChild(link)
     
     // Announce download
     announceToScreenReader(`Downloaded ${file.name}`)

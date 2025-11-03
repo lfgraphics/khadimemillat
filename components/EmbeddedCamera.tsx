@@ -13,8 +13,8 @@ import { Button } from "./ui/button";
 export async function openEmbeddedCamera(): Promise<string> {
     return new Promise((resolve, reject) => {
         // 1. Create a container <div> in the DOM
-        const container = document.createElement("div");
-        document.body.appendChild(container);
+        const container = document?.createElement("div");
+        document?.body.appendChild(container);
 
         // 2. Create a React root
         const root = ReactDOM.createRoot(container);
@@ -59,7 +59,7 @@ export async function openEmbeddedCamera(): Promise<string> {
                 if (!videoRef.current) return;
                 const video = videoRef.current;
 
-                const canvas = document.createElement("canvas");
+                const canvas = document?.createElement("canvas");
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
 

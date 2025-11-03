@@ -36,7 +36,7 @@ export default function HomeActivitiesSection({ activities, galleryImages }: Hom
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!imageDialogOpen || selectedImageIndex === null) return;
-      
+
       if (event.key === 'ArrowLeft') {
         event.preventDefault();
         navigateImage('prev');
@@ -49,8 +49,8 @@ export default function HomeActivitiesSection({ activities, galleryImages }: Hom
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document?.addEventListener('keydown', handleKeyDown);
+    return () => document?.removeEventListener('keydown', handleKeyDown);
   }, [imageDialogOpen, selectedImageIndex]);
 
   const handleImageClick = (imagePath: string) => {
@@ -66,7 +66,7 @@ export default function HomeActivitiesSection({ activities, galleryImages }: Hom
 
   const navigateImage = (direction: 'prev' | 'next') => {
     if (selectedImageIndex === null) return;
-    
+
     if (direction === 'prev') {
       setSelectedImageIndex(selectedImageIndex > 0 ? selectedImageIndex - 1 : allImages.length - 1);
     } else {
@@ -114,7 +114,7 @@ export default function HomeActivitiesSection({ activities, galleryImages }: Hom
                   </div>
                 ))}
               </div>
-              
+
               {/* Gradient fade on right */}
               <div className="absolute top-0 right-0 h-full w-16 bg-gradient-to-l from-card to-transparent pointer-events-none" />
             </div>
@@ -124,9 +124,12 @@ export default function HomeActivitiesSection({ activities, galleryImages }: Hom
           <AnimatedSection variant="slideUp" delay={0.3}>
             <div className="text-center mt-8">
               <Link href="/activities">
-                <Button size="lg" className="group">
+                <Button
+                  variant="outline"
+                  className="gap-2 border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground group"
+                >
                   View All Activities
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
             </div>
@@ -144,7 +147,7 @@ export default function HomeActivitiesSection({ activities, galleryImages }: Hom
               </DialogTitle>
             </div>
           </DialogHeader>
-          
+
           {selectedImageIndex !== null && (
             <div className="relative p-6 pt-0">
               <img
@@ -152,7 +155,7 @@ export default function HomeActivitiesSection({ activities, galleryImages }: Hom
                 alt={`Activity image ${selectedImageIndex + 1}`}
                 className="w-full h-auto max-h-[75vh] object-contain rounded-lg"
               />
-              
+
               {/* Navigation Buttons */}
               {allImages.length > 1 && (
                 <>
@@ -174,7 +177,7 @@ export default function HomeActivitiesSection({ activities, galleryImages }: Hom
                   </Button>
                 </>
               )}
-              
+
               {/* Image Counter */}
               <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
                 {selectedImageIndex + 1} / {allImages.length}

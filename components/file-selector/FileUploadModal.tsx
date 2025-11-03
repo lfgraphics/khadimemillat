@@ -167,9 +167,9 @@ export function FileUploadModal({
     }
 
     if (isOpen) {
-      document.addEventListener('file-selector-escape', handleEscape)
+      document?.addEventListener('file-selector-escape', handleEscape)
       return () => {
-        document.removeEventListener('file-selector-escape', handleEscape)
+        document?.removeEventListener('file-selector-escape', handleEscape)
       }
     }
   }, [isOpen, onClose])

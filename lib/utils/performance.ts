@@ -231,7 +231,7 @@ export const useAnimationQueue = (performanceScore: number) => {
 export const supportsHardwareAcceleration = (): boolean => {
   if (typeof window === 'undefined') return false;
   
-  const canvas = document.createElement('canvas');
+  const canvas = document?.createElement('canvas');
   const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
   
   return !!gl;

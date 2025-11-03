@@ -104,7 +104,7 @@ export default function MobileItemCard({
 
   const availableActions = getAvailableActions()
   const openSold = () => {
-    ;(document.getElementById(`mark-sold-trigger-${item.id}`) as HTMLButtonElement | null)?.click()
+    ;(document?.getElementById(`mark-sold-trigger-${item.id}`) as HTMLButtonElement | null)?.click()
   }
 
   return (

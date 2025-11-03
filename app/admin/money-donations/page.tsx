@@ -190,7 +190,7 @@ export default function MoneyDonationsPage() {
 
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
+    const a = document?.createElement('a')
     a.href = url
     a.download = `money-donations-${new Date().toISOString().split('T')[0]}.csv`
     a.click()

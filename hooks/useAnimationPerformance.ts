@@ -151,11 +151,6 @@ export const useAnimationPerformance = (): boolean => {
     
     setMetrics(prev => ({ ...prev, ...newMetrics }));
     setCanAnimate(shouldAnimate);
-    
-    // Log performance metrics in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Animation Performance Metrics:', newMetrics);
-    }
   }, [measureFrameRate, calculatePerformanceScore]);
 
   useEffect(() => {

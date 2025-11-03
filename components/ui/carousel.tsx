@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CarouselImage {
+  title?: string;
   id: string;
   src: string;
   alt: string;
@@ -43,7 +44,7 @@ export function Carousel({
     const checkMobile = () => {
       setIsMobile(window.innerWidth < mobileBreakpoint);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -73,10 +74,10 @@ export function Carousel({
   // Navigation functions
   const goToSlide = useCallback((index: number) => {
     if (isTransitioning) return;
-    
+
     setIsTransitioning(true);
     setCurrentIndex(index);
-    
+
     setTimeout(() => {
       setIsTransitioning(false);
     }, 300);
@@ -108,7 +109,7 @@ export function Carousel({
       startAutoPlay();
       return;
     }
-    
+
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
@@ -118,7 +119,7 @@ export function Carousel({
     } else if (isRightSwipe) {
       goToPrevious();
     }
-    
+
     startAutoPlay();
   };
 
@@ -132,7 +133,7 @@ export function Carousel({
     <div
       ref={carouselRef}
       className={cn(
-        "relative w-full overflow-hidden rounded-lg bg-gray-100",
+        "relative mx-auto w-[98%] overflow-hidden rounded-lg",
         className
       )}
       onMouseEnter={handleMouseEnter}
@@ -151,7 +152,7 @@ export function Carousel({
         {images.map((image, index) => (
           <div
             key={image.id}
-            className="w-full flex-shrink-0"
+            className="w-full flex-shrink-0 relative overflow-clip"
           >
             <img
               src={isMobile && image.mobileSrc ? image.mobileSrc : image.src}
@@ -163,6 +164,11 @@ export function Carousel({
               )}
               loading={index === 0 ? "eager" : "lazy"}
             />
+            {image.title &&
+              <div className="absolute bottom-0 left-0 w-full text-white bg-gradient-to-r from-black/45 via-black/20 to-transparent px-2">
+                {image.title}
+              </div>
+            }
           </div>
         ))}
       </div>
@@ -173,16 +179,16 @@ export function Carousel({
           <button
             onClick={goToPrevious}
             disabled={isTransitioning}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-black/40 text-white hover:bg-black/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Previous image"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          
+
           <button
             onClick={goToNext}
             disabled={isTransitioning}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-black/40 text-white hover:bg-black/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Next image"
           >
             <ChevronRight className="w-5 h-5" />
@@ -199,9 +205,9 @@ export function Carousel({
               onClick={() => goToSlide(index)}
               disabled={isTransitioning}
               className={cn(
-                "w-3 h-3 rounded-full transition-all duration-200 disabled:cursor-not-allowed",
+                "w-2 h-2 rounded-full transition-all duration-200 disabled:cursor-not-allowed",
                 index === currentIndex
-                  ? "bg-white scale-110"
+                  ? "bg-white w-6"
                   : "bg-white/50 hover:bg-white/75"
               )}
               aria-label={`Go to slide ${index + 1}`}

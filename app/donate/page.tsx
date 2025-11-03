@@ -483,11 +483,11 @@ export default function DonationPage() {
         try {
           // Save current tab state before redirecting
           saveTabState()
-          
+
           // Create redirect URL with current search params
           const currentUrl = new URL(window.location.href)
           const redirectUrl = `${currentUrl.pathname}${currentUrl.search}`
-          
+
           openSignIn?.({
             redirectUrl: redirectUrl,
             afterSignInUrl: redirectUrl,
@@ -888,11 +888,11 @@ export default function DonationPage() {
       if (typeof window !== 'undefined' && !(window as any).Razorpay) {
         toast.info('Loading secure payment gateway...')
         await new Promise<void>((resolve, reject) => {
-          const script = document.createElement('script')
+          const script = document?.createElement('script')
           script.src = 'https://checkout.razorpay.com/v1/checkout.js'
           script.onload = () => resolve()
           script.onerror = () => reject(new Error('Failed to load payment gateway'))
-          document.head.appendChild(script)
+          document?.head.appendChild(script)
         })
       }
 
@@ -999,8 +999,8 @@ export default function DonationPage() {
               <CardTitle className='text-base'>Scrap Collection Request</CardTitle>
               {(formDataRestored.scrap || tabRestored) && (
                 <div className='text-xs text-green-600 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded border border-green-200 dark:border-green-700'>
-                  ✅ {formDataRestored.scrap && tabRestored ? 'Form data and tab restored from previous session' : 
-                      formDataRestored.scrap ? 'Form data restored from previous session' : 
+                  ✅ {formDataRestored.scrap && tabRestored ? 'Form data and tab restored from previous session' :
+                    formDataRestored.scrap ? 'Form data restored from previous session' :
                       'Returned to your previous tab'}
                 </div>
               )}
@@ -1155,8 +1155,8 @@ export default function DonationPage() {
               <CardTitle className='text-base'>Monetary Donation</CardTitle>
               {(formDataRestored.money || tabRestored) && (
                 <div className='text-xs text-green-600 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded border border-green-200 dark:border-green-700'>
-                  ✅ {formDataRestored.money && tabRestored ? 'Form data and tab restored from previous session' : 
-                      formDataRestored.money ? 'Form data restored from previous session' : 
+                  ✅ {formDataRestored.money && tabRestored ? 'Form data and tab restored from previous session' :
+                    formDataRestored.money ? 'Form data restored from previous session' :
                       'Returned to your previous tab'}
                 </div>
               )}

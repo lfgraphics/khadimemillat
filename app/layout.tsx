@@ -13,6 +13,8 @@ import ClearRedirectCookie from "@/components/ClearRedirectCookie";
 import Script from "next/script";
 import TopNav from "@/components/TopNav";
 
+import ChatBotWrapper from "@/components/ChatBotWrapper";
+
 export const metadata: Metadata = {
   title: "Khadim-e-Millat Welfare Foundation",
   description: "Sponsor a family or individual in need with Khadim-e-Millat Welfare Foundation—connecting generous donors with verified families since 2021.",
@@ -102,6 +104,7 @@ export default function RootLayout({
 
         </head>
         <body>
+          <ChatBotWrapper />
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -110,7 +113,7 @@ export default function RootLayout({
           >
             <NotificationProvider>
               <SidebarProvider>
-                <AppSidebar />
+                {/* <AppSidebar /> */}
                 <SidebarInset>
                   <TopNav />
                   <main className="min-h-screen">

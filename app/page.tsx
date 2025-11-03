@@ -1,4 +1,4 @@
-import { ArrowRight, Badge, Headphones, Heart, Mail, Phone, ShoppingBag, Store, Truck, Users } from "lucide-react";
+import { ArrowRight, ClipboardCheck, Headphones, Heart, HeartHandshake, Mail, Package, Phone, ShoppingBag, Store, Truck, Users } from "lucide-react";
 import Link from "next/link";
 import SuspenseSection from "@/components/SuspenseSection";
 import Loading from "@/components/Loading";
@@ -6,18 +6,59 @@ import { AnimatedSection, AnimatedButton, AnimatedProcessSteps } from '@/compone
 import WelfareProgramsSection from '@/components/WelfareProgramsSection';
 import DynamicHomeCounters from '@/components/DynamicHomeCounters';
 import HomeActivitiesServer from '@/components/HomeActivitiesServer';
-import { Button } from "@/components/ui";
-import Image from "next/image";
-import ChatBot from "@/components/BotpressWebChat";
+import { Badge, Button, Carousel } from "@/components/ui";
+
+const processSteps = [
+  {
+    number: "01",
+    title: "Donate Your Items",
+    description:
+      "Share items you no longer need. From clothes to books, furniture to electronics - every contribution makes a difference in someone's life.",
+    icon: Package,
+    color: "from-blue-500 to-cyan-500",
+  },
+  {
+    number: "02",
+    title: "We Collect & Verify",
+    description:
+      "Our dedicated team picks up donations from your doorstep, carefully inspects each item, and ensures quality standards are met.",
+    icon: ClipboardCheck,
+    color: "from-purple-500 to-pink-500",
+  },
+  {
+    number: "03",
+    title: "Reaches Those in Need",
+    description:
+      "Verified items are distributed through our marketplace to families and individuals who need them most, creating real impact.",
+    icon: Truck,
+    color: "from-orange-500 to-red-500",
+  },
+];
+
+const images = [
+  {
+    id: '1',
+    src: '/carousel/scrap.jpeg',
+    mobileSrc: '/carousel/scrap.jpeg',
+    alt: 'Description 1',
+    title: 'Scrap Collection Drive',
+  },
+  {
+    id: '2',
+    src: '/carousel/scrap.jpeg',
+    mobileSrc: '/carousel/scrap.jpeg',
+    alt: 'Description 1',
+    title: 'Recycling for a Cause',
+  },
+];
 
 export default function Home() {
   return (
     <div className="min-h-screen">
-      <ChatBot />
       {/* Hero Section */}
       <section
         id="home"
-        className="relative overflow-hidden min-h-[85vh] flex items-center"
+        className="relative overflow-hidden min-h-[85vh] flex items-center container mx-auto"
       >
         {/* Animated Background Elements */}
         <div className="absolute inset-0">
@@ -66,18 +107,18 @@ export default function Home() {
                     size="lg"
                     className="bg-primary hover:bg-primary/90 text-base h-14 px-8 group"
                   >
-                    Start Donating
+                    Donate Now
                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
-                <Link href="/marketplace">
+                <Link href="/#">
                   <Button
                     size="lg"
                     variant="outline"
-                    className="gap-2 text-base h-14 px-8 border-border hover:bg-accent"
+                    className="gap-2 text-base h-14 px-8 border-border hover:bg-accent group"
                   >
-                    <ShoppingBag className="w-5 h-5" />
-                    Visit Marketplace
+                    <HeartHandshake className="w-5 h-5 animate-bounce" />
+                    Sponsor Now
                   </Button>
                 </Link>
               </div>
@@ -143,10 +184,10 @@ export default function Home() {
                 </div>
 
                 {/* Floating Badge */}
-                <div className="absolute top-2 md:-top-4 right-8 md:right-12 animate-bounce-slow rounded-xl overflow-clip">
-                  <span className="bg-green-500 text-white px-3 py-1.5 md:px-4 md:py-2 shadow-lg text-xs md:text-sm">
+                <div className="absolute top-2 md:-top-4 right-8 md:right-12 animate-bounce-slow">
+                  <Badge className="bg-green-500 text-white px-3 py-1.5 md:px-4 md:py-2 shadow-lg text-xs md:text-sm">
                     ✓ Verified Programs
-                  </span>
+                  </Badge>
                 </div>
               </div>
             </div>
@@ -154,8 +195,18 @@ export default function Home() {
         </div>
       </section>
 
+      <Carousel
+        images={images}
+        autoPlayInterval={5000}
+        showIndicators={true}
+        showArrows={true}
+      />
+
       {/* Stats Section (suspense localized) */}
-      <section className="bg-bg-background py-16" data-testid="stats-section">
+      <section className="bg-bg-background py-16 pt-8 text-center" data-testid="stats-section">
+        <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
+          Our Impact
+        </Badge>
         <SuspenseSection
           fallback={<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><Loading inline={false} label="Loading stats" /></div>}
         >
@@ -176,55 +227,60 @@ export default function Home() {
 
 
       {/* How It Works Section (suspense) */}
-      <section className="bg-background py-16" data-testid="how-it-works-section">
-        <SuspenseSection
-          fallback={<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><Loading inline={false} label="Loading process" /></div>}
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <AnimatedSection
-              variant="fade"
-              delay={0.1}
-              duration={0.5}
-              threshold={0.2}
-            >
-              <div className="text-center mb-12">
-                <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4" data-testid="how-it-works-title">
-                  How Our Process Works
-                </h2>
-                <p className="text-lg text-muted-foreground max-w-2xl mx-auto" data-testid="how-it-works-description">
-                  A transparent, efficient system that maximizes impact and ensures every donation reaches those who need it most
-                </p>
-              </div>
-            </AnimatedSection>
+      <section className="py-20 bg-gradient-to-b from-card/50 to-background relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
+        </div>
 
-            <AnimatedProcessSteps
-              steps={[
-                {
-                  icon: <Phone className="h-8 w-8 text-primary" />,
-                  title: "1. Request Collection",
-                  description: "Submit a donation request through our app with your contact details and location",
-                  testId: "step-request"
-                },
-                {
-                  icon: <Truck className="h-8 w-8 text-primary" />,
-                  title: "2. Verification & Collection",
-                  description: "Our team verifies and collects your items, processing them for maximum utility",
-                  testId: "step-collection"
-                },
-                {
-                  icon: <Store className="h-8 w-8 text-primary" />,
-                  title: "3. Marketplace Distribution",
-                  description: "Items are listed on our marketplace, with proceeds supporting welfare programs",
-                  testId: "step-marketplace"
-                }
-              ]}
-              delay={0.2}
-              duration={0.5}
-              staggerDelay={0.15}
-              threshold={0.2}
-            />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
+              Scrap Process
+            </Badge>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl mb-4">
+              How It Works
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+              A seamless journey from donation to impact -
+              making giving easier than ever
+            </p>
           </div>
-        </SuspenseSection>
+
+          <div className="grid md:grid-cols-3 gap-8 lg:gap-12 max-w-6xl mx-auto">
+            {processSteps.map((step, index) => {
+              const Icon = step.icon;
+              return (
+                <div key={index} className="relative group">
+                  {/* Connection Line */}
+                  {index < processSteps.length - 1 && (
+                    <div className="absolute rotate-90 md:rotate-0 bottom-0 md:top-12 md:left-[60%] w-full h-0.5 bg-gradient-to-r from-primary/50 to-transparent z-0"></div>
+                  )}
+
+                  <div className="relative bg-card border border-border rounded-2xl p-8 hover:border-primary/50 transition-all hover:shadow-xl group-hover:-translate-y-2 duration-300">
+                    {/* Gradient Circle */}
+                    <div
+                      className={`relative w-24 h-24 bg-gradient-to-br ${step.color} rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg transform group-hover:scale-110 transition-transform`}
+                    >
+                      <Icon className="w-12 h-12 text-white" />
+                      <div className="absolute -top-3 -right-3 w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm shadow-lg">
+                        {step.number}
+                      </div>
+                    </div>
+
+                    <h3 className="text-xl mb-3 text-center">
+                      {step.title}
+                    </h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed text-center">
+                      {step.description}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </section>
 
       {/* Our Programs Section */}
@@ -234,6 +290,48 @@ export default function Home() {
         >
           <WelfareProgramsSection />
         </SuspenseSection>
+      </section>
+
+      <section
+        id="marketplace"
+        className="py-20 bg-gradient-to-br from-primary/10 via-purple-500/5 to-card relative overflow-hidden"
+      >
+        <div className="absolute inset-0 opacity-15">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)",
+              backgroundSize: "32px 32px",
+            }}
+          ></div>
+        </div>
+
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="w-20 h-20 bg-gradient-to-br from-primary to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+              <ShoppingBag className="w-10 h-10 text-white" />
+            </div>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl mb-4">
+              Visit Our Marketplace
+            </h2>
+            <p className="text-muted-foreground mb-8 max-w-2xl mx-auto text-lg leading-relaxed">
+              Browse our marketplace where verified donations
+              are available for those in need. Access
+              essential items including clothing, furniture,
+              books, and household goods.
+            </p>
+            <Link href="/marketplace">
+              <Button
+                size="lg"
+                className="gap-2 bg-primary hover:bg-primary/90 h-14 px-8 text-base"
+              >
+                <ShoppingBag className="w-5 h-5 animate-bounce" />
+                Explore Marketplace
+              </Button>
+            </Link>
+          </div>
+        </div>
       </section>
 
       {/* Contact Section */}

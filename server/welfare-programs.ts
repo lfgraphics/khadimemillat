@@ -44,7 +44,7 @@ export async function getWelfarePrograms(includeStats = false, limit?: number, s
   try {
     await connectDB()
 
-    let query = WelfareProgram.find({ isActive: true })
+    let query = WelfareProgram.find({ isActive: true, slug: { $nin: ['default-campaign', 'test-campaign', 'sadqa', 'zakat', 'organization-support'] } })
       .sort({ displayOrder: 1, createdAt: -1 })
 
     if (skip !== undefined) {
@@ -72,7 +72,8 @@ export async function getWelfarePrograms(includeStats = false, limit?: number, s
       programs.map(async (program) => {
         const campaigns = await Campaign.find({
           programId: (program as any)._id,
-          isActive: true
+          isActive: true,
+          slug: { $nin: ['default-campaign', 'test-campaign', 'sadqa', 'zakar', 'organization-support'] }
         }).lean()
 
         const donations = await CampaignDonation.find({

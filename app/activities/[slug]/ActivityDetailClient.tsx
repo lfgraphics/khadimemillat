@@ -47,8 +47,8 @@ export default function ActivityDetailClient({ activity }: ActivityDetailClientP
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document?.addEventListener('keydown', handleKeyDown);
+    return () => document?.removeEventListener('keydown', handleKeyDown);
   }, [imageDialogOpen, selectedImageIndex]);
 
   const handleImageClick = (index: number) => {

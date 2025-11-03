@@ -84,17 +84,17 @@ export const announceAnimationState = (
 ) => {
   if (typeof window === 'undefined') return;
   
-  const announcement = document.createElement('div');
+  const announcement = document?.createElement('div');
   announcement.setAttribute('aria-live', priority);
   announcement.setAttribute('aria-atomic', 'true');
   announcement.className = 'sr-only';
   announcement.textContent = message;
   
-  document.body.appendChild(announcement);
+  document?.body.appendChild(announcement);
   
   // Remove after announcement
   setTimeout(() => {
-    document.body.removeChild(announcement);
+    document?.body.removeChild(announcement);
   }, 1000);
 };
 
@@ -105,7 +105,7 @@ export const supportsAnimations = (): boolean => {
   if (typeof window === 'undefined') return false;
   
   // Check for CSS animation support
-  const testElement = document.createElement('div');
+  const testElement = document?.createElement('div');
   const animationSupport = 'animation' in testElement.style || 
                           'webkitAnimation' in testElement.style ||
                           'mozAnimation' in testElement.style;
@@ -225,7 +225,7 @@ export const keyboardNavigation = {
    * Focus management utilities
    */
   focusElement: (selector: string) => {
-    const element = document.querySelector(selector) as HTMLElement;
+    const element = document?.querySelector(selector) as HTMLElement;
     if (element) {
       element.focus();
     }
@@ -244,12 +244,12 @@ export const keyboardNavigation = {
     const handleTabKey = (e: KeyboardEvent) => {
       if (e.key === 'Tab') {
         if (e.shiftKey) {
-          if (document.activeElement === firstElement) {
+          if (document?.activeElement === firstElement) {
             e.preventDefault();
             lastElement.focus();
           }
         } else {
-          if (document.activeElement === lastElement) {
+          if (document?.activeElement === lastElement) {
             e.preventDefault();
             firstElement.focus();
           }

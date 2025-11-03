@@ -65,8 +65,8 @@ const SearchableDropDownSelect = ({
                 setOpen(false);
             }
         };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+        document?.addEventListener("mousedown", handleClickOutside);
+        return () => document?.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     // Handle keyboard events on dropdown container

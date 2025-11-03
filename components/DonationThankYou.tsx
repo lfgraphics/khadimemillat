@@ -41,7 +41,7 @@ export default function DonationThankYou({
     const printWindow = window.open('', '_blank', 'width=800,height=600')
 
     if (printWindow) {
-      printWindow.document.write(`
+      printWindow.document?.write(`
         <!DOCTYPE html>
         <html>
         <head>
@@ -74,7 +74,7 @@ export default function DonationThankYou({
         </body>
         </html>
       `)
-      printWindow.document.close()
+      printWindow.document?.close()
     } else {
       // Fallback to regular print
       window.print()
@@ -95,12 +95,12 @@ export default function DonationThankYou({
         console.log('Downloaded blob type:', blob.type, 'size:', blob.size)
 
         const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
+        const a = document?.createElement('a')
         a.href = url
         a.download = `donation-receipt-${receiptId}.png`
-        document.body.appendChild(a)
+        document?.body.appendChild(a)
         a.click()
-        document.body.removeChild(a)
+        document?.body.removeChild(a)
         URL.revokeObjectURL(url)
 
         toast.success('Receipt downloaded successfully as PNG!')
@@ -109,12 +109,12 @@ export default function DonationThankYou({
         const receiptContent = generateReceiptContent()
         const blob = new Blob([receiptContent], { type: 'text/html' })
         const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
+        const a = document?.createElement('a')
         a.href = url
         a.download = `donation-receipt-${receiptId}.html`
-        document.body.appendChild(a)
+        document?.body.appendChild(a)
         a.click()
-        document.body.removeChild(a)
+        document?.body.removeChild(a)
         URL.revokeObjectURL(url)
 
         toast.success('Receipt downloaded as HTML!')
@@ -152,12 +152,12 @@ export default function DonationThankYou({
         } else {
           // Fallback: Download the image and share text
           const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
+          const a = document?.createElement('a')
           a.href = url
           a.download = `donation-receipt-${receiptId}.png`
-          document.body.appendChild(a)
+          document?.body.appendChild(a)
           a.click()
-          document.body.removeChild(a)
+          document?.body.removeChild(a)
           URL.revokeObjectURL(url)
 
           // Try to share text if Web Share API supports it

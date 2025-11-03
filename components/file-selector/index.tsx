@@ -287,7 +287,7 @@ export function EnhancedFileSelector({
 
   // Handle fallback action (open file browser)
   const handleFallbackAction = useCallback(() => {
-    const input = document.createElement('input')
+    const input = document?.createElement('input')
     input.type = 'file'
     input.accept = acceptedTypes.join(',')
     input.onchange = async (e) => {
@@ -451,7 +451,7 @@ export function EnhancedFileSelector({
             onReplace={() => {
               resetState()
               // Trigger file selection again
-              const input = document.createElement('input')
+              const input = document?.createElement('input')
               input.type = 'file'
               input.accept = acceptedTypes.join(',')
               input.onchange = async (e) => {

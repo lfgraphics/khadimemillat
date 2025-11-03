@@ -14,11 +14,14 @@ export function announceToScreenReader(
     message: string,
     priority: LiveRegionType = 'polite'
 ): void {
+    // Only run on client side
+    if (typeof document === 'undefined') return
+    
     // Create or get existing live region
-    let liveRegion = document.getElementById(`file-selector-live-${priority}`)
+    let liveRegion = document?.getElementById(`file-selector-live-${priority}`)
 
     if (!liveRegion) {
-        liveRegion = document.createElement('div')
+        liveRegion = document?.createElement('div')
         liveRegion.id = `file-selector-live-${priority}`
         liveRegion.setAttribute('aria-live', priority)
         liveRegion.setAttribute('aria-atomic', 'true')
@@ -34,7 +37,7 @@ export function announceToScreenReader(
       white-space: nowrap !important;
       border: 0 !important;
     `
-        document.body.appendChild(liveRegion)
+        document?.body.appendChild(liveRegion)
     }
 
     // Clear and set new message
@@ -79,13 +82,13 @@ export function useFocusTrap(isActive: boolean) {
 
             if (event.shiftKey) {
                 // Shift + Tab
-                if (document.activeElement === firstElement) {
+                if (document?.activeElement === firstElement) {
                     event.preventDefault()
                     lastElement.focus()
                 }
             } else {
                 // Tab
-                if (document.activeElement === lastElement) {
+                if (document?.activeElement === lastElement) {
                     event.preventDefault()
                     firstElement.focus()
                 }
@@ -103,7 +106,7 @@ export function useFocusTrap(isActive: boolean) {
     useEffect(() => {
         if (isActive && containerRef.current) {
             // Store previous focus
-            previousFocusRef.current = document.activeElement as HTMLElement
+            previousFocusRef.current = document?.activeElement as HTMLElement
 
             // Focus first focusable element
             const focusableElements = getFocusableElements(containerRef.current)
@@ -112,10 +115,10 @@ export function useFocusTrap(isActive: boolean) {
             }
 
             // Add event listener
-            document.addEventListener('keydown', handleKeyDown)
+            document?.addEventListener('keydown', handleKeyDown)
 
             return () => {
-                document.removeEventListener('keydown', handleKeyDown)
+                document?.removeEventListener('keydown', handleKeyDown)
 
                 // Restore previous focus
                 if (previousFocusRef.current) {
@@ -245,6 +248,9 @@ export const ACCESSIBILITY_MESSAGES = {
 
 // Cleanup function for live regions
 export function cleanupLiveRegions(): void {
-    const liveRegions = document.querySelectorAll('[id^="file-selector-live-"]')
+    // Only run on client side
+    if (typeof document === 'undefined') return
+    
+    const liveRegions = document?.querySelectorAll('[id^="file-selector-live-"]')
     liveRegions.forEach(region => region.remove())
 }

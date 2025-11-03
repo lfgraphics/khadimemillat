@@ -13,10 +13,10 @@ export default function ConversationList({ initial }: { initial?: any[] }) {
   // Monitor page visibility for auto-refresh
   useEffect(() => {
     const handleVisibilityChange = () => {
-      isPageVisible.current = !document.hidden
+      isPageVisible.current = !document?.hidden
     }
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+    document?.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document?.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [])
   
   const { data } = useSWR(`/api/protected/conversations`, fetcher, { 

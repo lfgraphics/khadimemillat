@@ -26,16 +26,16 @@ export function Footer() {
                             Every donation creates opportunities for those in need.
                         </p>
                         <div className="space-x-4 flex" data-testid="footer-social-links">
-                            <Link href="https://www.youtube.com/@muftidawoodqasmiofficial" className="text-muted-foreground hover:text-primary transition-colors" data-testid="social-facebook">
+                            <Link href="https://www.youtube.com/@muftidawoodqasmiofficial" className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg flex items-center justify-center transition-colors" data-testid="social-facebook">
                                 <Youtube className="h-5 w-5" />
                             </Link>
-                            <Link href="https://www.facebook.com/p/Khadim-e-Millat-Welfare-Foundation-61557994989166/" className="text-muted-foreground hover:text-primary transition-colors" data-testid="social-facebook">
+                            <Link href="https://www.facebook.com/p/Khadim-e-Millat-Welfare-Foundation-61557994989166/" className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg flex items-center justify-center transition-colors" data-testid="social-facebook">
                                 <Facebook className="h-5 w-5" />
                             </Link>
-                            <Link href="#" className="text-muted-foreground hover:text-primary transition-colors" data-testid="social-twitter">
+                            <Link href="#" className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg flex items-center justify-center transition-colors" data-testid="social-twitter">
                                 <Twitter className="h-5 w-5" />
                             </Link>
-                            <Link href="#" className="text-muted-foreground hover:text-primary transition-colors" data-testid="social-instagram">
+                            <Link href="#" className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg flex items-center justify-center transition-colors" data-testid="social-instagram">
                                 <Instagram className="h-5 w-5" />
                             </Link>
                         </div>
