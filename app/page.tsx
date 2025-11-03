@@ -58,13 +58,13 @@ export default function Home() {
       {/* Hero Section */}
       <section
         id="home"
-        className="relative overflow-hidden min-h-[85vh] flex items-center container mx-auto"
+        className="relative overflow-hidden min-h-[55svh] flex items-center container mx-auto"
       >
         {/* Animated Background Elements */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-purple-500/5"></div>
-          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-xl animate-pulse delay-1000"></div>
+          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/5 rounded-full blur-xl animate-pulse delay-1000"></div>
         </div>
 
         {/* Background Pattern */}
@@ -80,7 +80,7 @@ export default function Home() {
         </div>
 
         <div className="container mx-auto px-4 relative z-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-3 lg:gap-12 items-center">
             {/* Left Content */}
             <div className="space-y-8 text-center lg:text-left mt-3">
               {/* <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full backdrop-blur-sm border border-primary/20">
@@ -90,7 +90,7 @@ export default function Home() {
                   </span>
                 </div> */}
 
-              <h1 className="text-3xl md:text-4xl lg:text-5xl leading-tight">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold">
                 Bridging
                 <span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
                   Generosity & Need
@@ -101,11 +101,11 @@ export default function Home() {
                 We bring compassionate donors together with verified families and individuals in need — supporting them through sponsorships, community drives, and sustainable programs funded by scrap recycling initiatives.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <div className="flex flex-row gap-4 justify-center lg:justify-start">
                 <Link href="/donate">
                   <Button
                     size="lg"
-                    className="bg-primary hover:bg-primary/90 text-base h-14 px-8 group"
+                    className="bg-primary hover:bg-primary/90 text-base h-10 px-8 group"
                   >
                     Donate Now
                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -115,7 +115,7 @@ export default function Home() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="gap-2 text-base h-14 px-8 border-border hover:bg-accent group"
+                    className="gap-2 text-base h-10 px-8 border-border hover:bg-accent group"
                   >
                     <HeartHandshake className="w-5 h-5 animate-bounce" />
                     Sponsor Now
@@ -141,7 +141,7 @@ export default function Home() {
             </div>
 
             {/* Right Content - Hero Image with Floating Cards */}
-            <div className="relative lg:h-[600px] flex items-center justify-center mb-3">
+            <div className="relative lg:h-[500px] flex items-center justify-center mb-3">
               <div className="relative w-full max-w-xl">
                 {/* Main Hero Image */}
                 <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-border/50">
