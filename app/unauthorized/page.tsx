@@ -56,7 +56,7 @@ function UnauthorizedContent() {
 
                     <Link
                         href="/"
-                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                        className="bg-gray-500 hoact:bg-gray-700 text-white font-bold py-2 px-4 rounded"
                     >
                         Home
                     </Link>

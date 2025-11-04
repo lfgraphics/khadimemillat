@@ -60,7 +60,7 @@ export default function ProfilePopover() {
 
     // --- NavUser style trigger ---
     const triggerContent = (
-        <div className="flex items-center gap-2 p-1 cursor-pointer rounded-md hover:bg-secondary w-full">
+        <div className="flex items-center gap-2 p-1 cursor-pointer rounded-md hoact:bg-secondary w-full">
             <UserButton />
             <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">
@@ -78,7 +78,7 @@ export default function ProfilePopover() {
 
     // --- ProfilePopover internal menu (kept same styling but wrapped like NavUser) ---
     const menuContent = (
-        <div className="flex flex-col gap-1">
+        <Popover>
             {/* Header */}
             <div className="flex items-center gap-2 px-1 py-1.5 text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
@@ -98,7 +98,7 @@ export default function ProfilePopover() {
             {/* Items */}
             <Link
                 href="/account"
-                className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted text-sm"
+                className="flex items-center gap-2 px-2 py-1.5 rounded-md hoact:bg-muted text-sm"
             >
                 <UserCog className="h-4 w-4" />
                 Account
@@ -106,7 +106,7 @@ export default function ProfilePopover() {
 
             <Link
                 href="/notifications"
-                className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted text-sm"
+                className="flex items-center gap-2 px-2 py-1.5 rounded-md hoact:bg-muted text-sm"
             >
                 <Bell className="h-4 w-4" />
                 Notifications
@@ -120,12 +120,12 @@ export default function ProfilePopover() {
 
             {/* Logout */}
             <SignOutButton>
-                <button className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted text-sm text-red-600 w-full">
+                <button className="flex items-center gap-2 px-2 py-1.5 rounded-md hoact:bg-muted text-sm text-red-600 w-full">
                     <LogOut className="h-4 w-4" />
                     Log out
                 </button>
             </SignOutButton>
-        </div>
+        </Popover>
     )
 
     // responsive class for width & rounding

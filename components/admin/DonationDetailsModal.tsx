@@ -291,7 +291,7 @@ export default function DonationDetailsModal({
                       onOpenChange={() => toggleSection('donorInfo')}
                     >
                       <CollapsibleTrigger asChild>
-                        <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+                        <Card className="cursor-pointer hoact:bg-muted/50 transition-colors">
                           <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
@@ -384,7 +384,7 @@ export default function DonationDetailsModal({
                         onOpenChange={() => toggleSection('statistics')}
                       >
                         <CollapsibleTrigger asChild>
-                          <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+                          <Card className="cursor-pointer hoact:bg-muted/50 transition-colors">
                             <CardHeader className="pb-3">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -437,7 +437,7 @@ export default function DonationDetailsModal({
                     {/* Items Accordion - Always expanded */}
                     <Collapsible open={openSections.items} onOpenChange={() => toggleSection('items')}>
                       <CollapsibleTrigger asChild>
-                        <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+                        <Card className="cursor-pointer hoact:bg-muted/50 transition-colors">
                           <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">

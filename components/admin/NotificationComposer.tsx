@@ -323,7 +323,7 @@ export default function NotificationComposer({
             Save Draft
           </Button>
           
-          <Button onClick={handleSend} className="bg-blue-600 hover:bg-blue-700">
+          <Button onClick={handleSend} className="bg-blue-600 hoact:bg-blue-700">
             <Send className="h-4 w-4 mr-2" />
             {isEmergencyMode ? 'Send Emergency' : 'Send Notification'}
           </Button>

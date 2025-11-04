@@ -130,7 +130,7 @@ export const AnimatedProcessSteps: React.FC<AnimatedProcessStepsProps> = ({
       <div ref={intersectionRef as any} className={cn("grid md:grid-cols-3 gap-8", className)}>
         {steps.map((step, index) => (
           <div key={index} className="text-center group" data-testid={step.testId}>
-            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
+            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hoact:bg-primary/20 transition-colors">
               {step.icon}
             </div>
             <h3 className="text-xl font-semibold mb-3">{step.title}</h3>

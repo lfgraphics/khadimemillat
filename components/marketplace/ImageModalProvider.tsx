@@ -113,7 +113,7 @@ export function ImageModalProvider({ children }: { children: React.ReactNode }) 
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white border-0"
+                                            className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hoact:bg-black/70 text-white border-0"
                                             onClick={prevImage}
                                             aria-label="Previous image"
                                         >
@@ -123,7 +123,7 @@ export function ImageModalProvider({ children }: { children: React.ReactNode }) 
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white border-0"
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hoact:bg-black/70 text-white border-0"
                                             onClick={nextImage}
                                             aria-label="Next image"
                                         >
@@ -158,7 +158,7 @@ export function ImageModalProvider({ children }: { children: React.ReactNode }) 
                                                 flex-shrink-0 w-12 h-12 rounded-md overflow-hidden border-2 transition-all duration-200
                                                 ${index === currentIndex 
                                                     ? 'border-white shadow-lg' 
-                                                    : 'border-transparent opacity-60 hover:opacity-80'
+                                                    : 'border-transparent opacity-60 hoact:opacity-80'
                                                 }
                                             `}
                                             aria-label={`Go to image ${index + 1}`}

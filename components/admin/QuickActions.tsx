@@ -43,7 +43,7 @@ export default function QuickActions({
       title: 'New Notification',
       description: 'Create and send a new notification',
       icon: Send,
-      color: 'bg-blue-500 hover:bg-blue-600',
+      color: 'bg-blue-500 hoact:bg-blue-600',
       textColor: 'text-white',
       onClick: onNewNotification,
       shortcut: 'Ctrl+N'
@@ -53,7 +53,7 @@ export default function QuickActions({
       title: 'Emergency Alert',
       description: 'Send urgent notification to all users',
       icon: AlertTriangle,
-      color: 'bg-red-500 hover:bg-red-600',
+      color: 'bg-red-500 hoact:bg-red-600',
       textColor: 'text-white',
       onClick: () => setEmergencyDialogOpen(true),
       shortcut: 'Ctrl+E',
@@ -64,7 +64,7 @@ export default function QuickActions({
       title: 'View Templates',
       description: 'Manage notification templates',
       icon: FileText,
-      color: 'bg-purple-500 hover:bg-purple-600',
+      color: 'bg-purple-500 hoact:bg-purple-600',
       textColor: 'text-white',
       onClick: onViewTemplates,
       shortcut: 'Ctrl+T'
@@ -74,7 +74,7 @@ export default function QuickActions({
       title: 'Analytics',
       description: 'View detailed performance analytics',
       icon: BarChart3,
-      color: 'bg-green-500 hover:bg-green-600',
+      color: 'bg-green-500 hoact:bg-green-600',
       textColor: 'text-white',
       onClick: onViewAnalytics,
       shortcut: 'Ctrl+A'
@@ -105,7 +105,7 @@ export default function QuickActions({
                 <action.icon className="h-6 w-6" />
                 <div className="text-center">
                   <div className="font-medium">{action.title}</div>
-                  <div className="text-xs opacity-90 hidden group-hover:block">
+                  <div className="text-xs opacity-90 hidden group-hoact:block">
                     {action.shortcut}
                   </div>
                 </div>

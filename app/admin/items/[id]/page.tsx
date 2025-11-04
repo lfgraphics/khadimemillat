@@ -689,7 +689,7 @@ export default function ItemDetailPage() {
               <h4 className="font-medium mb-3 flex items-center justify-between">
                 <span>Before Photos ({item.photos.before.length})</span>
                 {editing && item.photos.before.length > 0 && (
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                  <Button variant="ghost" size="sm" className="text-red-600 hoact:text-red-700">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
@@ -706,11 +706,11 @@ export default function ItemDetailPage() {
                         sizes="200px"
                       />
                       {editing && (
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all rounded-md flex items-center justify-center">
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hoact:bg-opacity-30 transition-all rounded-md flex items-center justify-center">
                           <Button
                             variant="destructive"
                             size="sm"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="opacity-0 group-hoact:opacity-100 transition-opacity"
                             onClick={() => {
                               // TODO: Implement photo removal
                               toast.info('Photo removal coming soon')
@@ -741,7 +741,7 @@ export default function ItemDetailPage() {
               <h4 className="font-medium mb-3 flex items-center justify-between">
                 <span>After Photos ({item.photos.after.length})</span>
                 {editing && item.photos.after.length > 0 && (
-                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                  <Button variant="ghost" size="sm" className="text-red-600 hoact:text-red-700">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
@@ -758,11 +758,11 @@ export default function ItemDetailPage() {
                         sizes="200px"
                       />
                       {editing && (
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all rounded-md flex items-center justify-center">
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hoact:bg-opacity-30 transition-all rounded-md flex items-center justify-center">
                           <Button
                             variant="destructive"
                             size="sm"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="opacity-0 group-hoact:opacity-100 transition-opacity"
                             onClick={() => {
                               // TODO: Implement photo removal
                               toast.info('Photo removal coming soon')

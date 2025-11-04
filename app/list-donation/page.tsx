@@ -362,7 +362,7 @@ const DonationListManager: React.FC = () => {
                     variant="outline"
                     size="sm"
                     disabled={autoFillLoading}
-                    className="h-auto min-h-[44px] px-6 py-3 font-medium hover:bg-accent hover:text-accent-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 border-2 hover:border-accent-foreground/20 shadow-sm hover:shadow-md touch-manipulation"
+                    className="h-auto min-h-[44px] px-6 py-3 font-medium hoact:bg-accent hoact:text-accent-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 border-2 hoact:border-accent-foreground/20 shadow-sm hoact:shadow-md touch-manipulation"
                     aria-expanded={donorPanelOpen}
                     aria-controls="donor-selection-panel"
                   >
@@ -412,7 +412,7 @@ const DonationListManager: React.FC = () => {
           </Collapsible>
         </div>
         {donor && (
-          <Card className="relative p-4 sm:p-6 border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 shadow-lg transition-all duration-300 ease-in-out hover:shadow-xl hover:border-primary/40 hover:from-primary/8 hover:to-primary/15">
+          <Card className="relative p-4 sm:p-6 border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 shadow-lg transition-all duration-300 ease-in-out hoact:shadow-xl hoact:border-primary/40 hoact:from-primary/8 hoact:to-primary/15">
             {/* Selected indicator */}
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-primary/80 to-primary/60 rounded-t-md"></div>
 
@@ -450,7 +450,7 @@ const DonationListManager: React.FC = () => {
                 <div className="flex flex-col sm:items-end gap-3 flex-shrink-0 w-full sm:w-auto">
                   <Badge
                     variant="default"
-                    className="bg-green-100 text-green-800 border-green-200 text-xs font-medium px-3 py-1.5 hover:bg-green-200 transition-all duration-200 shadow-sm self-start sm:self-end"
+                    className="bg-green-100 text-green-800 border-green-200 text-xs font-medium px-3 py-1.5 hoact:bg-green-200 transition-all duration-200 shadow-sm self-start sm:self-end"
                   >
                     <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -460,7 +460,7 @@ const DonationListManager: React.FC = () => {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-auto min-h-[44px] px-4 py-2 text-xs sm:text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-all duration-200 focus:ring-2 focus:ring-ring focus:ring-offset-1 border border-transparent hover:border-border/50 touch-manipulation self-start sm:self-end"
+                    className="h-auto min-h-[44px] px-4 py-2 text-xs sm:text-sm font-medium hoact:bg-accent hoact:text-accent-foreground transition-all duration-200 focus:ring-2 focus:ring-ring focus:ring-offset-1 border border-transparent hoact:border-border/50 touch-manipulation self-start sm:self-end"
                     onClick={() => setDonorPanelOpen(o => !o)}
                   >
                     <svg className={`w-3 h-3 mr-1 transition-transform duration-200 ${donorPanelOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -551,7 +551,7 @@ const DonationListManager: React.FC = () => {
         {items.length === 0 && <p className="text-sm sm:text-base text-muted-foreground">No items yet.</p>}
         <div className="grid gap-4 sm:gap-6 md:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 auto-rows-fr">
           {items.map(item => (
-            <div key={item.tempId} className="border rounded-lg bg-card min-w-0 flex flex-col shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+            <div key={item.tempId} className="border rounded-lg bg-card min-w-0 flex flex-col shadow-sm hoact:shadow-md transition-all duration-200 overflow-hidden">
               {/* Header Section */}
               <div className="p-4 pb-3 space-y-3">
                 <div className="flex justify-between items-start gap-3">
@@ -613,12 +613,12 @@ const DonationListManager: React.FC = () => {
                     <div key={`b-${i}`} className="aspect-square min-w-0 relative group">
                       <ClickableImage
                         src={b}
-                        className="w-full h-full object-cover rounded-lg border-2 border-border/40 hover:border-primary/50 transition-all duration-200 shadow-sm hover:shadow-md"
+                        className="w-full h-full object-cover rounded-lg border-2 border-border/40 hoact:border-primary/50 transition-all duration-200 shadow-sm hoact:shadow-md"
                         alt="before"
                         caption={`${item.name} - Before photo ${i + 1}`}
                         transform={{ width: 150, height: 150, crop: 'fill' }}
                       />
-                      <div className="absolute top-1 left-1 bg-blue-500/90 text-white text-[8px] px-1.5 py-0.5 rounded font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <div className="absolute top-1 left-1 bg-blue-500/90 text-white text-[8px] px-1.5 py-0.5 rounded font-medium opacity-0 group-hoact:opacity-100 transition-opacity duration-200">
                         BEFORE
                       </div>
                     </div>
@@ -629,12 +629,12 @@ const DonationListManager: React.FC = () => {
                     <div key={`a-${i}`} className="aspect-square min-w-0 relative group">
                       <ClickableImage
                         src={a}
-                        className="w-full h-full object-cover rounded-lg border-2 border-border/40 hover:border-primary/50 transition-all duration-200 shadow-sm hover:shadow-md"
+                        className="w-full h-full object-cover rounded-lg border-2 border-border/40 hoact:border-primary/50 transition-all duration-200 shadow-sm hoact:shadow-md"
                         alt="after"
                         caption={`${item.name} - After photo ${i + 1}`}
                         transform={{ width: 150, height: 150, crop: 'fill' }}
                       />
-                      <div className="absolute top-1 left-1 bg-green-500/90 text-white text-[8px] px-1.5 py-0.5 rounded font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <div className="absolute top-1 left-1 bg-green-500/90 text-white text-[8px] px-1.5 py-0.5 rounded font-medium opacity-0 group-hoact:opacity-100 transition-opacity duration-200">
                         AFTER
                       </div>
                     </div>
@@ -642,7 +642,7 @@ const DonationListManager: React.FC = () => {
 
                   {/* Enhanced additional images indicator */}
                   {(item.photos.before.length + item.photos.after.length) > 3 && (
-                    <div className="aspect-square bg-gradient-to-br from-muted/40 to-muted/60 rounded-lg border-2 border-dashed border-muted-foreground/40 flex flex-col items-center justify-center min-w-0 hover:from-muted/60 hover:to-muted/80 transition-all duration-200">
+                    <div className="aspect-square bg-gradient-to-br from-muted/40 to-muted/60 rounded-lg border-2 border-dashed border-muted-foreground/40 flex flex-col items-center justify-center min-w-0 hoact:from-muted/60 hoact:to-muted/80 transition-all duration-200">
                       <span className="text-sm font-bold text-muted-foreground">
                         +{(item.photos.before.length + item.photos.after.length) - 3}
                       </span>

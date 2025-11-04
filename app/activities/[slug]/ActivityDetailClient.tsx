@@ -171,11 +171,11 @@ export default function ActivityDetailClient({ activity }: ActivityDetailClientP
                         <img
                           src={image}
                           alt={`${activity.title || 'Activity'} - Photo ${index + 1}`}
-                          className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                          className="w-full h-full object-cover transition-transform group-hoact:scale-105"
                           loading={index < 2 ? 'eager' : 'lazy'}
                         />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                          <Eye className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="absolute inset-0 bg-black/0 group-hoact:bg-black/20 transition-colors flex items-center justify-center">
+                          <Eye className="h-8 w-8 text-white opacity-0 group-hoact:opacity-100 transition-opacity" />
                         </div>
                       </div>
                     ))}
@@ -257,7 +257,7 @@ export default function ActivityDetailClient({ activity }: ActivityDetailClientP
                   <Button
                     variant="outline"
                     size="sm"
-                    className="absolute left-8 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white"
+                    className="absolute left-8 top-1/2 transform -translate-y-1/2 bg-white/90 hoact:bg-white"
                     onClick={() => navigateImage('prev')}
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -265,7 +265,7 @@ export default function ActivityDetailClient({ activity }: ActivityDetailClientP
                   <Button
                     variant="outline"
                     size="sm"
-                    className="absolute right-8 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white"
+                    className="absolute right-8 top-1/2 transform -translate-y-1/2 bg-white/90 hoact:bg-white"
                     onClick={() => navigateImage('next')}
                   >
                     <ChevronRight className="h-4 w-4" />

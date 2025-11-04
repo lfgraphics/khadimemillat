@@ -243,9 +243,9 @@ export function FileDropZone({
                     "min-h-[120px] sm:min-h-[140px]", // Responsive minimum height
                     isDragOver
                         ? "border-blue-500 bg-blue-50 dark:bg-blue-950/20 scale-[1.01] sm:scale-[1.02] shadow-lg"
-                        : "border-gray-300 hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500",
+                        : "border-gray-300 hoact:border-gray-400 dark:border-gray-600 dark:hoact:border-gray-500",
                     disabled && "opacity-50 cursor-not-allowed",
-                    !disabled && "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
+                    !disabled && "cursor-pointer hoact:bg-gray-50 dark:hoact:bg-gray-800/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
                     className
                 )}
                 onDragEnter={handleDragEnter}

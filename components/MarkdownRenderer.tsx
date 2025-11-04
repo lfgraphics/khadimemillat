@@ -43,7 +43,7 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
                 
                 // Links
                 .replace(/<a href="/g, '<a href="')
-                .replace(/<a /g, '<a class="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors" target="_blank" rel="noopener noreferrer" ')
+                .replace(/<a /g, '<a class="text-primary hoact:text-primary/80 underline underline-offset-2 transition-colors" target="_blank" rel="noopener noreferrer" ')
                 
                 // Code blocks
                 .replace(/<pre><code>/g, '<pre class="bg-muted p-4 rounded-lg mb-4 overflow-x-auto"><code class="text-sm font-mono text-foreground">')

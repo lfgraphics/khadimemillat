@@ -26,16 +26,16 @@ export function Footer() {
                             Every donation creates opportunities for those in need.
                         </p>
                         <div className="space-x-4 flex" data-testid="footer-social-links">
-                            <Link href="https://www.youtube.com/@muftidawoodqasmiofficial" className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg flex items-center justify-center transition-colors" data-testid="social-facebook">
+                            <Link href="https://www.youtube.com/@muftidawoodqasmiofficial" className="w-9 h-9 bg-muted hoact:bg-primary hoact:text-primary-foreground rounded-lg flex items-center justify-center transition-colors" data-testid="social-facebook">
                                 <Youtube className="h-5 w-5" />
                             </Link>
-                            <Link href="https://www.facebook.com/p/Khadim-e-Millat-Welfare-Foundation-61557994989166/" className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg flex items-center justify-center transition-colors" data-testid="social-facebook">
+                            <Link href="https://www.facebook.com/p/Khadim-e-Millat-Welfare-Foundation-61557994989166/" className="w-9 h-9 bg-muted hoact:bg-primary hoact:text-primary-foreground rounded-lg flex items-center justify-center transition-colors" data-testid="social-facebook">
                                 <Facebook className="h-5 w-5" />
                             </Link>
-                            <Link href="#" className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg flex items-center justify-center transition-colors" data-testid="social-twitter">
+                            <Link href="#" className="w-9 h-9 bg-muted hoact:bg-primary hoact:text-primary-foreground rounded-lg flex items-center justify-center transition-colors" data-testid="social-twitter">
                                 <Twitter className="h-5 w-5" />
                             </Link>
-                            <Link href="#" className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg flex items-center justify-center transition-colors" data-testid="social-instagram">
+                            <Link href="#" className="w-9 h-9 bg-muted hoact:bg-primary hoact:text-primary-foreground rounded-lg flex items-center justify-center transition-colors" data-testid="social-instagram">
                                 <Instagram className="h-5 w-5" />
                             </Link>
                         </div>
@@ -46,27 +46,27 @@ export function Footer() {
                         <h4 className="font-semibold text-foreground mb-4">Quick Links</h4>
                         <ul className="space-y-2">
                             <li>
-                                <Link href="/" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-link-home">
+                                <Link href="/" className="text-muted-foreground hoact:text-primary transition-colors" data-testid="footer-link-home">
                                     Home
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/marketplace" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-link-marketplace">
+                                <Link href="/marketplace" className="text-muted-foreground hoact:text-primary transition-colors" data-testid="footer-link-marketplace">
                                     Marketplace
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/donate" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-link-donate">
+                                <Link href="/donate" className="text-muted-foreground hoact:text-primary transition-colors" data-testid="footer-link-donate">
                                     Donate
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/about" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-link-about">
+                                <Link href="/about" className="text-muted-foreground hoact:text-primary transition-colors" data-testid="footer-link-about">
                                     About Us
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/activities" className="text-muted-foreground hover:text-primary transition-colors" data-testid="footer-link-activities">
+                                <Link href="/activities" className="text-muted-foreground hoact:text-primary transition-colors" data-testid="footer-link-activities">
                                     Activities
                                 </Link>
                             </li>
@@ -79,25 +79,25 @@ export function Footer() {
                         <ul className="space-y-2 text-muted-foreground">
                             <li className="flex items-center text-sm" data-testid="contact-phone">
                                 <Phone className="h-4 w-4 mr-2" />
-                                <Link href="tel:+918081747259" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                                <Link href="tel:+918081747259" target="_blank" rel="noopener noreferrer" className="hoact:text-primary transition-colors">
                                     +91 80817 47259
                                 </Link>
                             </li>
                             <li className="flex items-center text-sm" data-testid="contact-email">
                                 <Mail className="h-4 w-4 mr-2" />
-                                <Link href="mailto:support@khadimemillat.org" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                                <Link href="mailto:support@khadimemillat.org" target="_blank" rel="noopener noreferrer" className="hoact:text-primary transition-colors">
                                     support@khadimemillat.org
                                 </Link>
                             </li>
                             <li className="flex items-center text-sm" data-testid="contact-website">
                                 <Globe className="h-4 w-4 mr-2" />
-                                <Link href="https://khadimemillat.org" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                                <Link href="https://khadimemillat.org" target="_blank" rel="noopener noreferrer" className="hoact:text-primary transition-colors">
                                     khadimemillat.org
                                 </Link>
                             </li>
                             <li className="flex items-center text-sm" data-testid="contact-email">
                                 <MapPin className="h-4 w-4 mr-2" />
-                                <Link href="https://share.google/iBzqMXM0KkT4DHKF3" target="_blank" className="hover:text-primary transition-colors">
+                                <Link href="https://share.google/iBzqMXM0KkT4DHKF3" target="_blank" className="hoact:text-primary transition-colors">
                                     <span>
                                         Gorakhpur, Uttar Pradesh, India
                                     </span>

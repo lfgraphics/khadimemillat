@@ -93,7 +93,7 @@ export const AnimatedCard: React.FC<AnimatedCardProps> = ({
       <div 
         className={cn(
           'transition-shadow duration-200',
-          hoverShadow && 'hover:shadow-lg',
+          hoverShadow && 'hoact:shadow-lg',
           className
         )} 
         {...props}

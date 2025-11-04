@@ -141,7 +141,7 @@ export default function AccountPage() {
                     <div className='flex-1'>
                       <CardHeader className='pb-2'>
                         <CardTitle className='text-base'>
-                          {itemLink ? <a href={itemLink} className='hover:underline'>{item?.name || 'Item'}</a> : (item?.name || 'Item')}
+                          {itemLink ? <a href={itemLink} className='hoact:underline'>{item?.name || 'Item'}</a> : (item?.name || 'Item')}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className='text-sm grid grid-cols-2 gap-1'>

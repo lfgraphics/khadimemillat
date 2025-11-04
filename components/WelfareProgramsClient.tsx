@@ -105,7 +105,7 @@ export default function WelfareProgramsClient({
                             threshold={0.2}
                             className="h-full"
                         >
-                            <div className="bg-background rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full flex flex-col group" data-testid={`program-${program.title.toLowerCase().replace(/\s+/g, '-')}`}>
+                            <div className="bg-background rounded-lg overflow-hidden shadow-sm hoact:shadow-md transition-shadow h-full flex flex-col group" data-testid={`program-${program.title.toLowerCase().replace(/\s+/g, '-')}`}>
                                 <Link href={`/welfare-programs/${program.slug}`} className="block flex-1">
                                     <div className="relative h-48 w-full">
                                         {program.coverImage ? (
@@ -113,7 +113,7 @@ export default function WelfareProgramsClient({
                                                 src={program.coverImage}
                                                 alt={program.title}
                                                 fill
-                                                className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                                className="object-cover group-hoact:scale-110 transition-transform duration-700"
                                                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                             />
                                         ) : (
@@ -168,7 +168,7 @@ export default function WelfareProgramsClient({
                                         <Link className='flex-1 w-full' href={`/donate?program=${encodeURIComponent(program.slug)}`}>
                                             <Button variant="secondary" data-testid={`donate-${program.slug}`}>
                                                 Donate Now
-                                                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                                <ChevronRight className="w-4 h-4 group-hoact:translate-x-1 transition-transform" />
                                             </Button>
                                         </Link>
                                         <Button
@@ -179,7 +179,7 @@ export default function WelfareProgramsClient({
                                             data-testid={`share-${program.slug}`}
                                             title="Share this program"
                                         >
-                                            <Share2 className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                                            <Share2 className="w-4 h-4 group-hoact:-translate-x-1 transition-transform" />
                                         </Button>
                                     </div>
                                 </div>
@@ -206,7 +206,7 @@ export default function WelfareProgramsClient({
                             className="px-8 cursor-pointer group"
                         >
                             {loading ? 'Loading...' : 'View More Programs'}
-                            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                            <ChevronRight className="w-4 h-4 group-hoact:translate-x-1 transition-transform" />
                         </Button>
                     </Link>
                 </div>

@@ -248,7 +248,7 @@ const UserSearchForRequest: React.FC<UserSearchForRequestProps> = ({
                 size="sm"
                 onClick={handleClearSelection}
                 disabled={disabled}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hoact:text-foreground"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -310,7 +310,7 @@ const UserSearchForRequest: React.FC<UserSearchForRequestProps> = ({
               <Card 
                 key={user.id} 
                 className={cn(
-                  "cursor-pointer transition-all hover:border-primary/40 hover:bg-primary/5",
+                  "cursor-pointer transition-all hoact:border-primary/40 hoact:bg-primary/5",
                   disabled && "cursor-not-allowed opacity-50",
                   !hasRequiredInfo && "border-yellow-200 bg-yellow-50"
                 )}

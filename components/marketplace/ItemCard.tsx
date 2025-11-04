@@ -119,7 +119,7 @@ export function ItemCard({ item }: ItemCardProps) {
     };
 
     return (
-        <div className="rounded-2xl shadow-md p-4 bg-card hover:shadow-lg transition">
+        <div className="rounded-2xl shadow-md p-4 bg-card hoact:shadow-lg transition">
             {/* Image */}
             {item.photos?.before?.[0] ? (
                 <div 
@@ -134,14 +134,14 @@ export function ItemCard({ item }: ItemCardProps) {
                     <img
                         src={item.photos.before[0]}
                         alt={item.name}
-                        className="w-full h-48 object-cover rounded-lg hover:opacity-90 transition-opacity pointer-events-none"
+                        className="w-full h-48 object-cover rounded-lg hoact:opacity-90 transition-opacity pointer-events-none"
                     />
                     {allImages.length > 1 && (
                         <div className="absolute top-2 right-2 bg-black/50 text-white px-2 py-1 rounded-full text-xs pointer-events-none">
                             +{allImages.length - 1} more
                         </div>
                     )}
-                    <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors rounded-lg flex items-center justify-center opacity-0 hover:opacity-100 pointer-events-none">
+                    <div className="absolute inset-0 bg-black/0 hoact:bg-black/10 transition-colors rounded-lg flex items-center justify-center opacity-0 hoact:opacity-100 pointer-events-none">
                         <div className="bg-white/90 text-black px-3 py-1 rounded-full text-sm font-medium">
                             View {allImages.length} image{allImages.length > 1 ? 's' : ''}
                         </div>
@@ -162,7 +162,7 @@ export function ItemCard({ item }: ItemCardProps) {
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Link href={`/admin/items/${(item as any)._id}`}>
-                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-blue-50 transition-colors">
+                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hoact:bg-blue-50 transition-colors">
                                             <Edit className="h-4 w-4 text-blue-600" />
                                             <span className="sr-only">Edit item</span>
                                         </Button>
@@ -324,7 +324,7 @@ export function ItemCard({ item }: ItemCardProps) {
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="text-white hover:bg-white/20"
+                                className="text-white hoact:bg-white/20"
                                 onClick={() => setFallbackModalOpen(false)}
                             >
                                 <X className="h-4 w-4" />
@@ -346,7 +346,7 @@ export function ItemCard({ item }: ItemCardProps) {
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className="absolute left-8 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white"
+                                        className="absolute left-8 top-1/2 transform -translate-y-1/2 bg-white/90 hoact:bg-white"
                                         onClick={() => navigateImage('prev')}
                                     >
                                         <ChevronLeft className="h-4 w-4" />
@@ -354,7 +354,7 @@ export function ItemCard({ item }: ItemCardProps) {
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className="absolute right-8 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white"
+                                        className="absolute right-8 top-1/2 transform -translate-y-1/2 bg-white/90 hoact:bg-white"
                                         onClick={() => navigateImage('next')}
                                     >
                                         <ChevronRight className="h-4 w-4" />

@@ -154,7 +154,7 @@ export function UploadProgress({
               }
               onCancel()
             }}
-            className="ml-1 sm:ml-2 h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex-shrink-0"
+            className="ml-1 sm:ml-2 h-7 w-7 sm:h-8 sm:w-8 p-0 hoact:bg-gray-100 dark:hoact:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex-shrink-0"
             aria-label={`Cancel upload of ${fileName || 'file'}`}
           >
             <X className="h-3 w-3 sm:h-4 sm:w-4" aria-hidden="true" />

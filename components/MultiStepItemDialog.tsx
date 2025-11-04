@@ -361,7 +361,7 @@ const MarketplaceListingStep: React.FC<MarketplaceListingStepProps> = ({
                                 Listing Restriction
                             </h4>
                             <p className="text-sm text-yellow-800">
-                                Items with condition "{itemCondition}" cannot be listed on the marketplace. 
+                                Items with condition "{itemCondition}" cannot be listed on the marketplace.
                                 You can still add this item to the collection for record keeping.
                             </p>
                         </div>
@@ -507,17 +507,17 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
                         <Badge
                             variant="outline"
                             className={`text-[10px] uppercase tracking-wide px-2.5 py-1 h-auto font-medium flex-shrink-0 border-2 ${formData.item.condition === 'new' ? 'border-green-400 text-green-700 bg-green-50/80' :
-                                    formData.item.condition === 'good' ? 'border-blue-400 text-blue-700 bg-blue-50/80' :
-                                        formData.item.condition === 'repairable' ? 'border-yellow-400 text-yellow-700 bg-yellow-50/80' :
-                                            formData.item.condition === 'scrap' ? 'border-red-400 text-red-700 bg-red-50/80' :
-                                                'border-gray-400 text-gray-700 bg-gray-50/80'
+                                formData.item.condition === 'good' ? 'border-blue-400 text-blue-700 bg-blue-50/80' :
+                                    formData.item.condition === 'repairable' ? 'border-yellow-400 text-yellow-700 bg-yellow-50/80' :
+                                        formData.item.condition === 'scrap' ? 'border-red-400 text-red-700 bg-red-50/80' :
+                                            'border-gray-400 text-gray-700 bg-gray-50/80'
                                 }`}
                         >
                             <div className={`w-1.5 h-1.5 rounded-full mr-1.5 ${formData.item.condition === 'new' ? 'bg-green-500' :
-                                    formData.item.condition === 'good' ? 'bg-blue-500' :
-                                        formData.item.condition === 'repairable' ? 'bg-yellow-500' :
-                                            formData.item.condition === 'scrap' ? 'bg-red-500' :
-                                                'bg-gray-500'
+                                formData.item.condition === 'good' ? 'bg-blue-500' :
+                                    formData.item.condition === 'repairable' ? 'bg-yellow-500' :
+                                        formData.item.condition === 'scrap' ? 'bg-red-500' :
+                                            'bg-gray-500'
                                 }`}></div>
                             {formData.item.condition}
                         </Badge>
@@ -545,9 +545,9 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
                                 <img
                                     src={photoUrl}
                                     alt={`Before photo ${i + 1}`}
-                                    className="w-full h-full object-cover rounded-lg border-2 border-border/40 hover:border-primary/50 transition-all duration-200 shadow-sm hover:shadow-md"
+                                    className="w-full h-full object-cover rounded-lg border-2 border-border/40 hoact:border-primary/50 transition-all duration-200 shadow-sm hoact:shadow-md"
                                 />
-                                <div className="absolute top-1 left-1 bg-blue-500/90 text-white text-[8px] px-1.5 py-0.5 rounded font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                <div className="absolute top-1 left-1 bg-blue-500/90 text-white text-[8px] px-1.5 py-0.5 rounded font-medium opacity-0 group-hoact:opacity-100 transition-opacity duration-200">
                                     BEFORE
                                 </div>
                             </div>
@@ -559,9 +559,9 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
                                 <img
                                     src={photoUrl}
                                     alt={`After photo ${i + 1}`}
-                                    className="w-full h-full object-cover rounded-lg border-2 border-border/40 hover:border-primary/50 transition-all duration-200 shadow-sm hover:shadow-md"
+                                    className="w-full h-full object-cover rounded-lg border-2 border-border/40 hoact:border-primary/50 transition-all duration-200 shadow-sm hoact:shadow-md"
                                 />
-                                <div className="absolute top-1 left-1 bg-green-500/90 text-white text-[8px] px-1.5 py-0.5 rounded font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                <div className="absolute top-1 left-1 bg-green-500/90 text-white text-[8px] px-1.5 py-0.5 rounded font-medium opacity-0 group-hoact:opacity-100 transition-opacity duration-200">
                                     AFTER
                                 </div>
                             </div>
@@ -569,7 +569,7 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
 
                         {/* Additional images indicator */}
                         {(formData.photos.before.length + formData.photos.after.length) > 3 && (
-                            <div className="aspect-square bg-gradient-to-br from-muted/40 to-muted/60 rounded-lg border-2 border-dashed border-muted-foreground/40 flex flex-col items-center justify-center min-w-0 hover:from-muted/60 hover:to-muted/80 transition-all duration-200">
+                            <div className="aspect-square bg-gradient-to-br from-muted/40 to-muted/60 rounded-lg border-2 border-dashed border-muted-foreground/40 flex flex-col items-center justify-center min-w-0 hoact:from-muted/60 hoact:to-muted/80 transition-all duration-200">
                                 <span className="text-sm font-bold text-muted-foreground">
                                     +{(formData.photos.before.length + formData.photos.after.length) - 3}
                                 </span>
@@ -822,7 +822,7 @@ const PhotoUploadStep: React.FC<PhotoUploadStepProps> = ({
                                         />
                                         <button
                                             onClick={() => handlePhotoRemove(photoUrl, 'before')}
-                                            className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/80"
+                                            className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hoact:opacity-100 transition-opacity hoact:bg-destructive/80"
                                             title={formData.before.length === 1 && isScrapper ? 'Cannot remove last before photo (required)' : 'Remove photo'}
                                             disabled={formData.before.length === 1 && isScrapper}
                                         >
@@ -882,7 +882,7 @@ const PhotoUploadStep: React.FC<PhotoUploadStepProps> = ({
                                         />
                                         <button
                                             onClick={() => handlePhotoRemove(photoUrl, 'after')}
-                                            className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/80"
+                                            className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hoact:opacity-100 transition-opacity hoact:bg-destructive/80"
                                             title={formData.after.length === 1 && isModeratorOrAdmin ? 'Cannot remove last after photo (required)' : 'Remove photo'}
                                             disabled={formData.after.length === 1 && isModeratorOrAdmin}
                                         >
@@ -1207,7 +1207,7 @@ export const MultiStepItemDialog: React.FC<MultiStepItemDialogProps> = ({
                 }
             }
         }
-        
+
         return {
             item: {
                 name: '',
@@ -1630,7 +1630,7 @@ export const MultiStepItemDialog: React.FC<MultiStepItemDialogProps> = ({
                 onItemAdd(itemData)
                 toast.success(`Added "${itemData.name}" to the collection`)
             }
-            
+
             onOpenChange(false)
         } catch (error) {
             console.error(`Error ${mode === 'edit' ? 'updating' : 'adding'} item:`, error)
@@ -1655,7 +1655,7 @@ export const MultiStepItemDialog: React.FC<MultiStepItemDialogProps> = ({
                         {mode === 'edit' ? 'Edit Item' : 'Add New Item'}
                     </AlertDialogTitle>
                     <AlertDialogDescription className="text-sm text-muted-foreground">
-                        {mode === 'edit' 
+                        {mode === 'edit'
                             ? 'Update the item details below and save your changes.'
                             : 'Follow the steps below to add a new item to the donation collection.'
                         }
@@ -1678,7 +1678,7 @@ export const MultiStepItemDialog: React.FC<MultiStepItemDialogProps> = ({
                             <div className="text-center space-y-2">
                                 <h3 className="text-lg font-medium">{currentStepConfig.title}</h3>
                                 <p className="text-sm text-muted-foreground">
-                                    {currentStepConfig.id === 'preview' && mode === 'edit' 
+                                    {currentStepConfig.id === 'preview' && mode === 'edit'
                                         ? 'Review all details before updating the item'
                                         : currentStepConfig.description
                                     }

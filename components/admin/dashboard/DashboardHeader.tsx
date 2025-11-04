@@ -64,7 +64,7 @@ export default function DashboardHeader({
             aria-describedby="dashboard-description"
           >
             <RefreshCw 
-              className={`h-4 w-4 transition-transform duration-300 ${refreshing ? 'animate-spin' : 'hover:rotate-180'}`} 
+              className={`h-4 w-4 transition-transform duration-300 ${refreshing ? 'animate-spin' : 'hoact:rotate-180'}`} 
               aria-hidden="true"
             />
             <span className="hidden sm:inline transition-opacity duration-200">

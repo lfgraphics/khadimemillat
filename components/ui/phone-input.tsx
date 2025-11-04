@@ -193,7 +193,7 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
                   filteredCountries.map((country) => (
                     <div
                       key={country.code}
-                      className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
+                      className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hoact:bg-accent hoact:text-accent-foreground"
                       onClick={() => handleCountrySelect(country)}
                     >
                       <div className="flex items-center gap-3 w-full">

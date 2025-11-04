@@ -135,28 +135,28 @@ function SwipeableCard({ row, onViewDetails, onQuickAction, loading, selectedId 
         <Button
           size="sm"
           variant="ghost"
-          className={`${TOUCH_TARGETS.comfortable} h-full rounded-none px-4 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 button-press transition-all duration-200`}
+          className={`${TOUCH_TARGETS.comfortable} h-full rounded-none px-4 text-blue-600 hoact:bg-blue-50 dark:hoact:bg-blue-900/20 button-press transition-all duration-200`}
           onClick={() => handleQuickAction('complete')}
           aria-label={generateAriaLabel('Mark as complete', row.donor?.name || 'donation', 'button', 'Click to mark donation as complete')}
         >
-          <CheckCircle className="h-5 w-5 transition-transform duration-200 hover:scale-110" aria-hidden="true" />
+          <CheckCircle className="h-5 w-5 transition-transform duration-200 hoact:scale-110" aria-hidden="true" />
           <span className="sr-only">Mark as complete</span>
         </Button>
         <Button
           size="sm"
           variant="ghost"
-          className={`${TOUCH_TARGETS.comfortable} h-full rounded-none px-4 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 button-press transition-all duration-200`}
+          className={`${TOUCH_TARGETS.comfortable} h-full rounded-none px-4 text-orange-600 hoact:bg-orange-50 dark:hoact:bg-orange-900/20 button-press transition-all duration-200`}
           onClick={() => handleQuickAction('archive')}
           aria-label={generateAriaLabel('Archive', row.donor?.name || 'donation', 'button', 'Click to archive donation')}
         >
-          <Archive className="h-5 w-5 transition-transform duration-200 hover:scale-110" aria-hidden="true" />
+          <Archive className="h-5 w-5 transition-transform duration-200 hoact:scale-110" aria-hidden="true" />
           <span className="sr-only">Archive</span>
         </Button>
       </div>
 
       {/* Main card content */}
       <div
-        className="bg-card transition-all duration-200 ease-out touch-manipulation hover:bg-muted/20"
+        className="bg-card transition-all duration-200 ease-out touch-manipulation hoact:bg-muted/20"
         style={{ transform: `translateX(${dragOffset}px)` }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
@@ -184,7 +184,7 @@ function SwipeableCard({ row, onViewDetails, onQuickAction, loading, selectedId 
               <Button
                 size="sm"
                 variant="ghost"
-                className={`${TOUCH_TARGETS.comfortable} p-2 button-press transition-all duration-200 hover:bg-muted`}
+                className={`${TOUCH_TARGETS.comfortable} p-2 button-press transition-all duration-200 hoact:bg-muted`}
                 onClick={handleViewDetails}
                 disabled={loading && selectedId === row.id}
                 aria-label={generateAriaLabel('View details', row.donor?.name || 'donation', 'button', 'Click to view donation details')}
@@ -193,7 +193,7 @@ function SwipeableCard({ row, onViewDetails, onQuickAction, loading, selectedId 
                 {loading && selectedId === row.id ? (
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 ) : (
-                  <ChevronRight className="h-4 w-4 transition-transform duration-200 hover:translate-x-1" aria-hidden="true" />
+                  <ChevronRight className="h-4 w-4 transition-transform duration-200 hoact:translate-x-1" aria-hidden="true" />
                 )}
                 <span className="sr-only">
                   {loading && selectedId === row.id ? 'Loading details' : 'View details'}
@@ -259,7 +259,7 @@ function SwipeableCard({ row, onViewDetails, onQuickAction, loading, selectedId 
 
           {/* Swipe hint */}
           {!isRevealed && dragOffset === 0 && (
-            <div className="flex items-center justify-end mt-2 text-xs text-muted-foreground animate-pulse opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="flex items-center justify-end mt-2 text-xs text-muted-foreground animate-pulse opacity-0 group-hoact:opacity-100 transition-opacity duration-300">
               <span>Swipe left for actions</span>
               <ChevronRight className="h-3 w-3 ml-1 animate-wiggle" />
             </div>
@@ -345,7 +345,7 @@ export default function EnhancedDonationTable({
               {rows.map((row, index) => (
                 <TableRow 
                   key={row.id} 
-                  className="hover:bg-muted/50 transition-all duration-200 cursor-pointer group hover-lift animate-fade-in-up focus-within:bg-muted/30"
+                  className="hoact:bg-muted/50 transition-all duration-200 cursor-pointer group hover-lift animate-fade-in-up focus-within:bg-muted/30"
                   style={{ animationDelay: `${index * 50}ms` }}
                   onClick={() => onViewDetails(row.id)}
                   role="row"
@@ -355,7 +355,7 @@ export default function EnhancedDonationTable({
                 >
                   <TableCell className="py-4">
                     <div className="flex flex-col">
-                      <span className="font-medium text-foreground group-hover:text-primary transition-colors">
+                      <span className="font-medium text-foreground group-hoact:text-primary transition-colors">
                         {row.donor?.name || row.donor?.id || 'Unknown'}
                       </span>
                       {row.donor?.email && (
@@ -399,24 +399,24 @@ export default function EnhancedDonationTable({
                           <Button
                             size="sm"
                             variant="ghost"
-                            className={`${TOUCH_TARGETS.comfortable} opacity-0 group-hover:opacity-100 transition-all duration-200 button-press hover-lift`}
+                            className={`${TOUCH_TARGETS.comfortable} opacity-0 group-hoact:opacity-100 transition-all duration-200 button-press hover-lift`}
                             onClick={(e) => {
                               e.stopPropagation()
                               onQuickAction(row.id, 'complete')
                             }}
                           >
-                            <CheckCircle className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
+                            <CheckCircle className="h-4 w-4 transition-transform duration-200 hoact:scale-110" />
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
-                            className={`${TOUCH_TARGETS.comfortable} opacity-0 group-hover:opacity-100 transition-all duration-200 button-press hover-lift`}
+                            className={`${TOUCH_TARGETS.comfortable} opacity-0 group-hoact:opacity-100 transition-all duration-200 button-press hover-lift`}
                             onClick={(e) => {
                               e.stopPropagation()
                               onQuickAction(row.id, 'archive')
                             }}
                           >
-                            <Archive className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
+                            <Archive className="h-4 w-4 transition-transform duration-200 hoact:scale-110" />
                           </Button>
                         </>
                       )}
@@ -433,7 +433,7 @@ export default function EnhancedDonationTable({
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           <>
-                            <Eye className="h-4 w-4 mr-2 transition-transform duration-200 hover:scale-110" />
+                            <Eye className="h-4 w-4 mr-2 transition-transform duration-200 hoact:scale-110" />
                             View
                           </>
                         )}

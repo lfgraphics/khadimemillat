@@ -64,7 +64,7 @@ function StarRating({ rating, size = "md", interactive = false, onRatingChange }
             star <= displayRating
               ? "fill-yellow-400 text-yellow-400"
               : "text-gray-300"
-          } ${interactive ? "cursor-pointer hover:scale-110 transition-transform" : ""}`}
+          } ${interactive ? "cursor-pointer hoact:scale-110 transition-transform" : ""}`}
           onClick={interactive ? () => onRatingChange?.(star) : undefined}
           onMouseEnter={interactive ? () => setHoverRating(star) : undefined}
           onMouseLeave={interactive ? () => setHoverRating(0) : undefined}
@@ -98,7 +98,7 @@ function ReviewCard({ review }: ReviewCardProps) {
                     href={review.authorUrl} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="hover:text-primary transition-colors"
+                    className="hoact:text-primary transition-colors"
                   >
                     {review.author}
                   </a>

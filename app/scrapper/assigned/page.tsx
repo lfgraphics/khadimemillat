@@ -131,7 +131,7 @@ export default function ScrapperAssignedPage() {
               <Button
                 size='sm'
                 variant={r.location ? 'default' : 'outline'}
-                className={`w-full ${r.location ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                className={`w-full ${r.location ? 'bg-blue-600 hoact:bg-blue-700' : ''}`}
                 onClick={() => openMapsRoute(r)}
               >
                 <Navigation className='h-3 w-3 mr-1' />

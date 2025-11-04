@@ -174,14 +174,14 @@ function CampaignCard({ campaign, featured = false }: { campaign: CampaignWithSt
   return (
     <div className={`group ${featured ? 'md:col-span-1' : ''}`}>
       <Link href={`/campaigns/${campaign.slug}`} className="block">
-        <div className="bg-background rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group-hover:scale-[1.02]">
+        <div className="bg-background rounded-xl overflow-hidden shadow-sm hoact:shadow-lg transition-all duration-300 group-hoact:scale-[1.02]">
           {/* Cover Image */}
           <div className={`relative overflow-hidden ${featured ? 'h-64' : 'h-48'}`}>
             <Image
               src={campaign.coverImage}
               alt={campaign.title}
               fill
-              className="object-cover group-hover:scale-110 transition-transform duration-300"
+              className="object-cover group-hoact:scale-110 transition-transform duration-300"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             {campaign.isFeatured && (
@@ -193,7 +193,7 @@ function CampaignCard({ campaign, featured = false }: { campaign: CampaignWithSt
           
           {/* Content */}
           <div className="p-6">
-            <h3 className={`font-semibold mb-3 text-foreground group-hover:text-primary transition-colors ${featured ? 'text-2xl' : 'text-xl'}`}>
+            <h3 className={`font-semibold mb-3 text-foreground group-hoact:text-primary transition-colors ${featured ? 'text-2xl' : 'text-xl'}`}>
               {campaign.title}
             </h3>
             
@@ -236,7 +236,7 @@ function CampaignCard({ campaign, featured = false }: { campaign: CampaignWithSt
             {/* CTA */}
             <div className="flex items-center justify-between">
               <span className="text-sm text-primary font-medium">View Campaign</span>
-              <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="h-4 w-4 text-primary group-hoact:translate-x-1 transition-transform" />
             </div>
           </div>
         </div>

@@ -322,7 +322,7 @@ function DatePicker({
               <Button
                 variant="ghost"
                 size="sm"
-                className="ml-auto h-4 w-4 p-0 hover:bg-transparent"
+                className="ml-auto h-4 w-4 p-0 hoact:bg-transparent"
                 onClick={(e) => {
                   e.stopPropagation()
                   onChange(undefined)

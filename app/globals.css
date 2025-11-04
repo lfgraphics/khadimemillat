@@ -190,6 +190,10 @@
   }
 }
 
+/* Define a new custom variant named 'hoact' (hover or active) */
+/* The syntax uses the PostCSS ampersand (&) to denote the current selector */
+@custom-variant hoact (&:hover, &:active);
+
 @layer components {
 
   /* Enhanced collapsible panel animations */

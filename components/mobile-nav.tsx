@@ -56,7 +56,7 @@ export function MobileNav() {
                 {/* <Button variant="ghost" className="text-lg">
                 </Button> */}
             </SheetTrigger>
-            <SheetContent side="left" className="w-70 p-0 z-[2100]">
+            <SheetContent side="left" className="w-70 p-0">
                 <SheetHeader className="border-b p-4">
                     <SheetTitle />
                     <SheetDescription />
@@ -66,7 +66,7 @@ export function MobileNav() {
                 <div className="flex-1 overflow-auto p-4">
                     <Link
                         href="/notifications"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                         onClick={() => setOpen(false)}
                     >
                         <BellIcon className="h-4 w-4" />
@@ -80,7 +80,7 @@ export function MobileNav() {
                             <div className="space-y-1">
                                 <Link
                                     href="/admin"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <LayoutDashboard className="h-4 w-4" />
@@ -88,7 +88,7 @@ export function MobileNav() {
                                 </Link>
                                 <Link
                                     href="/admin/verify-requests"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <ClipboardCheck className="h-4 w-4" />
@@ -96,7 +96,7 @@ export function MobileNav() {
                                 </Link>
                                 <Link
                                     href="/admin/create-collection-request"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <Plus className="h-4 w-4" />
@@ -104,7 +104,7 @@ export function MobileNav() {
                                 </Link>
                                 <Link
                                     href="/admin/manage-users"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <UserCog2Icon className="h-4 w-4" />
@@ -112,7 +112,7 @@ export function MobileNav() {
                                 </Link>
                                 <Link
                                     href="/list-donation"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <ListIcon className="h-4 w-4" />
@@ -120,7 +120,7 @@ export function MobileNav() {
                                 </Link>
                                 <Link
                                     href="/admin/money-donations"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <Heart className="h-4 w-4" />
@@ -128,7 +128,7 @@ export function MobileNav() {
                                 </Link>
                                 <Link
                                     href="/admin/welfare-programs"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <HandHeart className="h-4 w-4" />
@@ -136,7 +136,7 @@ export function MobileNav() {
                                 </Link>
                                 <Link
                                     href="/admin/campaigns"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <Target className="h-4 w-4" />
@@ -144,7 +144,7 @@ export function MobileNav() {
                                 </Link>
                                 <Link
                                     href="/admin/notifications"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <BellDot className="h-4 w-4" />
@@ -152,7 +152,7 @@ export function MobileNav() {
                                 </Link>
                                 <Link
                                     href="/admin/activities"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <ImageIcon className="h-4 w-4" />
@@ -169,7 +169,7 @@ export function MobileNav() {
                             <div className="space-y-1">
                                 <Link
                                     href="/scrapper/assigned"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <Truck className="h-4 w-4" />
@@ -177,7 +177,7 @@ export function MobileNav() {
                                 </Link>
                                 <Link
                                     href="/list-donation"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <ListIcon className="h-4 w-4" />
@@ -194,7 +194,7 @@ export function MobileNav() {
                             <div className="space-y-1">
                                 <Link
                                     href="/moderator/review"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <FileCheck className="h-4 w-4" />
@@ -210,7 +210,7 @@ export function MobileNav() {
                         <div className="space-y-1">
                             <Link
                                 href="/donate"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <Heart className="h-4 w-4" />
@@ -218,7 +218,7 @@ export function MobileNav() {
                             </Link>
                             <Link
                                 href="/welfare-programs"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <HandHeart className="h-4 w-4" />
@@ -226,7 +226,7 @@ export function MobileNav() {
                             </Link>
                             <Link
                                 href="/marketplace"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <Store className="h-4 w-4" />
@@ -234,7 +234,7 @@ export function MobileNav() {
                             </Link>
                             <Link
                                 href="/about"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <Info className="h-4 w-4" />
@@ -242,7 +242,7 @@ export function MobileNav() {
                             </Link>
                             <Link
                                 href="/activities"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <ImageIcon className="h-4 w-4" />
@@ -250,7 +250,7 @@ export function MobileNav() {
                             </Link>
                             <Link
                                 href="/my-donations"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <Heart className="h-4 w-4" />
@@ -258,7 +258,7 @@ export function MobileNav() {
                             </Link>
                             <Link
                                 href="/account#purchases"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <ShoppingBag className="h-4 w-4" />
@@ -266,7 +266,7 @@ export function MobileNav() {
                             </Link>
                             <Link
                                 href="/conversations"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <MessageSquare className="h-4 w-4" />
@@ -275,7 +275,7 @@ export function MobileNav() {
                             <RoleGuard allowedRoles={["admin", "moderator", "scrapper"]}>
                                 <Link
                                     href="/scanner"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <Scan className="h-4 w-4" />
@@ -284,7 +284,7 @@ export function MobileNav() {
                             </RoleGuard>
                             <Link
                                 href="/account"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <UserIcon className="h-4 w-4" />

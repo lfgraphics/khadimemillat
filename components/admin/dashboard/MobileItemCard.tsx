@@ -120,7 +120,7 @@ export default function MobileItemCard({
     >
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
         <CollapsibleTrigger asChild>
-          <CardContent className="p-4 cursor-pointer hover:bg-muted/50 transition-colors">
+          <CardContent className="p-4 cursor-pointer hoact:bg-muted/50 transition-colors">
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-3 flex-1 min-w-0">
                 {onSelect && (
@@ -230,7 +230,7 @@ export default function MobileItemCard({
                     {allPhotos.slice(0, 8).map((photo, index) => (
                       <div
                         key={index}
-                        className="relative aspect-square rounded-md overflow-hidden bg-muted cursor-pointer hover:opacity-80 transition-opacity"
+                        className="relative aspect-square rounded-md overflow-hidden bg-muted cursor-pointer hoact:opacity-80 transition-opacity"
                         onClick={() => openModal(allPhotos)}
                         role="button"
                         tabIndex={0}

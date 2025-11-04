@@ -119,7 +119,7 @@ export default function ActivitiesClient({
                   variant="slideUp" 
                   delay={0.1 + (index * 0.1)}
                 >
-                  <Card className="h-full hover:shadow-lg transition-shadow">
+                  <Card className="h-full hoact:shadow-lg transition-shadow">
                     <div className="relative">
                       <img
                         src={activity.images[0]}
@@ -191,10 +191,10 @@ export default function ActivitiesClient({
                     <img
                       src={imagePath}
                       alt={`Gallery image ${index + 1}`}
-                      className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform group-hoact:scale-105"
                     />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                      <Eye className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-black/0 group-hoact:bg-black/20 transition-colors flex items-center justify-center">
+                      <Eye className="h-6 w-6 text-white opacity-0 group-hoact:opacity-100 transition-opacity" />
                     </div>
                   </div>
                 </AnimatedSection>
@@ -258,7 +258,7 @@ export default function ActivitiesClient({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="absolute left-8 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white"
+                      className="absolute left-8 top-1/2 transform -translate-y-1/2 bg-white/90 hoact:bg-white"
                       onClick={() => navigateImage('prev')}
                     >
                       <ChevronLeft className="h-4 w-4" />
@@ -266,7 +266,7 @@ export default function ActivitiesClient({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="absolute right-8 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white"
+                      className="absolute right-8 top-1/2 transform -translate-y-1/2 bg-white/90 hoact:bg-white"
                       onClick={() => navigateImage('next')}
                     >
                       <ChevronRight className="h-4 w-4" />

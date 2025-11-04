@@ -355,7 +355,7 @@ export default function RequestDetailPage() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {items.map(item => (
                 <Link key={item._id} href={`/admin/items/${item._id}`}>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                  <Card className="hoact:shadow-md transition-shadow cursor-pointer">
                     <CardContent className="p-4">
                       <div className="space-y-2">
                         <h4 className="font-medium">{item.name}</h4>

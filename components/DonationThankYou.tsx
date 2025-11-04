@@ -524,7 +524,7 @@ export default function DonationThankYou({
             <Button
               onClick={handleShare}
               disabled={isSharing}
-              className="w-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center gap-2"
+              className="w-full bg-blue-600 hoact:bg-blue-700 flex items-center justify-center gap-2"
             >
               <Share2 className="w-4 h-4" />
               {isSharing ? 'Sharing...' : 'Share Your Good Deed'}

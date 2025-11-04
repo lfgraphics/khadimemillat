@@ -105,17 +105,17 @@ export default function Home() {
                 <Link href="/donate">
                   <Button
                     size="lg"
-                    className="bg-primary hover:bg-primary/90 text-base h-10 px-8 group"
+                    className="bg-primary hoact:bg-primary/90 text-base h-10 px-8 group"
                   >
                     Donate Now
-                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="ml-2 w-5 h-5 group-hoact:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
                 <Link href="/#">
                   <Button
                     size="lg"
                     variant="outline"
-                    className="gap-2 text-base h-10 px-8 border-border hover:bg-accent group"
+                    className="gap-2 text-base h-10 px-8 border-border hoact:bg-accent group"
                   >
                     <HeartHandshake className="w-5 h-5 animate-bounce" />
                     Sponsor Now
@@ -258,10 +258,10 @@ export default function Home() {
                     <div className="absolute rotate-90 md:rotate-0 bottom-0 md:top-12 md:left-[60%] w-full h-0.5 bg-gradient-to-r from-primary/50 to-transparent z-0"></div>
                   )}
 
-                  <div className="relative bg-card border border-border rounded-2xl p-8 hover:border-primary/50 transition-all hover:shadow-xl group-hover:-translate-y-2 duration-300">
+                  <div className="relative bg-card border border-border rounded-2xl p-8 hoact:border-primary/50 transition-all hoact:shadow-xl group-hoact:-translate-y-2 duration-300">
                     {/* Gradient Circle */}
                     <div
-                      className={`relative w-24 h-24 bg-gradient-to-br ${step.color} rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg transform group-hover:scale-110 transition-transform`}
+                      className={`relative w-24 h-24 bg-gradient-to-br ${step.color} rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg transform group-hoact:scale-110 transition-transform`}
                     >
                       <Icon className="w-12 h-12 text-white" />
                       <div className="absolute -top-3 -right-3 w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm shadow-lg">
@@ -324,7 +324,7 @@ export default function Home() {
             <Link href="/marketplace">
               <Button
                 size="lg"
-                className="gap-2 bg-primary hover:bg-primary/90 h-14 px-8 text-base"
+                className="gap-2 bg-primary hoact:bg-primary/90 h-14 px-8 text-base"
               >
                 <ShoppingBag className="w-5 h-5 animate-bounce" />
                 Explore Marketplace
@@ -361,7 +361,7 @@ export default function Home() {
               threshold={0.2}
               className="h-full"
             >
-              <div className="text-center bg-card rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow h-full flex flex-col justify-between" data-testid="contact-phone">
+              <div className="text-center bg-card rounded-lg p-6 shadow-sm hoact:shadow-md transition-shadow h-full flex flex-col justify-between" data-testid="contact-phone">
                 <div>
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Phone className="h-8 w-8 text-primary" />
@@ -369,13 +369,13 @@ export default function Home() {
                   <h3 className="font-semibold mb-2 text-foreground">Phone</h3>
                 </div>
                 <div className="text-muted-foreground flex flex-col">
-                  <Link href="tel:+918081747259" className="hover:text-primary transition-colors">
+                  <Link href="tel:+918081747259" className="hoact:text-primary transition-colors">
                     +91 80817 47259
                   </Link>
-                  <Link href="tel:+919935904289" className="hover:text-primary transition-colors">
+                  <Link href="tel:+919935904289" className="hoact:text-primary transition-colors">
                     +91 99359 04289
                   </Link>
-                  <Link href="tel:+919839353055" className="hover:text-primary transition-colors">
+                  <Link href="tel:+919839353055" className="hoact:text-primary transition-colors">
                     +91 98393 53055
                   </Link>
                 </div>
@@ -389,7 +389,7 @@ export default function Home() {
               threshold={0.2}
               className="h-full"
             >
-              <div className="text-center bg-card rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow h-full flex flex-col justify-between" data-testid="contact-email">
+              <div className="text-center bg-card rounded-lg p-6 shadow-sm hoact:shadow-md transition-shadow h-full flex flex-col justify-between" data-testid="contact-email">
                 <div>
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Mail className="h-8 w-8 text-primary" />
@@ -397,7 +397,7 @@ export default function Home() {
                   <h3 className="font-semibold mb-2 text-foreground">Email</h3>
                 </div>
                 <div className="text-muted-foreground">
-                  <Link href="mailto:support@khadimemillat.org" className="hover:text-primary transition-colors">
+                  <Link href="mailto:support@khadimemillat.org" className="hoact:text-primary transition-colors">
                     <p>support@khadimemillat.org</p>
                   </Link>
                 </div>
@@ -411,7 +411,7 @@ export default function Home() {
               threshold={0.2}
               className="h-full"
             >
-              <div className="text-center bg-card rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow h-full flex flex-col justify-between" data-testid="contact-whatsapp">
+              <div className="text-center bg-card rounded-lg p-6 shadow-sm hoact:shadow-md transition-shadow h-full flex flex-col justify-between" data-testid="contact-whatsapp">
                 <div>
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Headphones className="h-8 w-8 text-primary" />

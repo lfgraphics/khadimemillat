@@ -129,9 +129,9 @@ export default function SeedPage() {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Next steps:</p>
               <div className="space-y-1 text-sm">
-                <p>• Visit <a href="/welfare-programs" className="text-primary hover:underline">/welfare-programs</a> to see the programs</p>
-                <p>• Visit <a href="/" className="text-primary hover:underline">home page</a> to see them in the programs section</p>
-                <p>• Visit <a href="/admin/welfare-programs" className="text-primary hover:underline">/admin/welfare-programs</a> to manage them</p>
+                <p>• Visit <a href="/welfare-programs" className="text-primary hoact:underline">/welfare-programs</a> to see the programs</p>
+                <p>• Visit <a href="/" className="text-primary hoact:underline">home page</a> to see them in the programs section</p>
+                <p>• Visit <a href="/admin/welfare-programs" className="text-primary hoact:underline">/admin/welfare-programs</a> to manage them</p>
               </div>
             </div>
           )}

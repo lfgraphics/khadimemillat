@@ -164,7 +164,7 @@ export const AnimatedProgramCards: React.FC<AnimatedProgramCardsProps> = ({
             key={card.id}
             className={cn(
               'overflow-hidden transition-shadow duration-200',
-              enableHoverEffects && 'hover:shadow-lg',
+              enableHoverEffects && 'hoact:shadow-lg',
               card.className
             )}
             data-testid={card.testId}

@@ -195,7 +195,7 @@ export const AnimatedContactSection: React.FC<AnimatedContactSectionProps> = ({
           {contactMethods.map((method) => (
             <div 
               key={method.id} 
-              className="text-center hover:shadow-lg transition-shadow duration-200" 
+              className="text-center hoact:shadow-lg transition-shadow duration-200" 
               data-testid={method.testId}
             >
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">

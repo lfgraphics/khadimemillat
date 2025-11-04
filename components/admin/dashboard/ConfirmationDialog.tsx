@@ -80,7 +80,7 @@ export default function ConfirmationDialog({
           <AlertDialogAction
             onClick={onConfirm}
             disabled={loading}
-            className={isDestructive ? 'bg-red-600 hover:bg-red-700' : ''}
+            className={isDestructive ? 'bg-red-600 hoact:bg-red-700' : ''}
           >
             {loading ? 'Processing...' : config.confirmText}
           </AlertDialogAction>

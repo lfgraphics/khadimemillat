@@ -88,7 +88,7 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
       <button 
         className={cn(
           'transition-all duration-200',
-          colorTransition && 'hover:brightness-110',
+          colorTransition && 'hoact:brightness-110',
           className
         )} 
         {...props}

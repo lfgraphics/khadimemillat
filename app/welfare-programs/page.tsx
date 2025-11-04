@@ -40,14 +40,14 @@ export default async function WelfareProgramsPage() {
                 return (
                   <div key={program._id} className="group">
                     <Link href={`/welfare-programs/${program.slug}`} className="block">
-                      <div className="bg-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group-hover:scale-[1.02]">
+                      <div className="bg-card rounded-xl overflow-hidden shadow-sm hoact:shadow-lg transition-all duration-300 group-hoact:scale-[1.02]">
                         {/* Cover Image */}
                         <div className="relative h-48 overflow-hidden">
                           <Image
                             src={program.coverImage}
                             alt={program.title}
                             fill
-                            className="object-cover group-hover:scale-110 transition-transform duration-300"
+                            className="object-cover group-hoact:scale-110 transition-transform duration-300"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                           <div
@@ -63,7 +63,7 @@ export default async function WelfareProgramsPage() {
 
                         {/* Content */}
                         <div className="p-6">
-                          <h3 className="text-xl font-semibold mb-3 text-foreground group-hover:text-primary transition-colors">
+                          <h3 className="text-xl font-semibold mb-3 text-foreground group-hoact:text-primary transition-colors">
                             {program.title}
                           </h3>
                           <p className="text-muted-foreground mb-4 line-clamp-3">
@@ -89,7 +89,7 @@ export default async function WelfareProgramsPage() {
                           {/* CTA */}
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-primary font-medium">View Campaigns</span>
-                            <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition-transform" />
+                            <ArrowRight className="h-4 w-4 text-primary group-hoact:translate-x-1 transition-transform" />
                           </div>
                         </div>
                       </div>

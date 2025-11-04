@@ -82,7 +82,7 @@ export default function ScrapItemCard({ item, onChange, onAction, saving = false
             folder: 'kmwf/scrap-items',
             tags: ['scrap-item', type, item.id]
           }}
-          className="w-16 h-16 rounded flex items-center justify-center text-muted-foreground bg-muted/40 cursor-pointer hover:bg-muted/60 transition-colors"
+          className="w-16 h-16 rounded flex items-center justify-center text-muted-foreground bg-muted/40 cursor-pointer hoact:bg-muted/60 transition-colors"
         />
       </div>
     )
@@ -119,7 +119,7 @@ export default function ScrapItemCard({ item, onChange, onAction, saving = false
               <div key={`b-${i}`} className="relative group w-16 h-16 rounded overflow-hidden border bg-muted" title="Before photo">
                 <ClickableImage src={pid} alt="Before photo" className="w-full h-full object-cover" caption={`${local.name} - Before photo`} transform={{ width: 128, height: 128, crop: 'fill' }} />
                 {editing && (
-                  <button type="button" onClick={() => setLocal(l => ({ ...l, photos: { ...l.photos, before: l.photos.before.filter((_, idx) => idx !== i) } }))} className="absolute top-0 right-0 m-0.5 bg-black/60 text-white rounded-full w-4 h-4 text-[10px] hidden group-hover:flex items-center justify-center">×</button>
+                  <button type="button" onClick={() => setLocal(l => ({ ...l, photos: { ...l.photos, before: l.photos.before.filter((_, idx) => idx !== i) } }))} className="absolute top-0 right-0 m-0.5 bg-black/60 text-white rounded-full w-4 h-4 text-[10px] hidden group-hoact:flex items-center justify-center">×</button>
                 )}
               </div>
             ))}
@@ -139,7 +139,7 @@ export default function ScrapItemCard({ item, onChange, onAction, saving = false
               <div key={`a-${i}`} className="relative group w-16 h-16 rounded overflow-hidden border bg-muted" title="After photo">
                 <ClickableImage src={pid} alt="After photo" className="w-full h-full object-cover" caption={`${local.name} - After photo`} transform={{ width: 128, height: 128, crop: 'fill' }} />
                 {editing && (
-                  <button type="button" onClick={() => setLocal(l => ({ ...l, photos: { ...l.photos, after: l.photos.after.filter((_, idx) => idx !== i) } }))} className="absolute top-0 right-0 m-0.5 bg-black/60 text-white rounded-full w-4 h-4 text-[10px] hidden group-hover:flex items-center justify-center">×</button>
+                  <button type="button" onClick={() => setLocal(l => ({ ...l, photos: { ...l.photos, after: l.photos.after.filter((_, idx) => idx !== i) } }))} className="absolute top-0 right-0 m-0.5 bg-black/60 text-white rounded-full w-4 h-4 text-[10px] hidden group-hoact:flex items-center justify-center">×</button>
                 )}
               </div>
             ))}

@@ -247,7 +247,7 @@ export default function ItemsPage() {
             {/* Items List */}
             <div className="grid gap-6">
                 {filteredItems.map(item => (
-                    <Card key={item._id} className="hover:shadow-md transition-shadow">
+                    <Card key={item._id} className="hoact:shadow-md transition-shadow">
                         <CardContent className="p-6">
                             {/* Header with title and actions */}
                             <div className="flex items-start justify-between mb-6">

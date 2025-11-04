@@ -222,7 +222,7 @@ export default function ChannelSelector({
                       ? 'border-blue-500 bg-blue-50'
                       : isDisabled
                       ? 'border-gray-200 bg-gray-50 opacity-60'
-                      : 'hover:bg-muted/50 cursor-pointer'
+                      : 'hoact:bg-muted/50 cursor-pointer'
                   }`}
                   onClick={() => !isDisabled && onChannelToggle(channel)}
                 >
@@ -397,7 +397,7 @@ export default function ChannelSelector({
                               folder: `kmwf/notifications/${channel}`,
                               tags: ['notification-attachment', channel]
                             }}
-                            className="min-w-[160px] h-10 rounded px-3 flex items-center justify-center text-sm bg-muted/40 hover:bg-muted/60"
+                            className="min-w-[160px] h-10 rounded px-3 flex items-center justify-center text-sm bg-muted/40 hoact:bg-muted/60"
                           />
                           <span className="text-xs text-muted-foreground">
                             {channel === 'email' ? 'Images/PDF' : 'Images only'}

@@ -338,7 +338,7 @@ export default function DynamicDonationPage({
               <Button
                 onClick={handleRazorpayPayment}
                 disabled={processing}
-                className="w-full bg-primary hover:bg-primary/90 text-white py-3 text-lg"
+                className="w-full bg-primary hoact:bg-primary/90 text-white py-3 text-lg"
                 size="lg"
               >
                 {processing ? (

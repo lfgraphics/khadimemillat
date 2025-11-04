@@ -114,7 +114,7 @@ const SearchableDropDownSelect = ({
             <button
                 type="button"
                 onClick={() => setOpen((prev) => !prev)}
-                className="flex items-center justify-between w-full min-h-[44px] border border-input rounded-md px-3 py-2 text-left bg-background hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors duration-200 touch-manipulation"
+                className="flex items-center justify-between w-full min-h-[44px] border border-input rounded-md px-3 py-2 text-left bg-background hoact:bg-accent hoact:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors duration-200 touch-manipulation"
                 aria-expanded={open}
                 aria-haspopup="listbox"
             >
@@ -149,7 +149,7 @@ const SearchableDropDownSelect = ({
                             {onCreateOption && searchTerm.trim() !== '' && (
                                 <button
                                     type="button"
-                                    className="text-primary hover:text-primary/80 underline text-left font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 rounded px-1 py-0.5"
+                                    className="text-primary hoact:text-primary/80 underline text-left font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 rounded px-1 py-0.5"
                                     onClick={() => {
                                         onCreateOption(searchTerm.trim());
                                         setOpen(false);
@@ -169,7 +169,7 @@ const SearchableDropDownSelect = ({
                                 aria-selected={value === item.value}
                                 className={cn(
                                     "flex items-center px-3 py-2.5 cursor-pointer transition-colors duration-150",
-                                    "hover:bg-accent hover:text-accent-foreground",
+                                    "hoact:bg-accent hoact:text-accent-foreground",
                                     index === highlightedIndex && "bg-accent text-accent-foreground",
                                     value === item.value && "font-semibold bg-primary/5"
                                 )}

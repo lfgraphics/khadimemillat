@@ -63,7 +63,7 @@ export default function GoogleBusinessStats({ showDetails = false, className = "
             {data.phone && (
               <div className="flex items-center space-x-2 text-muted-foreground">
                 <Phone className="h-4 w-4" />
-                <a href={`tel:${data.phone}`} className="hover:text-primary">
+                <a href={`tel:${data.phone}`} className="hoact:text-primary">
                   {data.phone}
                 </a>
               </div>
@@ -75,7 +75,7 @@ export default function GoogleBusinessStats({ showDetails = false, className = "
                   href={data.website} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="hover:text-primary"
+                  className="hoact:text-primary"
                 >
                   Visit Website
                 </a>

@@ -217,7 +217,7 @@ export function FileUploadModal({
             <Button
               onClick={handleSelectFromStorage}
               variant="outline"
-              className="flex items-center gap-2 h-12 hover:bg-accent hover:text-accent-foreground transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="flex items-center gap-2 h-12 hoact:bg-accent hoact:text-accent-foreground transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               disabled={disabled}
               aria-describedby={storageDescId}
               {...getAriaAttributes({
@@ -234,7 +234,7 @@ export function FileUploadModal({
             <Button
               onClick={handleTakePhoto}
               variant="outline"
-              className="flex items-center gap-2 h-12 hover:bg-accent hover:text-accent-foreground transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="flex items-center gap-2 h-12 hoact:bg-accent hoact:text-accent-foreground transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               disabled={disabled}
               aria-describedby={cameraDescId}
               {...getAriaAttributes({

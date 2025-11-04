@@ -174,7 +174,7 @@ export default function CampaignEditForm({ campaign }: CampaignEditFormProps) {
       <div className="mb-6">
         <Link 
           href="/admin/campaigns"
-          className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors"
+          className="inline-flex items-center text-muted-foreground hoact:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Campaigns

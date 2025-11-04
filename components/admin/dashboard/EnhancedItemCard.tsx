@@ -183,11 +183,11 @@ export default function EnhancedItemCard({
             variant="ghost"
             onClick={() => onEdit(item)}
             disabled={loading}
-            className="ml-2 flex-shrink-0 button-press hover-lift transition-all duration-200 opacity-0 group-hover:opacity-100 focus:opacity-100"
+            className="ml-2 flex-shrink-0 button-press hover-lift transition-all duration-200 opacity-0 group-hoact:opacity-100 focus:opacity-100"
             aria-label={generateAriaLabel('Edit', item.name, 'button', 'Click to edit item')}
             aria-describedby={`${item.id}-title`}
           >
-            <Edit className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+            <Edit className="h-4 w-4 transition-transform duration-200 group-hoact:scale-110" />
             <span className="sr-only">Edit item</span>
           </Button>
         </div>
@@ -211,14 +211,14 @@ export default function EnhancedItemCard({
           {hasPhotos && compact && (
             <Badge 
               variant="outline" 
-              className="text-xs cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 hover-scale" 
+              className="text-xs cursor-pointer hoact:bg-gray-100 dark:hoact:bg-gray-800 transition-all duration-200 hover-scale" 
               onClick={() => openModal(allPhotos)}
               role="button"
               tabIndex={0}
               aria-label={`View ${allPhotos.length} photos for ${item.name}`}
               onKeyDown={(e) => keyboardNavigation.handleKeyDown(e, () => openModal(allPhotos))}
             >
-              <ImageIcon className="h-3 w-3 mr-1 transition-transform duration-200 hover:scale-110" aria-hidden="true" />
+              <ImageIcon className="h-3 w-3 mr-1 transition-transform duration-200 hoact:scale-110" aria-hidden="true" />
               {allPhotos.length}
             </Badge>
           )}
@@ -266,7 +266,7 @@ export default function EnhancedItemCard({
                 className="text-xs h-6 px-2 button-press hover-lift transition-all duration-200"
                 aria-label={`View all ${allPhotos.length} photos for ${item.name}`}
               >
-                <Eye className="h-3 w-3 mr-1 transition-transform duration-200 hover:scale-110" aria-hidden="true" />
+                <Eye className="h-3 w-3 mr-1 transition-transform duration-200 hoact:scale-110" aria-hidden="true" />
                 View All
               </Button>
             </div>
@@ -359,7 +359,7 @@ export default function EnhancedItemCard({
                   aria-describedby={hasValidationErrors ? `${item.id}-validation-errors` : undefined}
                 >
                   <Icon 
-                    className={`h-3 w-3 mr-1 transition-transform duration-200 ${isActionPending ? 'animate-spin' : 'hover:scale-110'}`} 
+                    className={`h-3 w-3 mr-1 transition-transform duration-200 ${isActionPending ? 'animate-spin' : 'hoact:scale-110'}`} 
                     aria-hidden="true"
                   />
                   {isActionPending ? 'Processing...' : action.label}

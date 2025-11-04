@@ -171,7 +171,7 @@ export default function CreateCollectionRequestClient() {
                             <span className="flex-1">{error}</span>
                             <button
                                 onClick={() => setError(null)}
-                                className="text-xs underline hover:no-underline"
+                                className="text-xs underline hoact:no-underline"
                             >
                                 Dismiss
                             </button>
@@ -210,7 +210,7 @@ export default function CreateCollectionRequestClient() {
                                 </div>
                                 <button
                                     onClick={handleBackToSearch}
-                                    className="text-sm text-muted-foreground hover:text-foreground underline"
+                                    className="text-sm text-muted-foreground hoact:text-foreground underline"
                                 >
                                     Change user
                                 </button>

@@ -105,7 +105,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ intervalMs, 
                         <div
                             key={n._id}
                             className={cn(
-                                "px-3 py-2 border-b last:border-b-0 text-xs space-y-0.5 cursor-pointer hover:bg-muted/50",
+                                "px-3 py-2 border-b last:border-b-0 text-xs space-y-0.5 cursor-pointer hoact:bg-muted/50",
                                 !n.read && "bg-muted/30"
                             )}
                             onClick={() => {
@@ -130,7 +130,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ intervalMs, 
                                 {n.url && (
                                     <Link
                                         href={n.url}
-                                        className="text-[10px] underline text-blue-600 hover:text-blue-700"
+                                        className="text-[10px] underline text-blue-600 hoact:text-blue-700"
                                         onClick={() => setOpen(false)}
                                     >
                                         View

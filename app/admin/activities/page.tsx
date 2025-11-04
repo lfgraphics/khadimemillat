@@ -321,7 +321,7 @@ export default function AdminActivitiesPage() {
                             <button
                               type="button"
                               onClick={() => removeUploadedImage(image.publicId)}
-                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hoact:opacity-100 transition-opacity"
                               title="Remove image"
                             >
                               <X className="h-3 w-3" />
@@ -354,7 +354,7 @@ export default function AdminActivitiesPage() {
                           className={`relative cursor-pointer border-2 rounded-lg overflow-hidden ${
                             selectedImages.includes(imagePath) 
                               ? 'border-primary ring-2 ring-primary/20' 
-                              : 'border-gray-200 hover:border-gray-300'
+                              : 'border-gray-200 hoact:border-gray-300'
                           }`}
                           onClick={() => handleImageToggle(imagePath)}
                         >

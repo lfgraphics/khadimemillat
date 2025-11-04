@@ -1113,7 +1113,7 @@ export default function DonationPage() {
                               <button
                                 type='button'
                                 onClick={() => removeUploadedImage(image.publicId)}
-                                className='absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity'
+                                className='absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hoact:opacity-100 transition-opacity'
                                 title='Remove image'
                               >
                                 ×

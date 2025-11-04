@@ -290,7 +290,7 @@ export default function AudienceTargeting({
               {segments.map(segment => (
                 <div
                   key={segment._id}
-                  className="p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                  className="p-3 border rounded-lg hoact:bg-muted/50 cursor-pointer transition-colors"
                   onClick={() => loadSegment(segment)}
                 >
                   <div className="flex items-start justify-between">
@@ -361,7 +361,7 @@ export default function AudienceTargeting({
                   className={`p-3 border rounded-lg cursor-pointer transition-colors ${
                     criteria.roles.includes(role.value)
                       ? 'border-blue-500 bg-blue-50'
-                      : 'hover:bg-muted/50'
+                      : 'hoact:bg-muted/50'
                   }`}
                   onClick={() => handleRoleToggle(role.value)}
                 >
@@ -417,7 +417,7 @@ export default function AudienceTargeting({
                     {filteredLocations.map(location => (
                       <div
                         key={location}
-                        className="p-2 hover:bg-muted cursor-pointer"
+                        className="p-2 hoact:bg-muted cursor-pointer"
                         onClick={() => addLocation(location)}
                       >
                         {location}
@@ -448,7 +448,7 @@ export default function AudienceTargeting({
                     {location}
                     <button
                       onClick={() => removeLocation(location)}
-                      className="ml-1 hover:text-red-600"
+                      className="ml-1 hoact:text-red-600"
                     >
                       <Trash2 className="h-3 w-3" />
                     </button>

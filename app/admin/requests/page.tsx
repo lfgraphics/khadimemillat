@@ -169,7 +169,7 @@ export default function RequestsPage() {
       {/* Requests List */}
       <div className="grid gap-4">
         {filteredRequests.map(request => (
-          <Card key={request._id} className="hover:shadow-md transition-shadow">
+          <Card key={request._id} className="hoact:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="space-y-2">

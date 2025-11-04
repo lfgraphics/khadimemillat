@@ -183,7 +183,7 @@ export function FilePreview({
                 variant="ghost"
                 size="sm"
                 onClick={handleRemove}
-                className="h-6 w-6 p-0 text-red-600 hover:text-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                className="h-6 w-6 p-0 text-red-600 hoact:text-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                 aria-label={`Remove ${file.name}`}
               >
                 <X className="h-3 w-3" aria-hidden="true" />
@@ -198,7 +198,7 @@ export function FilePreview({
   return (
     <>
       <div 
-        className={cn("bg-white dark:bg-gray-800 border rounded-lg shadow-sm transition-all hover:shadow-md", "p-3 sm:p-4", className)}
+        className={cn("bg-white dark:bg-gray-800 border rounded-lg shadow-sm transition-all hoact:shadow-md", "p-3 sm:p-4", className)}
         role="region"
         aria-labelledby={previewId}
         aria-describedby={detailsId}
@@ -221,12 +221,12 @@ export function FilePreview({
                   onError={handleImageError}
                 />
                 {showFullPreview && (
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hoact:bg-opacity-30 transition-all rounded-md flex items-center justify-center opacity-0 group-hoact:opacity-100">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={handleFullPreviewOpen}
-                      className="h-6 w-6 sm:h-8 sm:w-8 p-0 text-white hover:bg-white hover:bg-opacity-20 focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
+                      className="h-6 w-6 sm:h-8 sm:w-8 p-0 text-white hoact:bg-white hoact:bg-opacity-20 focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
                       aria-label={`View full size preview of ${file.name}`}
                     >
                       <Eye className="h-3 w-3 sm:h-4 sm:w-4" aria-hidden="true" />
@@ -289,7 +289,7 @@ export function FilePreview({
                 variant="ghost"
                 size="sm"
                 onClick={handleRemove}
-                className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-red-600 hoact:text-red-700 dark:text-red-400 dark:hoact:text-red-300 focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                 aria-label={`Remove ${file.name}`}
               >
                 <X className="h-3 w-3 sm:h-4 sm:w-4" aria-hidden="true" />

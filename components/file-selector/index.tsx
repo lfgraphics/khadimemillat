@@ -420,7 +420,7 @@ export function EnhancedFileSelector({
             <p className="text-red-800 text-xs sm:text-sm">{fileState.error}</p>
             <button
               onClick={handleErrorDismiss}
-              className="text-red-600 hover:text-red-800 text-xs mt-1 underline"
+              className="text-red-600 hoact:text-red-800 text-xs mt-1 underline"
             >
               Dismiss
             </button>

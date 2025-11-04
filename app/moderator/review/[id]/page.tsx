@@ -143,7 +143,7 @@ export default function ModeratorReviewDetailPage() {
             folder: 'kmwf/scrap-items/after',
             tags: ['scrap-item', 'after-photo', itemId]
           }}
-          className="text-xs bg-muted px-2 py-1 rounded border hover:bg-background transition cursor-pointer"
+          className="text-xs bg-muted px-2 py-1 rounded border hoact:bg-background transition cursor-pointer"
         />
       </div>
     );

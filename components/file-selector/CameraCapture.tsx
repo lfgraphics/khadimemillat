@@ -317,7 +317,7 @@ export function CameraCapture({
                       variant="secondary"
                       size="sm"
                       onClick={switchCamera}
-                      className="bg-black/50 hover:bg-black/70 text-white border-white/20 focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
+                      className="bg-black/50 hoact:bg-black/70 text-white border-white/20 focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
                       aria-label={`Switch to ${facingMode === 'user' ? 'back' : 'front'} camera`}
                     >
                       <RotateCcw className="h-4 w-4" aria-hidden="true" />
@@ -328,7 +328,7 @@ export function CameraCapture({
                   <Button
                     onClick={handleCapture}
                     size="lg"
-                    className="bg-white hover:bg-gray-100 text-black rounded-full h-16 w-16 p-0 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-black"
+                    className="bg-white hoact:bg-gray-100 text-black rounded-full h-16 w-16 p-0 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-black"
                     aria-label="Capture photo"
                   >
                     <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center" aria-hidden="true">

@@ -55,8 +55,8 @@ export default function ConversationList({ initial }: { initial?: any[] }) {
           (Date.now() - new Date(c.createdAt).getTime()) < 60 * 60 * 1000 // 1 hour
         
         return (
-          <Card key={c._id} className={`transition-all duration-200 hover:shadow-md ${
-            isCompleted ? 'opacity-60 bg-muted/30' : 'hover:bg-accent/50'
+          <Card key={c._id} className={`transition-all duration-200 hoact:shadow-md ${
+            isCompleted ? 'opacity-60 bg-muted/30' : 'hoact:bg-accent/50'
           }`}>
             <Link href={`/conversations/${c._id}`} className="block">
               <div className="p-3 sm:p-4">

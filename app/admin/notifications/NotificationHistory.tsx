@@ -211,7 +211,7 @@ export default function NotificationHistory() {
           ) : (
             <div className="space-y-4">
               {filteredNotifications.map((notification) => (
-                <Card key={notification._id} className="hover:shadow-md transition-shadow">
+                <Card key={notification._id} className="hoact:shadow-md transition-shadow">
                   <CardContent className="pt-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

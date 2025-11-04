@@ -267,7 +267,7 @@ export default function AboutPage() {
                                 </Button>
                             </Link>
                             <Link href="/marketplace">
-                                <Button size="lg" variant="outline" className="w-full sm:w-auto border-primary-foreground text-primary-foreground hover:bg-primary-foreground">
+                                <Button size="lg" variant="outline" className="w-full sm:w-auto border-primary-foreground text-primary-foreground hoact:bg-primary-foreground">
                                     <ShoppingBag className="mr-2 h-5 w-5" />
                                     Browse Marketplace
                                 </Button>

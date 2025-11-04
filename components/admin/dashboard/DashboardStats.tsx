@@ -123,7 +123,7 @@ export default function DashboardStatsComponent({ stats, loading }: DashboardSta
             className="animate-fade-in-up"
           >
             <Card 
-              className="group hover-lift hover-glow transition-all duration-300 cursor-default border-0 shadow-sm hover:shadow-lg focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
+              className="group hover-lift hover-glow transition-all duration-300 cursor-default border-0 shadow-sm hoact:shadow-lg focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
               role="article"
               aria-label={generateAriaLabel(item.label, 'dashboard statistics', formattedValue, item.description)}
               tabIndex={0}
@@ -134,13 +134,13 @@ export default function DashboardStatsComponent({ stats, loading }: DashboardSta
                   <div 
                     className={`
                       p-1.5 sm:p-2 rounded-lg transition-all duration-300 ${item.bgColor} 
-                      group-hover:scale-110 group-hover:rotate-3
+                      group-hoact:scale-110 group-hoact:rotate-3
                     `}
                     aria-hidden="true"
                   >
                     <Icon className={`
                       h-4 w-4 sm:h-5 sm:w-5 ${item.color} 
-                      transition-all duration-300 group-hover:scale-110
+                      transition-all duration-300 group-hoact:scale-110
                     `} />
                   </div>
                   
@@ -153,7 +153,7 @@ export default function DashboardStatsComponent({ stats, loading }: DashboardSta
                       {item.label}
                     </p>
                     <p 
-                      className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100 leading-tight mt-0.5 transition-all duration-200 group-hover:scale-105"
+                      className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100 leading-tight mt-0.5 transition-all duration-200 group-hoact:scale-105"
                       aria-labelledby={`stat-${index}-label`}
                       aria-describedby={`stat-${index}-description`}
                     >
