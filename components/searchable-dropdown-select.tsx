@@ -123,7 +123,7 @@ const SearchableDropDownSelect = ({
                     !value && "text-muted-foreground"
                 )}>
                     {value
-                        ? options.find((opt) => opt.value === value)?.label
+                        ? options.find((opt) => opt.value === value)?.label || value
                         : placeholder}
                 </span>
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

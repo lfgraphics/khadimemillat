@@ -209,7 +209,7 @@ const ItemSelectionStep: React.FC<ItemSelectionStepProps> = ({
     // Handle creating new item option
     const handleCreateOption = useCallback((label: string) => {
         onUpdate({ name: label })
-        setSearchTerm('')
+        setSearchTerm('') // Clear search term after creating option
     }, [onUpdate])
 
     return (
