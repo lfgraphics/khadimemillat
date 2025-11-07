@@ -1,10 +1,12 @@
 import { Metadata } from "next";
-import { Heart, Users, MapPin, Calendar, Award, Target, Eye, Handshake, ShoppingBag } from "lucide-react";
+import { Heart, Users, MapPin, Calendar, Award, Target, Eye, Handshake, ShoppingBag, ArrowRight, Recycle, HandHeart, UserCheck, TrendingUp, Shield, Quote, Lightbulb } from "lucide-react";
 import { AnimatedSection } from '@/components/animations';
 import GoogleReviewsServer from '@/components/GoogleReviewsServer';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
+// Use client-safe animated wrappers from our animations collection
+import { Badge, ClickableImage } from "@/components/ui";
 
 export const metadata: Metadata = {
     title: "About Us - Khadim-e-Millat Welfare Foundation",
@@ -12,270 +14,439 @@ export const metadata: Metadata = {
     keywords: ["about", "welfare foundation", "Gorakhpur", "community service", "scrap collection", "charity", "social impact"],
 };
 
+// Note: animation behaviour is delegated to `AnimatedSection` and other
+// client-safe animation components exported from `components/animations`.
+
+// Animation configuration and behaviour are handled by client-safe
+// components in `components/animations` (e.g. `AnimatedSection`).
+
 export default function AboutPage() {
+    const stories = [
+        {
+            name: "Aisha Rahman",
+            role: "Sponsored Student",
+            image: "https://images.unsplash.com/photo-1622996061359-0da030a44e6b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtdXNsaW0lMjBmYW1pbHklMjBzdXBwb3J0fGVufDF8fHx8MTc2MjQ2NDYzM3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+            quote: "Thanks to KMWF, I'm now pursuing my graduation. My family never thought education would be possible for me."
+        },
+        {
+            name: "Mohammad Hussain",
+            role: "Scrap Collection Volunteer",
+            image: "https://images.unsplash.com/photo-1759320244288-10ddfcdbb5b4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyZWN5Y2xpbmclMjBjb21tdW5pdHklMjB3b3JrfGVufDF8fHx8MTc2MjQ2NDYzMHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+            quote: "Being part of KMWF changed my perspective. Every item we collect is another family helped."
+        },
+        {
+            name: "Fatima Begum",
+            role: "Widow & Beneficiary",
+            image: "https://images.unsplash.com/photo-1629131973019-56596eb9975a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtdXNsaW0lMjBjaGFyaXR5JTIwdm9sdW50ZWVyfGVufDF8fHx8MTc2MjQ2NDYyOHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+            quote: "After losing my husband, KMWF's sponsorship program gave my children hope. We're not alone anymore."
+        }
+    ];
+
+    const approachSteps = [
+        {
+            icon: Recycle,
+            title: "Sustainable Scrap Recycling",
+            description: "Every donated or collected scrap item — from metals to household recyclables — is processed responsibly. The proceeds fund key welfare activities and create a circular model where waste transforms into welfare.",
+            highlight: "This initiative sustains nearly half of our welfare operations.",
+            color: "from-green-500 to-emerald-500"
+        },
+        {
+            icon: Users,
+            title: "Verified Sponsorships",
+            description: "Our sponsorship system allows donors to take financial responsibility for an individual or a family in need. We conduct on-ground surveys and home visits to ensure genuine need.",
+            highlight: "Donors can personally meet and follow the progress of their beneficiaries.",
+            color: "from-blue-500 to-purple-500"
+        },
+        {
+            icon: HandHeart,
+            title: "Community Welfare & Relief Drives",
+            description: "From flood relief and winter clothing to Ramadan support and educational assistance — our community programs respond to both seasonal and urgent needs.",
+            highlight: "Ensuring no deserving family is left unseen.",
+            color: "from-purple-500 to-pink-500"
+        }
+    ];
+
+    const howWeWork = [
+        {
+            step: "01",
+            title: "Survey & Verification",
+            description: "Every beneficiary is identified through careful on-ground assessment.",
+            icon: UserCheck
+        },
+        {
+            step: "02",
+            title: "Connection & Sponsorship",
+            description: "Verified profiles are matched with compassionate donors who wish to take long-term responsibility.",
+            icon: Users
+        },
+        {
+            step: "03",
+            title: "Sustainable Support",
+            description: "Scrap proceeds and donations are channelled transparently to sustain welfare programs and ongoing relief efforts.",
+            icon: TrendingUp
+        },
+        {
+            step: "04",
+            title: "Accountability & Updates",
+            description: "Donors receive periodic updates and, where possible, can meet the beneficiaries they support.",
+            icon: Eye
+        }
+    ];
+
+    const values = [
+        {
+            icon: Eye,
+            title: "Transparency",
+            description: "Every rupee and resource is traceable to its impact."
+        },
+        {
+            icon: Recycle,
+            title: "Sustainability",
+            description: "Recycling, reusing, and restoring — for people and the planet."
+        },
+        {
+            icon: Shield,
+            title: "Dignity",
+            description: "Assistance that uplifts without dependency."
+        },
+        {
+            icon: Heart,
+            title: "Compassion",
+            description: "Human connection is the heart of everything we do."
+        }
+    ];
+
     return (
-        <div className="min-h-screen">
-            {/* Hero Section */}
-            <section className="relative bg-gradient-to-br from-primary to-primary/80 text-primary-foreground py-20">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <AnimatedSection variant="fade" delay={0.1} duration={0.6}>
-                        <div className="text-center">
-                            <h1 className="text-4xl md:text-6xl font-bold mb-6">
-                                About Our Foundation
+        <>
+            <div className="min-h-screen bg-background">
+                {/* Hero Section */}
+                <AnimatedSection variant="fade" className="relative py-20 md:py-32 overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-purple-500/10 to-background"></div>
+                    <div className="container mx-auto px-4 relative z-10">
+                        <AnimatedSection variant="fade" delay={0.2} className="max-w-4xl mx-auto text-center">
+                            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">About Us</Badge>
+                            <h1 className="text-4xl md:text-5xl lg:text-6xl mb-6">
+                                About Khadim-e-Millat Welfare Foundation
                             </h1>
-                            <p className="text-xl md:text-2xl mb-8 text-primary-foreground/90 max-w-3xl mx-auto">
-                                Transforming communities through sustainable practices and compassionate service since 2021
+                            <p className="text-lg md:text-xl text-muted-foreground">
+                                Together, we are Khadim-e-Millat — a community where giving means belonging.
                             </p>
-                        </div>
-                    </AnimatedSection>
-                </div>
-            </section>
+                        </AnimatedSection>
+                    </div>
+                </AnimatedSection>
 
-            {/* Foundation Story */}
-            <section className="py-16 bg-background">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        <AnimatedSection variant="slideLeft" delay={0.2}>
+                {/* Who We Are */}
+                <section className="py-16 md:py-24">
+                    <div className="container mx-auto px-4">
+                        <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+                            <AnimatedSection variant="fade" className="" triggerOnce>
+                                <h2 className="text-3xl md:text-4xl mb-4">Who We Are</h2>
+                                <p className="text-lg text-muted-foreground mb-4">
+                                    Founded in 2021 in Gorakhpur, Uttar Pradesh, Khadim-e-Millat Welfare Foundation (KMWF) is a community-driven organisation dedicated to connecting those who wish to give with those who truly need support.
+                                </p>
+                                <p className="text-lg text-muted-foreground mb-4">
+                                    We blend compassion with structure — ensuring every act of charity reaches a verified, deserving individual or family.
+                                </p>
+                                <Card className="bg-gradient-to-br from-primary/10 to-purple-500/10 border-primary/20 mt-6">
+                                    <CardContent className="p-6">
+                                        <Quote className="w-8 h-8 text-primary mb-3" />
+                                        <p className="text-lg italic">
+                                            Together, we are Khadim-e-Millat — a community where giving means belonging.
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            </AnimatedSection>
+
+                            <div className="grid md:grid-cols-1 gap-4">
+                                {stories.map((story, index) => (
+                                    <AnimatedSection key={index} variant="scale" className="">
+                                        <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300">
+                                            <CardContent className="p-6">
+                                                <div className="flex gap-4 items-start">
+                                                    <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
+                                                        <ClickableImage
+                                                            src={story.image}
+                                                            alt={story.name}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <h3 className="font-medium mb-1">{story.name}</h3>
+                                                        <p className="text-sm text-primary mb-2">{story.role}</p>
+                                                        <p className="text-sm text-muted-foreground italic">"{story.quote}"</p>
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </AnimatedSection>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Mission */}
+                <section className="py-16 md:py-24 bg-muted/30">
+                    <div className="container mx-auto px-4">
+                        <AnimatedSection variant="fade" className="max-w-4xl mx-auto text-center" triggerOnce>
+                            <Target className="w-16 h-16 text-primary mx-auto mb-6" />
+                            <h2 className="text-3xl md:text-4xl mb-6">Our Mission</h2>
+                            <p className="text-xl text-muted-foreground mb-4">
+                                To empower underprivileged families and individuals through verified sponsorships, need-based welfare programs, and innovative scrap-to-charity systems that sustain long-term impact.
+                            </p>
+                            <p className="text-lg text-muted-foreground italic">
+                                Our mission is simple yet profound: to make giving transparent, sustainable, and life-changing.
+                            </p>
+                        </AnimatedSection>
+                    </div>
+                </section>
+
+                {/* Our Approach */}
+                <section className="py-16 md:py-24">
+                    <div className="container mx-auto px-4">
+                        <AnimatedSection variant="fade" className="text-center mb-12" triggerOnce>
+                            <h2 className="text-3xl md:text-4xl mb-4">Our Approach</h2>
+                            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+                                Unlike traditional welfare models, KMWF combines three powerful streams of support that work hand-in-hand:
+                            </p>
+                        </AnimatedSection>
+
+                        <div className="grid md:grid-cols-3 gap-6 mb-12">
+                            {approachSteps.map((step, index) => (
+                                <AnimatedSection key={index} variant="scale" className="">
+                                    <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300 group">
+                                        <CardContent className="p-6">
+                                            <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                                                <step.icon className="w-7 h-7 text-white" />
+                                            </div>
+                                            <h3 className="text-xl mb-3">{step.title}</h3>
+                                            <p className="text-sm text-muted-foreground mb-4">{step.description}</p>
+                                            <p className="text-sm text-primary italic">{step.highlight}</p>
+                                        </CardContent>
+                                    </Card>
+                                </AnimatedSection>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* How We Work */}
+                <section className="py-16 md:py-24 bg-muted/30">
+                    <div className="container mx-auto px-4">
+                        <AnimatedSection variant="fade" className="text-center mb-12" triggerOnce>
+                            <h2 className="text-3xl md:text-4xl mb-4">How We Work</h2>
+                        </AnimatedSection>
+
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+                            {howWeWork.map((item, index) => (
+                                <AnimatedSection key={index} variant="scale" className="">
+                                    <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 text-center">
+                                        <CardContent className="p-6">
+                                            <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                                                <item.icon className="w-8 h-8 text-primary" />
+                                            </div>
+                                            <div className="text-4xl font-bold text-primary/20 mb-3">{item.step}</div>
+                                            <h3 className="text-lg mb-2">{item.title}</h3>
+                                            <p className="text-sm text-muted-foreground">{item.description}</p>
+                                        </CardContent>
+                                    </Card>
+                                </AnimatedSection>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* Vision & Values */}
+                <section className="py-16 md:py-24">
+                    <div className="container mx-auto px-4">
+                        <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+                            {/* Vision */}
+                            <AnimatedSection variant="fade" triggerOnce>
+                                <Card className="h-full bg-gradient-to-br from-primary/10 to-purple-500/10 border-primary/20">
+                                    <CardContent className="p-8">
+                                        <Lightbulb className="w-12 h-12 text-primary mb-6" />
+                                        <h2 className="text-3xl mb-4">Our Vision</h2>
+                                        <p className="text-lg text-muted-foreground">
+                                            A community where generosity flows sustainably — where donors, volunteers, and beneficiaries work hand-in-hand to restore dignity, opportunity, and hope.
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            </AnimatedSection>
+
+                            {/* Values */}
                             <div>
-                                <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
-                                    Our Story
-                                </h2>
-                                <div className="space-y-4 text-muted-foreground">
-                                    <p className="text-lg">
-                                        Khadim-e-Millat Welfare Foundation was established in 2021 in the heart of Gorakhpur, Uttar Pradesh,
-                                        with a vision to create sustainable change in our communities. What started as a small initiative has
-                                        grown into a comprehensive welfare platform that bridges the gap between waste and want.
-                                    </p>
-                                    <p>
-                                        Our unique approach combines environmental sustainability with social welfare. Through our innovative
-                                        scrap collection and redistribution system, we transform discarded items into opportunities for those
-                                        in need, creating a circular economy that benefits everyone involved.
-                                    </p>
-                                    <p>
-                                        Every donation, every collection, and every redistribution is a step towards building a more equitable
-                                        and sustainable society. We believe that small actions, when multiplied by millions of people, can
-                                        transform the world.
-                                    </p>
+                                <h2 className="text-3xl mb-6">Our Values</h2>
+                                <div className="grid gap-4">
+                                    {values.map((value, index) => (
+                                        <AnimatedSection key={index} variant="scale">
+                                            <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300">
+                                                <CardContent className="p-4">
+                                                    <div className="flex items-start gap-4">
+                                                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                            <value.icon className="w-5 h-5 text-primary" />
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="font-medium mb-1">{value.title}</h3>
+                                                            <p className="text-sm text-muted-foreground">{value.description}</p>
+                                                        </div>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        </AnimatedSection>
+                                    ))}
                                 </div>
                             </div>
-                        </AnimatedSection>
+                        </div>
+                    </div>
+                </section>
 
-                        <AnimatedSection variant="slideRight" delay={0.4}>
-                            <div className="grid grid-cols-2 gap-4">
-                                <Card className="p-6 text-center">
-                                    <CardContent className="p-0">
-                                        <Calendar className="h-12 w-12 text-primary mx-auto mb-4" />
-                                        <h3 className="font-semibold text-2xl mb-2">2021</h3>
-                                        <p className="text-sm text-muted-foreground">Founded</p>
+                {/* Leadership Section */}
+                <AnimatedSection variant="fade" className="py-16 md:py-24 bg-card/80" triggerOnce>
+                    <div className="container mx-auto px-4">
+                        <div className="max-w-4xl mx-auto">
+                            <AnimatedSection variant="fade" className="text-center mb-8" delay={0} triggerOnce>
+                                <h2 className="text-3xl md:text-4xl mb-4">Leadership</h2>
+                            </AnimatedSection>
+
+                            <AnimatedSection variant="scale" className="" delay={0.06} triggerOnce>
+                                <Card className="bg-gradient-to-br from-primary/10 to-purple-500/10 border-primary/20">
+                                    <CardContent className="p-8 md:p-12">
+                                        <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
+                                            <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-2xl overflow-hidden flex-shrink-0 border-4 border-primary/20">
+                                                <ClickableImage
+                                                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop"
+                                                    alt="Mufti Mohammad Dawood Qasmi"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                            <div className="flex-1 text-center md:text-left">
+                                                <h3 className="text-2xl mb-2">Mufti Mohammad Dawood Qasmi</h3>
+                                                <p className="text-primary mb-4">Founder & Director</p>
+                                                <p className="text-muted-foreground mb-6">
+                                                    At the heart of Khadim-e-Millat Welfare Foundation stands Mufti Mohammad Dawood Qasmi, the organisation's founder and director. Guided by faith and a lifelong commitment to community service, he leads the Foundation's efforts to combine compassion with accountability.
+                                                </p>
+                                                <p className="text-muted-foreground">
+                                                    Under his direction, KMWF has grown into a transparent welfare ecosystem — connecting donors, volunteers, and verified families across Gorakhpur and beyond.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <AnimatedSection variant="fade" className="mt-8 pt-8 border-t border-primary/20" delay={0.12} triggerOnce>
+                                            <div className="flex gap-4">
+                                                <Quote className="w-8 h-8 text-primary flex-shrink-0" />
+                                                <blockquote className="text-lg italic text-foreground">
+                                                    "Our goal is simple — to serve humanity sincerely and sustainably, until giving becomes our collective habit."
+                                                </blockquote>
+                                            </div>
+                                            <p className="text-right text-sm text-muted-foreground mt-4">
+                                                — Mufti Mohammad Dawood Qasmi, Director, KMWF
+                                            </p>
+                                        </AnimatedSection>
                                     </CardContent>
                                 </Card>
-                                <Card className="p-6 text-center">
-                                    <CardContent className="p-0">
-                                        <MapPin className="h-12 w-12 text-primary mx-auto mb-4" />
-                                        <h3 className="font-semibold text-2xl mb-2">Gorakhpur</h3>
-                                        <p className="text-sm text-muted-foreground">Headquarters</p>
-                                    </CardContent>
-                                </Card>
-                                <Card className="p-6 text-center">
-                                    <CardContent className="p-0">
-                                        <Users className="h-12 w-12 text-primary mx-auto mb-4" />
-                                        <h3 className="font-semibold text-2xl mb-2">1000+</h3>
-                                        <p className="text-sm text-muted-foreground">Families Helped</p>
-                                    </CardContent>
-                                </Card>
-                                <Card className="p-6 text-center">
-                                    <CardContent className="p-0">
-                                        <Heart className="h-12 w-12 text-primary mx-auto mb-4" />
-                                        <h3 className="font-semibold text-2xl mb-2">50+</h3>
-                                        <p className="text-sm text-muted-foreground">Active Volunteers</p>
-                                    </CardContent>
-                                </Card>
+                            </AnimatedSection>
+                        </div>
+                    </div>
+                </AnimatedSection>
+
+                {/* Journey Ahead */}
+                <section className="py-16 md:py-24">
+                    <div className="container mx-auto px-4">
+                        <AnimatedSection variant="fade" className="max-w-4xl mx-auto" triggerOnce>
+                            <Card className="bg-gradient-to-br from-primary to-purple-500 border-0">
+                                <CardContent className="p-8 md:p-12 text-center">
+                                    <TrendingUp className="w-16 h-16 text-white mx-auto mb-6" />
+                                    <h2 className="text-3xl md:text-4xl text-white mb-6">
+                                        Our Journey Ahead
+                                    </h2>
+                                    <p className="text-lg text-white/90 mb-6 max-w-3xl mx-auto">
+                                        KMWF is evolving from on-paper operations to a fully digitised, accountable ecosystem.
+                                    </p>
+                                    <p className="text-lg text-white/90 mb-8 max-w-3xl mx-auto">
+                                        Through this online platform, we aim to make giving more personal, traceable, and impactful — letting every donor witness the real change their compassion creates.
+                                    </p>
+                                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                        <Button size="lg" className="bg-white text-primary hover:bg-white/90" asChild>
+                                            <Link href="/programs">
+                                                Explore Our Programs
+                                                <ArrowRight className="ml-2 w-5 h-5" />
+                                            </Link>
+                                        </Button>
+                                        <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10" asChild>
+                                            <Link href="/transparency">
+                                                View Our Transparency
+                                            </Link>
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </AnimatedSection>
+                    </div>
+                </section>
+
+                {/* Testimonials */}
+                <section className="py-16 md:py-24 bg-muted/30">
+                    <div className="container mx-auto px-4">
+                        <AnimatedSection variant="fade" className="max-w-5xl mx-auto" rootMargin="-100px" triggerOnce>
+                            <AnimatedSection variant="fade" className="text-center mb-12" triggerOnce>
+                                <h2 className="text-3xl md:text-4xl mb-4">Voices from Our Community</h2>
+                            </AnimatedSection>
+
+                            <div className="grid md:grid-cols-3 gap-6">
+                                {stories.map((story, index) => (
+                                    <AnimatedSection key={index} variant="scale" className="">
+                                        <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50">
+                                            <CardContent className="p-6">
+                                                <div className="flex flex-col items-center text-center mb-4">
+                                                    <div className="w-20 h-20 rounded-full overflow-hidden mb-4">
+                                                        <ClickableImage
+                                                            src={story.image}
+                                                            alt={story.name}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    </div>
+                                                    <h3 className="font-medium mb-1">{story.name}</h3>
+                                                    <p className="text-sm text-primary">{story.role}</p>
+                                                </div>
+                                                <Quote className="w-6 h-6 text-primary/50 mb-2" />
+                                                <p className="text-sm text-muted-foreground italic">"{story.quote}"</p>
+                                            </CardContent>
+                                        </Card>
+                                    </AnimatedSection>
+                                ))}
                             </div>
                         </AnimatedSection>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            {/* Mission, Vision, Values */}
-            <section className="py-16 bg-card">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <AnimatedSection variant="fade" delay={0.1}>
-                        <div className="text-center mb-12">
-                            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                                Our Foundation
+                {/* CTA */}
+                <section className="py-16 md:py-24">
+                    <div className="container mx-auto px-4">
+                        <AnimatedSection variant="fade" className="max-w-3xl mx-auto text-center" triggerOnce>
+                            <Heart className="w-16 h-16 text-primary mx-auto mb-6" />
+                            <h2 className="text-3xl md:text-4xl mb-4">
+                                Join Our Movement
                             </h2>
-                            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                                Built on strong values and guided by a clear vision for a better tomorrow
+                            <p className="text-lg text-muted-foreground mb-8">
+                                Be part of a community where giving means belonging and every contribution creates lasting change.
                             </p>
-                        </div>
-                    </AnimatedSection>
-
-                    <div className="grid md:grid-cols-3 gap-8">
-                        <AnimatedSection variant="slideUp" delay={0.2}>
-                            <Card className="h-full p-8 text-center">
-                                <CardContent className="p-0">
-                                    <Target className="h-16 w-16 text-primary mx-auto mb-6" />
-                                    <h3 className="text-2xl font-bold mb-4 text-foreground">Our Mission</h3>
-                                    <p className="text-muted-foreground">
-                                        To create sustainable change in communities by transforming waste into opportunities,
-                                        ensuring that every donation reaches those who need it most while promoting environmental
-                                        responsibility.
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        </AnimatedSection>
-
-                        <AnimatedSection variant="slideUp" delay={0.35}>
-                            <Card className="h-full p-8 text-center">
-                                <CardContent className="p-0">
-                                    <Eye className="h-16 w-16 text-primary mx-auto mb-6" />
-                                    <h3 className="text-2xl font-bold mb-4 text-foreground">Our Vision</h3>
-                                    <p className="text-muted-foreground">
-                                        A world where no resource goes to waste and no person goes without help. We envision
-                                        communities where sustainability and social welfare work hand in hand to create lasting
-                                        positive impact.
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        </AnimatedSection>
-
-                        <AnimatedSection variant="slideUp" delay={0.5}>
-                            <Card className="h-full p-8 text-center">
-                                <CardContent className="p-0">
-                                    <Handshake className="h-16 w-16 text-primary mx-auto mb-6" />
-                                    <h3 className="text-2xl font-bold mb-4 text-foreground">Our Values</h3>
-                                    <p className="text-muted-foreground">
-                                        Transparency, sustainability, compassion, and community. We believe in honest operations,
-                                        environmental stewardship, caring for all people, and building stronger communities together.
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        </AnimatedSection>
-                    </div>
-                </div>
-            </section>
-
-            {/* How We Work */}
-            <section className="py-16 bg-background">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <AnimatedSection variant="fade" delay={0.1}>
-                        <div className="text-center mb-12">
-                            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                                How We Create Impact
-                            </h2>
-                            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                                Our systematic approach ensures maximum impact and transparency in every operation
-                            </p>
-                        </div>
-                    </AnimatedSection>
-
-                    <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        <AnimatedSection variant="slideLeft" delay={0.2}>
-                            <div className="space-y-6">
-                                <div className="flex items-start space-x-4">
-                                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                                        <span className="text-primary font-bold">1</span>
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-semibold mb-2">Collection & Verification</h3>
-                                        <p className="text-muted-foreground">
-                                            We collect donated items through our app-based system, verify their condition,
-                                            and process them for maximum utility.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-start space-x-4">
-                                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                                        <span className="text-primary font-bold">2</span>
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-semibold mb-2">Marketplace Distribution</h3>
-                                        <p className="text-muted-foreground">
-                                            Items are listed on our marketplace where community members can purchase them
-                                            at affordable prices, generating funds for welfare programs.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-start space-x-4">
-                                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                                        <span className="text-primary font-bold">3</span>
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-semibold mb-2">Welfare Programs</h3>
-                                        <p className="text-muted-foreground">
-                                            Proceeds fund various welfare initiatives including healthcare, education,
-                                            food distribution, and emergency assistance for families in need.
-                                        </p>
-                                    </div>
-                                </div>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                <Button size="lg" asChild>
+                                    <Link href="/sponsorship">
+                                        Sponsor a Family
+                                        <ArrowRight className="ml-2 w-5 h-5" />
+                                    </Link>
+                                </Button>
+                                <Button size="lg" variant="outline" asChild>
+                                    <Link href="/contribute">
+                                        See All Ways to Help
+                                    </Link>
+                                </Button>
                             </div>
                         </AnimatedSection>
-
-                        <AnimatedSection variant="slideRight" delay={0.4}>
-                            <Card className="p-8">
-                                <CardContent className="p-0">
-                                    <h3 className="text-2xl font-bold mb-6 text-center">Our Impact Areas</h3>
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg">
-                                            <span className="font-medium">Healthcare Support</span>
-                                            <Award className="h-5 w-5 text-primary" />
-                                        </div>
-                                        <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg">
-                                            <span className="font-medium">Education Assistance</span>
-                                            <Award className="h-5 w-5 text-primary" />
-                                        </div>
-                                        <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg">
-                                            <span className="font-medium">Food Distribution</span>
-                                            <Award className="h-5 w-5 text-primary" />
-                                        </div>
-                                        <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg">
-                                            <span className="font-medium">Emergency Relief</span>
-                                            <Award className="h-5 w-5 text-primary" />
-                                        </div>
-                                        <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg">
-                                            <span className="font-medium">Environmental Conservation</span>
-                                            <Award className="h-5 w-5 text-primary" />
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </AnimatedSection>
                     </div>
-                </div>
-            </section>
-
-            {/* Reviews Section */}
-            <GoogleReviewsServer />
-
-            {/* Call to Action */}
-            <section className="py-16 bg-primary text-primary-foreground">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <AnimatedSection variant="fade" delay={0.1}>
-                        <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                            Join Our Mission
-                        </h2>
-                        <p className="text-xl mb-8 text-primary-foreground/90">
-                            Be part of the change. Every contribution, big or small, makes a difference in someone's life.
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <Link href="/donate">
-                                <Button size="lg" variant="secondary" className="w-full sm:w-auto">
-                                    <Heart className="mr-2 h-5 w-5" />
-                                    Start Donating
-                                </Button>
-                            </Link>
-                            <Link href="/marketplace">
-                                <Button size="lg" variant="outline" className="w-full sm:w-auto border-primary-foreground text-primary-foreground hoact:bg-primary-foreground">
-                                    <ShoppingBag className="mr-2 h-5 w-5" />
-                                    Browse Marketplace
-                                </Button>
-                            </Link>
-                        </div>
-                    </AnimatedSection>
-                </div>
-            </section>
-        </div>
+                </section>
+            </div>
+        </>
     );
 }

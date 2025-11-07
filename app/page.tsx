@@ -1,4 +1,4 @@
-import { ArrowRight, ClipboardCheck, Headphones, Heart, HeartHandshake, Mail, Package, Phone, ShoppingBag, Store, Truck, Users } from "lucide-react";
+import { ArrowRight, ClipboardCheck, Headphones, Heart, HeartHandshake, HandHeart, HomeIcon, Mail, Package, Phone, Recycle, ShoppingBag, Store, Truck, Users } from "lucide-react";
 import Link from "next/link";
 import SuspenseSection from "@/components/SuspenseSection";
 import Loading from "@/components/Loading";
@@ -7,6 +7,7 @@ import WelfareProgramsSection from '@/components/WelfareProgramsSection';
 import DynamicHomeCounters from '@/components/DynamicHomeCounters';
 import HomeActivitiesServer from '@/components/HomeActivitiesServer';
 import { Badge, Button, Carousel } from "@/components/ui";
+import { Card, CardContent } from "@/components/ui/card";
 
 const processSteps = [
   {
@@ -33,6 +34,49 @@ const processSteps = [
     icon: Truck,
     color: "from-orange-500 to-red-500",
   },
+];
+
+const supportOptions = [
+  {
+    icon: Recycle,
+    title: "Donate Scrap or Clothing",
+    description: "Your unused items can bring warmth, dignity and relief to another family. We collect, repair, recycle and upcycle scrap and clothing — and the proceeds directly support welfare programs.",
+    cta: "Schedule a Pickup",
+    link: "/contact",
+    color: "from-green-500 to-emerald-500"
+  },
+  {
+    icon: ShoppingBag,
+    title: "Purchase Upcycled Products",
+    description: "From repaired household items to cotton-filled mattresses made from recycled fabric — our upcycled products fund medical aid, education support, and monthly stipends.",
+    cta: "Visit the Marketplace",
+    link: "/programs",
+    color: "from-blue-500 to-purple-500"
+  },
+  {
+    icon: Heart,
+    title: "Sadqa Subscription",
+    description: "Let giving become a daily habit. Choose from daily, weekly, monthly, or yearly Sadqa plans — small amounts, continuous blessings, lasting impact.",
+    cta: "Start a Subscription",
+    link: "/programs",
+    color: "from-purple-500 to-pink-500"
+  },
+  {
+    icon: Users,
+    title: "Sponsor a Family or Individual",
+    description: "Support a verified widow, orphan, student, medical patient, or family in need. Meet them, stay connected, and see the difference your sponsorship makes over time.",
+    cta: "Learn About Sponsorship",
+    link: "/sponsorship",
+    color: "from-orange-500 to-red-500"
+  },
+  {
+    icon: HomeIcon,
+    title: "Golak Contribution",
+    description: "Contribute locally — our tech-enabled Golak system allows you to give with trust. Each Golak is registered, tracked and mapped for transparency.",
+    cta: "Find a Golak Near You",
+    link: "/programs",
+    color: "from-cyan-500 to-blue-500"
+  }
 ];
 
 const images = [
@@ -292,46 +336,144 @@ export default function Home() {
         </SuspenseSection>
       </section>
 
-      <section
-        id="marketplace"
-        className="py-20 bg-gradient-to-br from-primary/10 via-purple-500/5 to-card relative overflow-hidden"
-      >
-        <div className="absolute inset-0 opacity-15">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)",
-              backgroundSize: "32px 32px",
-            }}
-          ></div>
-        </div>
-
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-primary to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
-              <ShoppingBag className="w-10 h-10 text-white" />
-            </div>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl mb-4">
-              Visit Our Marketplace
-            </h2>
-            <p className="text-muted-foreground mb-8 max-w-2xl mx-auto text-lg leading-relaxed">
-              Browse our marketplace where verified donations
-              are available for those in need. Access
-              essential items including clothing, furniture,
-              books, and household goods.
+      {/* Ways you can support */}
+      <section className="py-16 bg-muted/30">
+        <AnimatedSection variant="fade" className="container mx-auto px-4" rootMargin="-100px" triggerOnce>
+          <AnimatedSection variant="fade" className="text-center mb-12" triggerOnce>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl mb-4">Ways You Can Support the Mission</h2>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+              Every act of compassion strengthens our community. Choose the path that speaks to you:
             </p>
-            <Link href="/marketplace">
-              <Button
-                size="lg"
-                className="gap-2 bg-primary hoact:bg-primary/90 h-14 px-8 text-base"
-              >
-                <ShoppingBag className="w-5 h-5 animate-bounce" />
-                Explore Marketplace
-              </Button>
-            </Link>
+          </AnimatedSection>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 my-6">
+            {supportOptions.map((option, index) => (
+              <AnimatedSection key={index} variant="scale" delay={index * 0.1} className={index === 4 ? "md:col-span-2 lg:col-span-2" : ""}>
+                <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300 group">
+                  <CardContent className="p-6">
+                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${option.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                      <option.icon className="w-7 h-7 text-white" />
+                    </div>
+                    <h3 className="text-xl mb-3">{option.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {option.description}
+                    </p>
+                    <Button variant="outline" className="w-full" asChild>
+                      <Link href={option.link}>
+                        {option.cta}
+                        <ArrowRight className="ml-2 w-4 h-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </AnimatedSection>
+            ))}
           </div>
-        </div>
+
+          <AnimatedSection variant="fade" className="text-center" triggerOnce>
+            <Button size="lg" asChild>
+              <Link href="/contribute">
+                See All Ways to Contribute
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Link>
+            </Button>
+          </AnimatedSection>
+        </AnimatedSection>
+      </section>
+
+      {/* Testimonials Section (Placeholder for now) */}
+      <section className="py-16 md:py-24">
+        <AnimatedSection variant="fade" className="container mx-auto px-4" rootMargin="-100px" triggerOnce>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl mb-4">Stories of Impact</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Hear from the families and donors who are part of our movement
+            </p>
+          </div>
+          <div className="max-w-4xl mx-auto">
+            <Card className="bg-gradient-to-br from-primary/10 to-purple-500/10 border-primary/20">
+              <CardContent className="p-8 md:p-12 text-center">
+                <HandHeart className="w-16 h-16 text-primary mx-auto mb-4" />
+                <p className="text-lg italic text-muted-foreground mb-4">
+                  "Together, we are Khadim-e-Millat — a community where giving means belonging."
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  More testimonials coming soon
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </AnimatedSection>
+      </section>
+
+
+      <section className="py-16 md:py-24 bg-muted/30">
+        <AnimatedSection variant="fade" className="container mx-auto px-4" rootMargin="-100px" triggerOnce>
+          <AnimatedSection variant="fade" className="text-center mb-12" triggerOnce>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl mb-4">Ways You Can Support the Mission</h2>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+              Every act of compassion strengthens our community. Choose the path that speaks to you:
+            </p>
+          </AnimatedSection>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {supportOptions.map((option, index) => (
+              <AnimatedSection key={index} variant="scale" delay={index * 0.1} className="">
+                <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300 group">
+                  <CardContent className="p-6">
+                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${option.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                      <option.icon className="w-7 h-7 text-white" />
+                    </div>
+                    <h3 className="text-xl mb-3">{option.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {option.description}
+                    </p>
+                    <Button variant="outline" className="w-full" asChild>
+                      <Link href={option.link}>
+                        {option.cta}
+                        <ArrowRight className="ml-2 w-4 h-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </AnimatedSection>
+            ))}
+          </div>
+
+          <AnimatedSection variant="fade" className="text-center" triggerOnce>
+            <Button size="lg" asChild>
+              <Link href="/contribute">
+                See All Ways to Contribute
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Link>
+            </Button>
+          </AnimatedSection>
+        </AnimatedSection>
+      </section>
+
+      {/* Testimonials Section (Placeholder for now) */}
+      <section className="py-16 md:py-24">
+        <AnimatedSection variant="fade" className="container mx-auto px-4" rootMargin="-100px" triggerOnce>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl mb-4">Stories of Impact</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Hear from the families and donors who are part of our movement
+            </p>
+          </div>
+          <div className="max-w-4xl mx-auto">
+            <Card className="bg-gradient-to-br from-primary/10 to-purple-500/10 border-primary/20">
+              <CardContent className="p-8 md:p-12 text-center">
+                <HandHeart className="w-16 h-16 text-primary mx-auto mb-4" />
+                <p className="text-lg italic text-muted-foreground mb-4">
+                  "Together, we are Khadim-e-Millat — a community where giving means belonging."
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  More testimonials coming soon
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </AnimatedSection>
       </section>
 
       {/* Contact Section */}
