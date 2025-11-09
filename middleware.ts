@@ -33,6 +33,11 @@ const protectedRoutes = [
         allowedRoles: ['admin', 'moderator'],
         routeName: 'Verify Requests'
     },
+    {
+        matcher: createRouteMatcher(['admin/money-donations']),
+        allowedRoles: ['admin', 'accountant'],
+        routeName: 'Verify Requests'
+    },
     // Main Admin Dashboard accessible to admin and moderator
     {
         matcher: createRouteMatcher(['/admin']),

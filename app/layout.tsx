@@ -98,12 +98,18 @@ export default function RootLayout({
             type="text/javascript"
             src="https://d3mkw6s8thqya7.cloudfront.net/integration-plugin.js"
             id="aisensy-wa-widget"
+            widget-id="aaa61q"
+          />
+          <Script
+            type="text/javascript"
+            src="https://cdn.jotfor.ms/agent/embedjs/019a69f1c1dd710689e3899441387a399c75/embed.js"
+            id="aisensy-wa-widget"
             widget-id="aaao9p"
           />
 
         </head>
         <body>
-          <ChatBotWrapper />
+          {/* <ChatBotWrapper /> */}
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
