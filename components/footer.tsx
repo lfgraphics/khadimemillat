@@ -46,28 +46,23 @@ export function Footer() {
                         <h4 className="font-semibold text-foreground mb-4">Quick Links</h4>
                         <ul className="space-y-2">
                             <li>
-                                <Link href="/" className="text-muted-foreground hoact:text-primary transition-colors" data-testid="footer-link-home">
-                                    Home
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/marketplace" className="text-muted-foreground hoact:text-primary transition-colors" data-testid="footer-link-marketplace">
-                                    Marketplace
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/donate" className="text-muted-foreground hoact:text-primary transition-colors" data-testid="footer-link-donate">
-                                    Donate
-                                </Link>
-                            </li>
-                            <li>
                                 <Link href="/about" className="text-muted-foreground hoact:text-primary transition-colors" data-testid="footer-link-about">
                                     About Us
                                 </Link>
                             </li>
                             <li>
+                                <Link href="/contact" className="text-muted-foreground hoact:text-primary transition-colors" data-testid="footer-link-donate">
+                                    Contact Us
+                                </Link>
+                            </li>
+                            <li>
                                 <Link href="/activities" className="text-muted-foreground hoact:text-primary transition-colors" data-testid="footer-link-activities">
                                     Activities
+                                </Link>
+                            </li>
+                            <li>
+                                <Link href="/marketplace" className="text-muted-foreground hoact:text-primary transition-colors" data-testid="footer-link-marketplace">
+                                    Marketplace
                                 </Link>
                             </li>
                         </ul>

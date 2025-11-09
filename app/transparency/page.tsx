@@ -2,7 +2,6 @@ import { AnimatedSection } from '@/components/animations';
 import type { Metadata } from 'next';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge, Button } from "@/components/ui";
-import { ClickableImage } from '@/components/ui/clickable-image';
 import {
     Shield,
     FileCheck,
@@ -30,10 +29,7 @@ export const metadata: Metadata = {
     description: 'See exactly how your donations are used — verified beneficiaries, audited accounts, and full reports at Khadim-e-Millat Welfare Foundation.'
 };
 
-// Motion shim: provide minimal runtime-compatible replacements for motion.* used in older pages.
-// Note: animations are handled via `AnimatedSection` (client component) above.
-
-// Minimal motion shim used on several pages to avoid importing `motion/react` in server components.
+// Motion shim to avoid importing motion/react directly; renders plain elements.
 const motion: any = {
     div: (props: any) => {
         const { children, className, ...rest } = props;
@@ -42,27 +38,6 @@ const motion: any = {
     section: (props: any) => {
         const { children, className, ...rest } = props;
         return <section className={className} {...rest}>{children}</section>;
-    }
-};
-
-// Simple variants used by older pages; these are no-op for the shim but kept for parity.
-const fadeIn = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
-};
-
-const popIn = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: { opacity: 1, scale: 1 }
-};
-
-const staggerContainer = {
-    hidden: { opacity: 0 },
-    visible: {
-        opacity: 1,
-        transition: {
-            staggerChildren: 0.1
-        }
     }
 };
 
@@ -281,7 +256,7 @@ export default function TransparencyPage() {
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {donationFlow.map((item, index) => (
                                 <AnimatedSection key={index} variant="scale" delay={index * 0.06} className="">
-                                    <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300 group">
+                                    <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hoact:border-primary/50 transition-all duration-300 group">
                                         <CardContent className="p-6">
                                             <div
                                                 className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
@@ -523,7 +498,7 @@ export default function TransparencyPage() {
                                                         >
                                                             <Button
                                                                 variant="outline"
-                                                                className="w-full justify-between hover:bg-primary/10 hover:border-primary/50 transition-all"
+                                                                className="w-full justify-between hoact:bg-primary/10 hoact:border-primary/50 transition-all"
                                                             >
                                                                 <span>
                                                                     Verify on {link.name}
@@ -541,7 +516,7 @@ export default function TransparencyPage() {
                                                 >
                                                     <Button
                                                         variant="outline"
-                                                        className="w-full justify-between bg-primary/5 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all"
+                                                        className="w-full justify-between bg-primary/5 border-primary/30 hoact:bg-primary/10 hoact:border-primary/50 transition-all"
                                                     >
                                                         <span>🔗 Verify on MCA Portal</span>
                                                         <ExternalLink className="w-4 h-4" />
@@ -577,31 +552,22 @@ export default function TransparencyPage() {
                 </section>
 
                 {/* Financials & Impact Reports */}
-                <section className="py-16 md:py-24">
-                    <div className="container mx-auto px-4">
-                        <motion.div
-                            initial="hidden"
-                            whileInView="visible"
-                            viewport={{ once: true, margin: "-100px" }}
-                            variants={staggerContainer}
-                        >
-                            <motion.div
-                                variants={fadeIn}
-                                className="text-center mb-12"
-                            >
-                                <h2 className="text-3xl md:text-4xl mb-4">
-                                    Financials & Impact Reports
-                                </h2>
-                                <p className="text-lg text-muted-foreground">
-                                    Your Contribution, Accounted for — Every Step
-                                    of the Way
-                                </p>
-                            </motion.div>
+                <section className="py-16 md:py-24 overflow-hidden">
+                    <div className="container mx-auto px-4 max-w-7xl">
+                        <AnimatedSection variant="fade" className="text-center mb-12" triggerOnce>
+                            <h2 className="text-3xl md:text-4xl mb-4">
+                                Financials & Impact Reports
+                            </h2>
+                            <p className="text-lg text-muted-foreground">
+                                Your Contribution, Accounted for — Every Step
+                                of the Way
+                            </p>
+                        </AnimatedSection>
 
-                            <div className="grid lg:grid-cols-2 gap-12">
+                            <div className="grid lg:grid-cols-2 gap-6 lg:gap-12 w-full overflow-hidden">
                                 {/* Fund Allocation */}
-                                <motion.div variants={fadeIn}>
-                                    <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+                                <AnimatedSection variant="slideUp" delay={0.1} className="w-full min-w-0">
+                                    <Card className="bg-card/50 backdrop-blur-sm border-border/50 w-full">
                                         <CardContent className="p-6 md:p-8">
                                             <h3 className="text-2xl mb-4">
                                                 Fund Allocation Overview
@@ -657,14 +623,11 @@ export default function TransparencyPage() {
                                             </div>
                                         </CardContent>
                                     </Card>
-                                </motion.div>
+                                </AnimatedSection>
 
                                 {/* Reports */}
-                                <motion.div
-                                    variants={fadeIn}
-                                    className="space-y-6"
-                                >
-                                    <Card className="bg-gradient-to-br from-primary/10 to-purple-500/10 border-primary/20">
+                                <AnimatedSection variant="slideUp" delay={0.2} className="space-y-6 w-full min-w-0">
+                                    <Card className="bg-gradient-to-br from-primary/10 to-purple-500/10 border-primary/20 w-full">
                                         <CardContent className="p-6 md:p-8">
                                             <FileText className="w-12 h-12 text-primary mb-4" />
                                             <h3 className="text-xl mb-4">
@@ -701,7 +664,7 @@ export default function TransparencyPage() {
                                                     className="w-full justify-between"
                                                     variant="outline"
                                                 >
-                                                    View Latest Annual Report (PDF)
+                                                    Latest Annual Report
                                                     <span>coming soon</span>
                                                     <Download className="w-4 h-4" />
                                                 </Button>
@@ -709,8 +672,7 @@ export default function TransparencyPage() {
                                                     className="w-full justify-between"
                                                     variant="outline"
                                                 >
-                                                    Download Quarterly Financial Summary
-                                                    (PDF)
+                                                    Quarterly Financial Summary
                                                     <span>coming soon</span>
                                                     <Download className="w-4 h-4" />
                                                 </Button>
@@ -718,7 +680,7 @@ export default function TransparencyPage() {
                                         </CardContent>
                                     </Card>
 
-                                    <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+                                    <Card className="bg-card/50 backdrop-blur-sm border-border/50 w-full">
                                         <CardContent className="p-6">
                                             <Quote className="w-8 h-8 text-primary mb-3" />
                                             <p className="text-lg italic text-muted-foreground">
@@ -728,22 +690,15 @@ export default function TransparencyPage() {
                                             </p>
                                         </CardContent>
                                     </Card>
-                                </motion.div>
+                                </AnimatedSection>
                             </div>
-                        </motion.div>
                     </div>
                 </section>
 
                 {/* Payment Options */}
                 <section className="py-16 md:py-24 bg-muted/30">
                     <div className="container mx-auto px-4">
-                        <motion.div
-                            initial="hidden"
-                            whileInView="visible"
-                            viewport={{ once: true }}
-                            variants={fadeIn}
-                            className="text-center mb-12"
-                        >
+                        <AnimatedSection variant="fade" className="text-center mb-12" triggerOnce>
                             <h2 className="text-3xl md:text-4xl mb-4">
                                 Payment & Donation Options
                             </h2>
@@ -751,18 +706,12 @@ export default function TransparencyPage() {
                                 We strive to make giving simple, safe, and
                                 inclusive.
                             </p>
-                        </motion.div>
+                        </AnimatedSection>
 
-                        <motion.div
-                            className="grid md:grid-cols-3 gap-6"
-                            initial="hidden"
-                            whileInView="visible"
-                            viewport={{ once: true, margin: "-100px" }}
-                            variants={staggerContainer}
-                        >
+                        <div className="grid md:grid-cols-3 gap-6">
                             {paymentMethods.map((method, index) => (
-                                <motion.div key={index} variants={popIn}>
-                                    <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300">
+                                <AnimatedSection key={index} variant="slideUp" delay={index * 0.1}>
+                                    <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hoact:border-primary/50 transition-all duration-300">
                                         <CardContent className="p-6">
                                             <div className="flex items-start justify-between mb-4">
                                                 <method.icon className="w-10 h-10 text-primary" />
@@ -781,17 +730,11 @@ export default function TransparencyPage() {
                                             </p>
                                         </CardContent>
                                     </Card>
-                                </motion.div>
+                                </AnimatedSection>
                             ))}
-                        </motion.div>
+                        </div>
 
-                        <motion.div
-                            variants={fadeIn}
-                            className="mt-8 max-w-3xl mx-auto"
-                            initial="hidden"
-                            whileInView="visible"
-                            viewport={{ once: true }}
-                        >
+                        <AnimatedSection variant="fade" className="mt-8 max-w-3xl mx-auto" triggerOnce>
                             <Card className="bg-gradient-to-r from-primary/10 to-purple-500/10 border-primary/20">
                                 <CardContent className="p-6">
                                     <Shield className="w-8 h-8 text-primary mb-3" />
@@ -803,34 +746,22 @@ export default function TransparencyPage() {
                                     </p>
                                 </CardContent>
                             </Card>
-                        </motion.div>
+                        </AnimatedSection>
                     </div>
                 </section>
 
                 {/* Financial Integrity */}
                 <section className="py-16 md:py-24">
                     <div className="container mx-auto px-4">
-                        <motion.div
-                            initial="hidden"
-                            whileInView="visible"
-                            viewport={{ once: true }}
-                            variants={fadeIn}
-                            className="text-center mb-12"
-                        >
+                        <AnimatedSection variant="fade" className="text-center mb-12" triggerOnce>
                             <h2 className="text-3xl md:text-4xl mb-4">
                                 How We Maintain Financial Integrity
                             </h2>
-                        </motion.div>
+                        </AnimatedSection>
 
-                        <motion.div
-                            className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
-                            initial="hidden"
-                            whileInView="visible"
-                            viewport={{ once: true, margin: "-100px" }}
-                            variants={staggerContainer}
-                        >
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {integrityMeasures.map((measure, index) => (
-                                <motion.div key={index} variants={popIn}>
+                                <AnimatedSection key={index} variant="slideUp" delay={index * 0.1}>
                                     <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 text-center">
                                         <CardContent className="p-6">
                                             <div className="w-14 h-14 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-4">
@@ -844,34 +775,22 @@ export default function TransparencyPage() {
                                             </p>
                                         </CardContent>
                                     </Card>
-                                </motion.div>
+                                </AnimatedSection>
                             ))}
-                        </motion.div>
+                        </div>
 
-                        <motion.div
-                            variants={fadeIn}
-                            className="mt-12 text-center"
-                            initial="hidden"
-                            whileInView="visible"
-                            viewport={{ once: true }}
-                        >
+                        <AnimatedSection variant="fade" className="mt-12 text-center" triggerOnce>
                             <p className="text-lg text-muted-foreground italic">
                                 Transparency today ensures trust tomorrow.
                             </p>
-                        </motion.div>
+                        </AnimatedSection>
                     </div>
                 </section>
 
                 {/* Join Our Circle of Accountability */}
                 <section className="py-16 md:py-24 bg-gradient-to-br from-primary/20 via-purple-500/10 to-background">
                     <div className="container mx-auto px-4">
-                        <motion.div
-                            className="max-w-4xl mx-auto"
-                            initial="hidden"
-                            whileInView="visible"
-                            viewport={{ once: true }}
-                            variants={fadeIn}
-                        >
+                        <AnimatedSection variant="fade" className="max-w-4xl mx-auto" triggerOnce>
                             <Card className="bg-gradient-to-br from-primary to-purple-500 border-0">
                                 <CardContent className="p-8 md:p-12 text-center">
                                     <h2 className="text-3xl md:text-4xl text-white mb-4">
@@ -898,7 +817,7 @@ export default function TransparencyPage() {
                                     </div>
                                 </CardContent>
                             </Card>
-                        </motion.div>
+                        </AnimatedSection>
                     </div>
                 </section>
             </div>

@@ -119,7 +119,7 @@ export default function ContactPage() {
                         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
                             {contactInfo.map((info, index) => (
                                 <AnimatedSection key={index} variant="scale" delay={index * 0.06} className="">
-                                    <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300 group">
+                                    <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hoact:border-primary/50 transition-all duration-300 group">
                                         <CardContent className="p-6">
                                             <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${info.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                                                 <info.icon className="w-6 h-6 text-white" />
@@ -183,7 +183,7 @@ export default function ContactPage() {
                                                 delay={index * 0.05}
                                                 className=""
                                             >
-                                                <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300">
+                                                <Card className="bg-card/50 backdrop-blur-sm border-border/50 hoact:border-primary/50 transition-all duration-300">
                                                     <CardContent className="p-4">
                                                         <div className="flex gap-4">
                                                             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">

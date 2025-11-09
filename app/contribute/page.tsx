@@ -33,9 +33,10 @@ export default function ContributePage() {
                 "Sponsor securely",
                 "Receive updates"
             ],
-            cta: "Learn More",
-            ctaSecondary: "See Verified Beneficiaries",
-            link: "/sponsorship",
+            cta: [
+                { label: "Learn More", url: "/sponsorship", variant: "default" as const },
+                { label: "See Verified Beneficiaries", url: "/sponsorship/beneficiaries", variant: "outline" as const }
+            ],
             color: "from-blue-500 to-purple-500"
         },
         {
@@ -48,8 +49,9 @@ export default function ContributePage() {
                 "Monthly: ₹100 to ₹5,000",
                 "Yearly: ₹5,000+"
             ],
-            cta: "Start Subscription",
-            link: "/programs",
+            cta: [
+                { label: "Start Subscription", url: "/programs/sadqa-subscription", variant: "default" as const }
+            ],
             color: "from-purple-500 to-pink-500"
         },
         {
@@ -62,9 +64,10 @@ export default function ContributePage() {
                 "Contributions tracked transparently",
                 "Donors can find nearest Golak online"
             ],
-            cta: "Locate a Golak on Map",
-            ctaSecondary: "Apply to Host a Golak",
-            link: "/programs",
+            cta: [
+                { label: "Locate a Golak on Map", url: "/programs/golak-map", variant: "default" as const },
+                { label: "Apply to Host a Golak", url: "/programs/host-golak", variant: "outline" as const }
+            ],
             color: "from-cyan-500 to-blue-500"
         },
         {
@@ -77,8 +80,9 @@ export default function ContributePage() {
                 "Household items & utensils",
                 "Scrap materials"
             ],
-            cta: "Schedule Pickup",
-            link: "/contact",
+            cta: [
+                { label: "Schedule Pickup", url: "/donate", variant: "default" as const }
+            ],
             color: "from-green-500 to-emerald-500"
         },
         {
@@ -91,8 +95,9 @@ export default function ContributePage() {
                 "Cotton-filled mattresses from recycled fabric",
                 "Proceeds support welfare programs"
             ],
-            cta: "Visit Marketplace",
-            link: "/programs",
+            cta: [
+                { label: "Visit Marketplace", url: "/marketplace", variant: "default" as const }
+            ],
             color: "from-orange-500 to-red-500"
         },
         {
@@ -105,9 +110,10 @@ export default function ContributePage() {
                 "Full accountability",
                 "Transparent tracking"
             ],
-            cta: "Fulfill your Zakat",
-            ctaSecondary: "Give Sadqa",
-            link: "/programs",
+            cta: [
+                { label: "Fulfill your Zakat", url: "/donate?program=zakat", variant: "default" as const },
+                { label: "Give Sadqa", url: "/donate?program=sadqa", variant: "outline" as const }
+            ],
             color: "from-indigo-500 to-purple-500"
         },
         {
@@ -120,8 +126,9 @@ export default function ContributePage() {
                 "Logistics & field operations",
                 "Data systems & technology"
             ],
-            cta: "Support Operations",
-            link: "/programs",
+            cta: [
+                { label: "Support Operations", url: "/programs/operations", variant: "default" as const }
+            ],
             color: "from-slate-500 to-gray-500"
         },
         {
@@ -134,8 +141,9 @@ export default function ContributePage() {
                 "Medical support camps",
                 "Education assistance"
             ],
-            cta: "Support a Welfare Drive",
-            link: "/programs",
+            cta: [
+                { label: "Support a Welfare Drive", url: "/programs/welfare-drives", variant: "default" as const }
+            ],
             color: "from-teal-500 to-green-500"
         }
     ];
@@ -166,7 +174,7 @@ export default function ContributePage() {
                         <div className="grid md:grid-cols-2 gap-6 max-w-6xl mx-auto">
                             {supportWays.map((way, index) => (
                                 <AnimatedSection key={index} variant="scale" delay={index * 0.06} className="">
-                                    <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300 group">
+                                    <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hoact:border-primary/50 transition-all duration-300 group">
                                         <CardContent className="p-6 md:p-8">
                                             <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${way.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                                                 <way.icon className="w-7 h-7 text-white" />
@@ -187,19 +195,19 @@ export default function ContributePage() {
                                             </ul>
 
                                             <div className="flex flex-col gap-2">
-                                                <Button className="w-full" asChild>
-                                                    <Link href={way.link}>
-                                                        {way.cta}
-                                                        <ArrowRight className="ml-2 w-4 h-4" />
-                                                    </Link>
-                                                </Button>
-                                                {way.ctaSecondary && (
-                                                    <Button variant="outline" className="w-full" asChild>
-                                                        <Link href={way.link}>
-                                                            {way.ctaSecondary}
+                                                {way.cta.map((ctaItem, ctaIndex) => (
+                                                    <Button 
+                                                        key={ctaIndex}
+                                                        variant={ctaItem.variant}
+                                                        className="w-full" 
+                                                        asChild
+                                                    >
+                                                        <Link href={ctaItem.url}>
+                                                            {ctaItem.label}
+                                                            <ArrowRight className="ml-2 w-4 h-4" />
                                                         </Link>
                                                     </Button>
-                                                )}
+                                                ))}
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -223,13 +231,13 @@ export default function ContributePage() {
                                         Every act of compassion strengthens our community and changes lives. Join thousands of others who are making a difference.
                                     </p>
                                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                        <Button size="lg" className="bg-white text-primary hover:bg-white/90" asChild>
+                                        <Button size="lg" className="bg-white text-primary hoact:bg-white/90" asChild>
                                             <Link href="/sponsorship">
                                                 Start Making an Impact
                                                 <ArrowRight className="ml-2 w-5 h-5" />
                                             </Link>
                                         </Button>
-                                        <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10" asChild>
+                                        <Button size="lg" variant="outline" className="text-white border-white hoact:bg-white/10" asChild>
                                             <Link href="/about">
                                                 Learn About Our Work
                                             </Link>

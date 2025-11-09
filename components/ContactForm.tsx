@@ -88,7 +88,7 @@ export default function ContactForm({ formEndpoint }: Props) {
         <Textarea id="message" name="message" required rows={6} placeholder="Tell us how we can help..." className="bg-input-background border-border resize-none" />
       </div>
 
-      <Button type="submit" size="lg" className="w-full bg-primary hover:bg-primary/90" disabled={status === 'submitting'}>
+      <Button type="submit" size="lg" className="w-full bg-primary hoact:bg-primary/90" disabled={status === 'submitting'}>
         {status === 'submitting' ? 'Sending...' : (
           <>
             Send Message

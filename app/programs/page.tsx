@@ -1,4 +1,3 @@
-import { AnimatedSection } from '@/components/animations';
 import type { Metadata } from 'next';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge, Button } from "@/components/ui";
@@ -28,10 +27,6 @@ import {
     Building2,
     Briefcase,
     ArrowRight,
-    Package,
-    RefreshCw,
-    UserCheck,
-    Globe,
     Quote,
     Sparkles
 } from "lucide-react";
@@ -323,7 +318,7 @@ export default function ProgramsPage() {
                                                     {program.cta && (
                                                         <Button
                                                             size="lg"
-                                                            className={`bg-gradient-to-r ${program.color} text-white border-0 hover:opacity-90`}
+                                                            className={`bg-gradient-to-r ${program.color} text-white border-0 hoact:opacity-90`}
                                                         >
                                                             {program.cta}
                                                             <ArrowRight className="ml-2 w-5 h-5" />
@@ -334,7 +329,7 @@ export default function ProgramsPage() {
                                                             key={idx}
                                                             size="lg"
                                                             variant={idx === 0 ? "default" : "outline"}
-                                                            className={idx === 0 ? `bg-gradient-to-r ${program.color} text-white border-0 hover:opacity-90` : ''}
+                                                            className={idx === 0 ? `bg-gradient-to-r ${program.color} text-white border-0 hoact:opacity-90` : ''}
                                                         >
                                                             {cta.label}
                                                             <ArrowRight className="ml-2 w-5 h-5" />
@@ -369,7 +364,7 @@ export default function ProgramsPage() {
                                         "At Khadim-e-Millat, every program begins with trust and ends with impact — uniting faith, community, and sustainability in a single act of giving."
                                     </blockquote>
                                     <div className="flex flex-wrap justify-center gap-4 mt-8">
-                                        <Button size="lg" className="bg-primary hover:bg-primary/90">
+                                        <Button size="lg" className="bg-primary hoact:bg-primary/90">
                                             Start Giving Today
                                             <ArrowRight className="ml-2 w-5 h-5" />
                                         </Button>

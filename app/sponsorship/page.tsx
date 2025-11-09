@@ -176,7 +176,7 @@ export default function SponsorshipPage() {
                         <div className="grid md:grid-cols-2 gap-6">
                             {assessmentPillars.map((pillar, index) => (
                                 <AnimatedSection key={index} variant="scale" className="">
-                                    <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300">
+                                    <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hoact:border-primary/50 transition-all duration-300">
                                         <CardContent className="p-6">
                                             <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${pillar.color} flex items-center justify-center mb-4`}>
                                                 <pillar.icon className="w-7 h-7 text-white" />
@@ -407,11 +407,11 @@ export default function SponsorshipPage() {
                                         "We meet families where they are — in their homes, in their real circumstances, with dignity."
                                     </p>
                                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                        <Button size="lg" className="bg-white text-primary hover:bg-white/90">
+                                        <Button size="lg" className="bg-white text-primary hoact:bg-white/90">
                                             Sponsor a Family Now
                                             <Heart className="ml-2 w-5 h-5" />
                                         </Button>
-                                        <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10">
+                                        <Button size="lg" variant="outline" className="text-white border-white hoact:bg-white/10">
                                             See Live Verified Cases
                                             <ArrowRight className="ml-2 w-5 h-5" />
                                         </Button>

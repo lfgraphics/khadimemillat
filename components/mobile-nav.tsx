@@ -22,7 +22,9 @@ import {
     ShoppingBag,
     Info,
     Image as ImageIcon,
-    Menu
+    Menu,
+    HeartPlus,
+    BookOpenCheck
 } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import Link from "next/link"
@@ -41,11 +43,8 @@ import { Button } from "@/components/ui/button"
 import { TeamSwitcher } from "./team-switcher"
 import ProfilePopover from "./profile-dropdown"
 import RoleGuard from "./role-guard"
-import NotificationBell from '@/components/NotificationBell'
-import ThemeChanger from "./ThemeChanger"
 
 export function MobileNav() {
-    const pathname = usePathname()
     const [open, setOpen] = React.useState(false)
 
     return (
@@ -209,6 +208,30 @@ export function MobileNav() {
                         <h3 className="mb-2 px-2 text-sm font-semibold text-muted-foreground">General</h3>
                         <div className="space-y-1">
                             <Link
+                                href="/about"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                onClick={() => setOpen(false)}
+                            >
+                                <Info className="h-4 w-4" />
+                                About Us
+                            </Link>
+                            <Link
+                                href="/transparency"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                onClick={() => setOpen(false)}
+                            >
+                                <BookOpenCheck className="h-4 w-4" />
+                                Transparency
+                            </Link>
+                            <Link
+                                href="/contribute"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                onClick={() => setOpen(false)}
+                            >
+                                <HeartPlus className="h-4 w-4" />
+                                Ways To Contribute
+                            </Link>
+                            <Link
                                 href="/donate"
                                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                 onClick={() => setOpen(false)}
@@ -231,14 +254,6 @@ export function MobileNav() {
                             >
                                 <Store className="h-4 w-4" />
                                 Marketplace
-                            </Link>
-                            <Link
-                                href="/about"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
-                                onClick={() => setOpen(false)}
-                            >
-                                <Info className="h-4 w-4" />
-                                About Us
                             </Link>
                             <Link
                                 href="/activities"

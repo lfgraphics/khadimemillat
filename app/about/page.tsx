@@ -160,7 +160,7 @@ export default function AboutPage() {
                             <div className="grid md:grid-cols-1 gap-4">
                                 {stories.map((story, index) => (
                                     <AnimatedSection key={index} variant="scale" className="">
-                                        <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300">
+                                        <Card className="bg-card/50 backdrop-blur-sm border-border/50 hoact:border-primary/50 transition-all duration-300">
                                             <CardContent className="p-6">
                                                 <div className="flex gap-4 items-start">
                                                     <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
@@ -214,7 +214,7 @@ export default function AboutPage() {
                         <div className="grid md:grid-cols-3 gap-6 mb-12">
                             {approachSteps.map((step, index) => (
                                 <AnimatedSection key={index} variant="scale" className="">
-                                    <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300 group">
+                                    <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hoact:border-primary/50 transition-all duration-300 group">
                                         <CardContent className="p-6">
                                             <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                                                 <step.icon className="w-7 h-7 text-white" />
@@ -279,7 +279,7 @@ export default function AboutPage() {
                                 <div className="grid gap-4">
                                     {values.map((value, index) => (
                                         <AnimatedSection key={index} variant="scale">
-                                            <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300">
+                                            <Card className="bg-card/50 backdrop-blur-sm border-border/50 hoact:border-primary/50 transition-all duration-300">
                                                 <CardContent className="p-4">
                                                     <div className="flex items-start gap-4">
                                                         <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -313,8 +313,8 @@ export default function AboutPage() {
                                     <CardContent className="p-8 md:p-12">
                                         <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
                                             <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-2xl overflow-hidden flex-shrink-0 border-4 border-primary/20">
-                                                <ClickableImage
-                                                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop"
+                                                <img
+                                                    src="assets/leader.png"
                                                     alt="Mufti Mohammad Dawood Qasmi"
                                                     className="w-full h-full object-cover"
                                                 />
@@ -366,13 +366,13 @@ export default function AboutPage() {
                                         Through this online platform, we aim to make giving more personal, traceable, and impactful — letting every donor witness the real change their compassion creates.
                                     </p>
                                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                        <Button size="lg" className="bg-white text-primary hover:bg-white/90" asChild>
+                                        <Button size="lg" className="bg-white text-primary hoact:bg-white/90" asChild>
                                             <Link href="/programs">
                                                 Explore Our Programs
                                                 <ArrowRight className="ml-2 w-5 h-5" />
                                             </Link>
                                         </Button>
-                                        <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10" asChild>
+                                        <Button size="lg" variant="outline" className="text-white border-white hoact:bg-white/10" asChild>
                                             <Link href="/transparency">
                                                 View Our Transparency
                                             </Link>

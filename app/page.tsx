@@ -349,7 +349,7 @@ export default function Home() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 my-6">
             {supportOptions.map((option, index) => (
               <AnimatedSection key={index} variant="scale" delay={index * 0.1} className={index === 4 ? "md:col-span-2 lg:col-span-2" : ""}>
-                <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300 group">
+                <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hoact:border-primary/50 transition-all duration-300 group">
                   <CardContent className="p-6">
                     <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${option.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                       <option.icon className="w-7 h-7 text-white" />
@@ -419,7 +419,7 @@ export default function Home() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {supportOptions.map((option, index) => (
               <AnimatedSection key={index} variant="scale" delay={index * 0.1} className="">
-                <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300 group">
+                <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hoact:border-primary/50 transition-all duration-300 group">
                   <CardContent className="p-6">
                     <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${option.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                       <option.icon className="w-7 h-7 text-white" />

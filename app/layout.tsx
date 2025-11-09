@@ -99,8 +99,7 @@ export default function RootLayout({
             src="https://d3mkw6s8thqya7.cloudfront.net/integration-plugin.js"
             id="aisensy-wa-widget"
             widget-id="aaao9p"
-          /
-          >
+          />
 
         </head>
         <body>

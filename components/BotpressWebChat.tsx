@@ -36,7 +36,7 @@ const headerConfig = {
 }
 
 function ChatBot() {
-    const [isWebchatOpen, setIsWebchatOpen] = useState(true)
+    const [isWebchatOpen, setIsWebchatOpen] = useState(false)
     const { client, messages, isTyping, user, clientState, newConversation } = useWebchat({
         clientId: '72d9b166-84ac-45fb-aa6a-b3e33770207e'
     })
