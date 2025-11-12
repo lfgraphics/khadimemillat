@@ -56,7 +56,7 @@ export default function ContributePage() {
         },
         {
             icon: Home,
-            title: "Golak Contribution",
+            title: "Nekin Bank (Golak) Contribution",
             description: "Our smart Golak system with registered caretakers, GPS mapping, and transparent contribution tracking.",
             features: [
                 "Each Golak has a registered caretaker",

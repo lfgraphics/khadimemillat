@@ -31,20 +31,78 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
     const status = searchParams.get('status')
+    const paymentVerified = searchParams.get('paymentVerified')
+    const panProvided = searchParams.get('panProvided')
     const search = searchParams.get('search')
+    const showAll = searchParams.get('showAll') === 'true' // Admin override parameter
+    const dateFrom = searchParams.get('dateFrom')
+    const dateTo = searchParams.get('dateTo')
 
-    // Build query
+    // Build query with default audit filtering
     const query: any = {}
+    const andConditions: any[] = []
     
-    if (status && status !== 'all') {
-      query.status = status
+    // Default filtering: only show verified and completed donations unless admin override
+    if (!showAll) {
+      query.status = 'completed'
+      // Only set default paymentVerified if not explicitly filtered
+      if (!paymentVerified || paymentVerified === 'all') {
+        query.paymentVerified = true
+      }
+    } else {
+      // Admin override: apply status filter if provided
+      if (status && status !== 'all') {
+        query.status = status
+      }
+    }
+
+    // Apply payment verification filter
+    if (paymentVerified && paymentVerified !== 'all') {
+      if (paymentVerified === 'verified') {
+        query.paymentVerified = true
+      } else if (paymentVerified === 'unverified') {
+        query.paymentVerified = { $ne: true }
+      }
+    }
+
+    // Apply PAN provided filter
+    if (panProvided && panProvided !== 'all') {
+      if (panProvided === 'provided') {
+        query.donorPAN = { $exists: true, $ne: null }
+      } else if (panProvided === 'not_provided') {
+        andConditions.push({
+          $or: [
+            { donorPAN: { $exists: false } },
+            { donorPAN: null },
+            { donorPAN: '' }
+          ]
+        })
+      }
     }
 
     if (search) {
-      query.$or = [
-        { donorName: { $regex: search, $options: 'i' } },
-        { donorEmail: { $regex: search, $options: 'i' } }
-      ]
+      andConditions.push({
+        $or: [
+          { donorName: { $regex: search, $options: 'i' } },
+          { donorEmail: { $regex: search, $options: 'i' } }
+        ]
+      })
+    }
+
+    // Add date range filtering
+    if (dateFrom || dateTo) {
+      query.createdAt = {}
+      if (dateFrom) {
+        query.createdAt.$gte = new Date(dateFrom)
+      }
+      if (dateTo) {
+        query.createdAt.$lte = new Date(dateTo)
+      }
+    }
+
+    // Combine all AND conditions if any exist
+    if (andConditions.length > 0) {
+      query.$and = andConditions
     }
 
     // Find money donations with pagination
@@ -67,6 +125,10 @@ export async function GET(request: NextRequest) {
         limit,
         total,
         pages: Math.ceil(total / limit)
+      },
+      filters: {
+        showAll,
+        appliedFilters: showAll ? 'All donations with status indicators' : 'Verified and completed donations only'
       }
     })
 

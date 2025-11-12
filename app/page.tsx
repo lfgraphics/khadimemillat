@@ -1,8 +1,8 @@
-import { ArrowRight, ClipboardCheck, Headphones, Heart, HeartHandshake, HandHeart, HomeIcon, Mail, Package, Phone, Recycle, ShoppingBag, Store, Truck, Users } from "lucide-react";
+import { ArrowRight, ClipboardCheck, Headphones, Heart, HeartHandshake, HandHeart, HomeIcon, Mail, Package, Phone, Recycle, ShoppingBag, Truck, Users, HandHelping } from "lucide-react";
 import Link from "next/link";
 import SuspenseSection from "@/components/SuspenseSection";
 import Loading from "@/components/Loading";
-import { AnimatedSection, AnimatedButton, AnimatedProcessSteps } from '@/components/animations';
+import { AnimatedSection } from '@/components/animations';
 import WelfareProgramsSection from '@/components/WelfareProgramsSection';
 import DynamicHomeCounters from '@/components/DynamicHomeCounters';
 import HomeActivitiesServer from '@/components/HomeActivitiesServer';
@@ -71,11 +71,19 @@ const supportOptions = [
   },
   {
     icon: HomeIcon,
-    title: "Golak Contribution",
-    description: "Contribute locally — our tech-enabled Golak system allows you to give with trust. Each Golak is registered, tracked and mapped for transparency.",
+    title: "Neki Bank (Golak) Contribution",
+    description: `Your coins become currency for the Hereafter \n Our community Golak network — also called the Neki Bank — turns daily generosity into ongoing support. Placed in homes, shops, and offices, each Golak collects small donations that together fund education, food, and healthcare for families in need. Simple, transparent, and spiritually rewarding.`,
     cta: "Find a Golak Near You",
     link: "/programs",
     color: "from-cyan-500 to-blue-500"
+  },
+  {
+    icon: HandHelping,
+    title: "Bulk Food Recovery Program",
+    description: `From surplus to sustenance.\nThrough our Food Recovery Initiative, leftover food from events and gatherings is collected, inspected, and safely distributed to impoverished communities. A quick call prevents waste and feeds hundreds. Compassion shouldn’t end with the meal — let your occasion nourish others.`,
+    cta: "Report Extra Food",
+    link: "/donate",
+    color: "from-orange-500 to-green-500"
   }
 ];
 
@@ -346,9 +354,9 @@ export default function Home() {
             </p>
           </AnimatedSection>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 my-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-6">
             {supportOptions.map((option, index) => (
-              <AnimatedSection key={index} variant="scale" delay={index * 0.1} className={index === 4 ? "md:col-span-2 lg:col-span-2" : ""}>
+              <AnimatedSection key={index} variant="scale" delay={index * 0.1} className={index === 4 ? "md:col-span-2 lg:col-span-1 lg:col-start-2" : ""}>
                 <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hoact:border-primary/50 transition-all duration-300 group">
                   <CardContent className="p-6">
                     <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${option.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
@@ -428,7 +436,7 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-8">
             <AnimatedSection
               variant="slideUp"
-              delay={0.2}
+              delay={0.1}
               duration={0.5}
               threshold={0.2}
               className="h-full"
@@ -456,7 +464,7 @@ export default function Home() {
 
             <AnimatedSection
               variant="slideUp"
-              delay={0.35}
+              delay={0.1}
               duration={0.5}
               threshold={0.2}
               className="h-full"
@@ -478,7 +486,7 @@ export default function Home() {
 
             <AnimatedSection
               variant="slideUp"
-              delay={0.5}
+              delay={0.1}
               duration={0.5}
               threshold={0.2}
               className="h-full"

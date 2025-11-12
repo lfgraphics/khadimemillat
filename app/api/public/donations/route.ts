@@ -157,14 +157,20 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
         }
 
-        const donations = await CampaignDonation.find({})
+        // Only show verified and completed donations for public visibility
+        const publicQuery = {
+            status: 'completed',
+            paymentVerified: true
+        }
+
+        const donations = await CampaignDonation.find(publicQuery)
             .populate('programId', 'title slug')
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
             .lean()
 
-        const total = await CampaignDonation.countDocuments({})
+        const total = await CampaignDonation.countDocuments(publicQuery)
 
         return NextResponse.json({
             donations,

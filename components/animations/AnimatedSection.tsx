@@ -43,7 +43,7 @@ export const AnimatedSection: React.FC<AnimatedSectionProps> = ({
   duration = 0.6,
   direction = 'up',
   variant = 'slideUp',
-  threshold = INTERSECTION_THRESHOLDS.quarter,
+  threshold = INTERSECTION_THRESHOLDS.minimal,
   triggerOnce = true,
   rootMargin = '0px 0px -10% 0px',
   ...props

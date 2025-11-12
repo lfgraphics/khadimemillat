@@ -21,7 +21,8 @@ const isPublicRoute = createRouteMatcher([
     '/our-services(.*)',
     '/api/public(.*)',
     '/api/receipts(.*)',
-    '/api/upload/cloudinary(.*)'
+    '/api/upload/cloudinary(.*)',
+    '/workflow'
 ])
 
 // Define protected routes and their allowed roles

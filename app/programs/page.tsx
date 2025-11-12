@@ -4,7 +4,7 @@ import { Badge, Button } from "@/components/ui";
 import Link from 'next/link';
 export const metadata: Metadata = {
     title: 'Our Programs - Khadim-e-Millat',
-    description: 'Explore our welfare programs — scrap recycling, sponsorships, Sadqa & Zakat, and livelihood support that turn compassion into lasting change.'
+    description: 'Explore our welfare programs — scrap recycling, sponsorships, Sadqa & Zakat, Neki Bank, food redistribution, and livelihood support that turn compassion into lasting change.'
 };
 
 // Motion shim to avoid importing motion/react directly; renders plain elements.
@@ -28,7 +28,11 @@ import {
     Briefcase,
     ArrowRight,
     Quote,
-    Sparkles
+    Sparkles,
+    Coins,
+    UtensilsCrossed,
+    Star,
+    MapPin
 } from "lucide-react";
 
 // Animation variants
@@ -170,6 +174,42 @@ export default function ProgramsPage() {
             campaignNote: "Each campaign transparently shows the target, collected amount, and completion status, ensuring accountability at every stage.",
             paymentNote: "All campaign contributions are processed securely through our Razorpay payment gateway and credited directly to the organisation's official account. After deducting standard payment-gateway charges, the full remaining amount is delivered to the verified recipient.",
             quote: "We believe in sustainable help — where every rupee restores not just relief, but livelihood."
+        },
+        {
+            id: 8,
+            icon: Coins,
+            title: "Neki Bank — Your Account of Eternal Rewards",
+            subtitle: "The Everyday Charity System",
+            color: "from-amber-500 to-yellow-500",
+            description: "Every coin has a purpose, every rupee has potential. At Khadim-e-Millat Welfare Foundation, the Golak System—lovingly known as the Neki Bank—turns daily generosity into lasting impact. It's not a bank of this world, but one of the Hereafter, where every deposit of kindness becomes eternal profit.",
+            details: [
+                "Each Neki Bank (Golak) is a small metal or digital box with a big mission. It sits quietly in homes, shops, offices, and schools, waiting for moments of goodness.",
+                "A child saving a rupee after buying candy, a family setting aside a portion before a meal, a traveller giving thanks before a safe journey — every small act becomes part of continuous charity.",
+                "Once full, each Golak is collected, opened in the presence of its caretaker, counted, logged, and resealed for the next round with complete transparency.",
+                "Faith teaches that charity does not reduce wealth—it multiplies it. Through the Neki Bank, we turn that belief into a living practice."
+            ],
+            quote: "Where your coins become currency for the Hereafter.",
+            note: "Your Golak doesn't just collect coins—it collects blessings.",
+            cta: "Register a Golak",
+            ctaLink: "#golak-registration"
+        },
+        {
+            id: 9,
+            icon: UtensilsCrossed,
+            title: "From Tables to Tummies — The Food Recovery Initiative",
+            subtitle: "Bulk Food Redistribution Program",
+            color: "from-orange-500 to-red-500",
+            description: "Every day, countless meals are prepared across weddings, community events, and gatherings. Often, a large portion goes uneaten—not out of neglect, but simply because there's more than people can finish. Instead of letting this food go to waste, KMWF transforms it into nourishment for those who truly need it.",
+            details: [
+                "Anyone can participate. When there's extra food left from an event, restaurant, or household function, simply contact KMWF through our helpline or website.",
+                "Our collection team quickly visits the location, inspects and safely packs the food, then transports it to the nearest underserved area or village.",
+                "Distribution happens within hours, ensuring freshness, hygiene, and dignity for all recipients.",
+                "This initiative not only prevents waste but restores value to what would have been lost. Each plate becomes a meal for someone hungry."
+            ],
+            quote: "Where surplus becomes sustenance.",
+            note: "For the donors, it's effortless yet deeply meaningful: a chance to convert excess into sustenance, convenience into compassion.",
+            cta: "Report Extra Food",
+            ctaLink: "#food-donation"
         }
     ];
 
@@ -196,7 +236,7 @@ export default function ProgramsPage() {
                                 Programs That Empower Change
                             </h1>
                             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-                                Every act of compassion at Khadim-e-Millat Welfare Foundation (KMWF) is part of a larger system — designed to make help last, not fade. We've built a balanced welfare model where sustainability, sponsorship, and service come together to uplift lives with dignity.
+                                At Khadim-e-Millat Welfare Foundation, we believe that compassion should be simple, accessible, and continuous. Every individual, family, and business can contribute in a way that fits their life. Whether you give time, items, or income—every act matters, because together they sustain the lives of thousands.
                             </p>
                         </motion.div>
                     </div>
@@ -342,6 +382,110 @@ export default function ProgramsPage() {
                                 </motion.div>
                             ))}
                         </div>
+                    </div>
+                </section>
+
+                {/* Ways to Contribute Section */}
+                <section className="py-16 md:py-24 bg-muted/30">
+                    <div className="container mx-auto px-4">
+                        <motion.div
+                            className="max-w-6xl mx-auto"
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true }}
+                            variants={staggerContainer}
+                        >
+                            <motion.div className="text-center mb-16" variants={fadeIn}>
+                                <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">Ways to Help</Badge>
+                                <h2 className="text-4xl md:text-5xl mb-6">Ways to Be a Part of the Mission</h2>
+                                <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
+                                    At Khadim-e-Millat Welfare Foundation, we believe that compassion should be simple, accessible, and continuous. Every individual, family, and business can contribute in a way that fits their life. Whether you give time, items, or income—every act matters, because together they sustain the lives of thousands.
+                                </p>
+                            </motion.div>
+
+                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {[
+                                    {
+                                        icon: Users,
+                                        title: "Sponsor a Family or Individual",
+                                        description: "Take long-term responsibility for a verified beneficiary. Choose from categories such as widows, orphans, students, and patients.",
+                                        cta: "Sponsor Now",
+                                        color: "from-blue-500 to-purple-500"
+                                    },
+                                    {
+                                        icon: Heart,
+                                        title: "Subscribe to Ongoing Sadqa",
+                                        description: "Make charity a habit, not an occasion. Choose a daily, weekly, monthly, or yearly plan and let your Sadqa flow automatically.",
+                                        cta: "Start Subscription",
+                                        color: "from-purple-500 to-pink-500"
+                                    },
+                                    {
+                                        icon: Recycle,
+                                        title: "Contribute Through Scrap and Clothing",
+                                        description: "Donate recyclable materials or used clothes. KMWF processes them sustainably, turning items into funds that fuel welfare programs.",
+                                        cta: "Donate Scrap",
+                                        color: "from-green-500 to-emerald-500"
+                                    },
+                                    {
+                                        icon: Coins,
+                                        title: "Join the Neki Bank Network",
+                                        description: "Host a Golak in your home, office, or shop. Your personal bank of blessings—where every small coin becomes lasting charity.",
+                                        cta: "Register a Golak",
+                                        color: "from-amber-500 to-yellow-500",
+                                        note: "You may not remember each coin you gave, but heaven does."
+                                    },
+                                    {
+                                        icon: UtensilsCrossed,
+                                        title: "Share Unused Food",
+                                        description: "Be part of our Food Redistribution Drive. When there's extra food after an event, let us know. We reduce waste and spread warmth—one meal at a time.",
+                                        cta: "Report Extra Food",
+                                        color: "from-orange-500 to-red-500"
+                                    },
+                                    {
+                                        icon: HandHeart,
+                                        title: "Volunteer or Partner",
+                                        description: "Join hands with us as a volunteer, organization, or CSR partner. Help conduct drives, awareness campaigns, and community upliftment projects.",
+                                        cta: "Get Involved",
+                                        color: "from-teal-500 to-cyan-500"
+                                    }
+                                ].map((way, index) => (
+                                    <motion.div key={index} variants={popIn}>
+                                        <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300 group">
+                                            <CardContent className="p-6">
+                                                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${way.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                                                    <way.icon className="w-8 h-8 text-white" />
+                                                </div>
+                                                <h3 className="text-xl mb-3">{way.title}</h3>
+                                                <p className="text-muted-foreground mb-4">{way.description}</p>
+                                                {way.note && (
+                                                    <p className="text-sm italic text-primary mb-4">"{way.note}"</p>
+                                                )}
+                                                <Button 
+                                                    className={`w-full bg-gradient-to-r ${way.color} text-white border-0 hover:opacity-90`}
+                                                >
+                                                    {way.cta}
+                                                    <ArrowRight className="ml-2 w-4 h-4" />
+                                                </Button>
+                                            </CardContent>
+                                        </Card>
+                                    </motion.div>
+                                ))}
+                            </div>
+
+                            <motion.div 
+                                className="text-center mt-16"
+                                variants={fadeIn}
+                            >
+                                <Card className="bg-gradient-to-r from-primary/10 to-purple-500/10 border-primary/20 max-w-4xl mx-auto">
+                                    <CardContent className="p-8">
+                                        <Quote className="w-12 h-12 text-primary mx-auto mb-4" />
+                                        <p className="text-xl italic text-muted-foreground">
+                                            "At KMWF, every rupee, every scrap, every meal, and every moment counts. When compassion finds structure, miracles become measurable."
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        </motion.div>
                     </div>
                 </section>
 

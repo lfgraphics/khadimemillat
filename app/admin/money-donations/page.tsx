@@ -6,24 +6,31 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
+import MoneyDonationFilters, { MoneyDonationFiltersState } from '@/components/admin/MoneyDonationFilters'
 import { 
   DollarSign, 
   Calendar, 
   CreditCard, 
   RefreshCw, 
   Search, 
-  Filter, 
   Download,
-  AlertTriangle,
   Eye,
   RotateCcw,
   CheckCircle2,
   XCircle,
   Clock
 } from 'lucide-react'
+import { 
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@/components/ui/pagination'
 import { safeJson } from '@/lib/utils'
 import { toast } from 'sonner'
 
@@ -32,10 +39,13 @@ interface MoneyDonation {
   donorId?: string
   donorName: string
   donorEmail: string
+  donorPAN?: string
   amount: number
   message?: string
   paymentMethod: string
   status: 'pending' | 'completed' | 'failed' | 'refunded'
+  paymentVerified?: boolean
+  paymentVerifiedAt?: string
   razorpayOrderId?: string
   razorpayPaymentId?: string
   razorpaySignature?: string
@@ -54,6 +64,13 @@ interface MoneyDonation {
   updatedAt: string
 }
 
+interface PaginationInfo {
+  page: number
+  limit: number
+  total: number
+  pages: number
+}
+
 interface RefundRequest {
   donationId: string
   reason: string
@@ -63,20 +80,78 @@ interface RefundRequest {
 export default function MoneyDonationsPage() {
   const [donations, setDonations] = useState<MoneyDonation[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
   const [selectedDonation, setSelectedDonation] = useState<MoneyDonation | null>(null)
-  const [showRefundDialog, setShowRefundDialog] = useState(false)
   const [refundReason, setRefundReason] = useState('')
   const [processing, setProcessing] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  
+  // Filters state
+  const [filters, setFilters] = useState<MoneyDonationFiltersState>({
+    searchTerm: '',
+    statusFilter: 'all',
+    paymentVerified: 'all',
+    panProvided: 'all',
+    showAllDonations: false,
+    dateRange: undefined
+  })
+  
+  // Pagination state
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    page: 1,
+    limit: 25,
+    total: 0,
+    pages: 0
+  })
 
-  const loadDonations = async () => {
+  const loadDonations = async (page: number = pagination.page) => {
     setLoading(true)
     try {
-      const response = await fetch('/api/protected/admin/money-donations')
+      const params = new URLSearchParams()
+      params.append('page', page.toString())
+      params.append('limit', pagination.limit.toString())
+      
+      if (filters.showAllDonations) {
+        params.append('showAll', 'true')
+      }
+      
+      if (filters.statusFilter && filters.statusFilter !== 'all') {
+        params.append('status', filters.statusFilter)
+      }
+      
+      if (filters.paymentVerified && filters.paymentVerified !== 'all') {
+        params.append('paymentVerified', filters.paymentVerified)
+      }
+      
+      if (filters.panProvided && filters.panProvided !== 'all') {
+        params.append('panProvided', filters.panProvided)
+      }
+      
+      if (filters.searchTerm?.trim()) {
+        params.append('search', filters.searchTerm.trim())
+      }
+      
+      // Add date range filtering
+      if (filters.dateRange?.from) {
+        params.append('dateFrom', filters.dateRange.from.toISOString())
+      }
+      
+      if (filters.dateRange?.to) {
+        params.append('dateTo', filters.dateRange.to.toISOString())
+      }
+      
+      const response = await fetch(`/api/protected/admin/money-donations?${params}`)
       if (response.ok) {
-        const data = await safeJson<{ donations: MoneyDonation[] }>(response)
+        const data = await safeJson<{ 
+          donations: MoneyDonation[]
+          pagination: PaginationInfo
+        }>(response)
         setDonations(data.donations || [])
+        setPagination(data.pagination || {
+          page: 1,
+          limit: 25,
+          total: 0,
+          pages: 0
+        })
       } else {
         toast.error('Failed to load money donations')
       }
@@ -89,22 +164,40 @@ export default function MoneyDonationsPage() {
   }
 
   useEffect(() => {
-    loadDonations()
-  }, [])
+    loadDonations(1)
+  }, [filters])
 
-  const filteredDonations = donations.filter(donation => {
-    const matchesSearch = donation.donorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         donation.donorEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         donation.programId.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (donation.campaignId?.title || '').toLowerCase().includes(searchTerm.toLowerCase())
+  const handlePageChange = (newPage: number) => {
+    setPagination(prev => ({ ...prev, page: newPage }))
+    loadDonations(newPage)
+  }
 
-    const matchesStatus = statusFilter === 'all' || donation.status === statusFilter
+  const handleLimitChange = (newLimit: number) => {
+    setPagination(prev => ({ ...prev, limit: newLimit, page: 1 }))
+    loadDonations(1)
+  }
 
-    return matchesSearch && matchesStatus
-  })
+  const handleFiltersChange = (newFilters: MoneyDonationFiltersState) => {
+    setFilters(newFilters)
+    setPagination(prev => ({ ...prev, page: 1 })) // Reset to first page when filters change
+  }
+
+  const clearAllFilters = () => {
+    setFilters({
+      searchTerm: '',
+      statusFilter: 'all',
+      paymentVerified: 'all',
+      panProvided: 'all',
+      showAllDonations: false,
+      dateRange: undefined
+    })
+  }
+
+  // Remove client-side filtering since it's now handled by the API
+  const filteredDonations = donations
 
   const stats = {
-    total: donations.length,
+    total: pagination.total,
     completed: donations.filter(d => d.status === 'completed').length,
     pending: donations.filter(d => d.status === 'pending').length,
     failed: donations.filter(d => d.status === 'failed').length,
@@ -152,7 +245,6 @@ export default function MoneyDonationsPage() {
 
       if (response.ok) {
         toast.success('Refund initiated successfully')
-        setShowRefundDialog(false)
         setRefundReason('')
         setSelectedDonation(null)
         loadDonations()
@@ -168,33 +260,74 @@ export default function MoneyDonationsPage() {
     }
   }
 
-  const exportDonations = () => {
-    const csvData = filteredDonations.map(donation => ({
-      'Donation ID': donation._id,
-      'Donor Name': donation.donorName,
-      'Donor Email': donation.donorEmail,
-      'Amount': donation.amount,
-      'Status': donation.status,
-      'Payment Method': donation.paymentMethod,
-      'Program': donation.programId.title,
-      'Campaign': donation.campaignId?.title || 'N/A',
-      'Razorpay Payment ID': donation.razorpayPaymentId || 'N/A',
-      'Date': new Date(donation.createdAt).toLocaleDateString(),
-      'Message': donation.message || 'N/A'
-    }))
+  const exportDonations = async () => {
+    setExporting(true)
+    try {
+      // Build query parameters to match current filters
+      const params = new URLSearchParams()
+      
+      if (filters.showAllDonations) {
+        params.append('showAll', 'true')
+      }
+      
+      if (filters.statusFilter && filters.statusFilter !== 'all') {
+        params.append('status', filters.statusFilter)
+      }
+      
+      if (filters.paymentVerified && filters.paymentVerified !== 'all') {
+        params.append('paymentVerified', filters.paymentVerified)
+      }
+      
+      if (filters.panProvided && filters.panProvided !== 'all') {
+        params.append('panProvided', filters.panProvided)
+      }
+      
+      if (filters.searchTerm?.trim()) {
+        params.append('search', filters.searchTerm.trim())
+      }
+      
+      // Add date range to export
+      if (filters.dateRange?.from) {
+        params.append('dateFrom', filters.dateRange.from.toISOString())
+      }
+      
+      if (filters.dateRange?.to) {
+        params.append('dateTo', filters.dateRange.to.toISOString())
+      }
 
-    const csv = [
-      Object.keys(csvData[0]).join(','),
-      ...csvData.map(row => Object.values(row).map(val => `"${val}"`).join(','))
-    ].join('\n')
-
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = window.URL.createObjectURL(blob)
-    const a = document?.createElement('a')
-    a.href = url
-    a.download = `money-donations-${new Date().toISOString().split('T')[0]}.csv`
-    a.click()
-    window.URL.revokeObjectURL(url)
+      const response = await fetch(`/api/protected/admin/money-donations/export?${params}`)
+      
+      if (response.ok) {
+        // Get the CSV content as blob
+        const blob = await response.blob()
+        
+        // Extract filename from response headers or use default
+        const contentDisposition = response.headers.get('Content-Disposition')
+        const filename = contentDisposition 
+          ? contentDisposition.split('filename=')[1]?.replace(/"/g, '')
+          : `money-donations-export-${new Date().toISOString().split('T')[0]}.csv`
+        
+        // Create download link
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = filename
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        window.URL.revokeObjectURL(url)
+        
+        toast.success('Export completed successfully')
+      } else {
+        const errorText = await response.text()
+        toast.error(errorText || 'Failed to export donations')
+      }
+    } catch (error) {
+      console.error('Error exporting donations:', error)
+      toast.error('Failed to export donations')
+    } finally {
+      setExporting(false)
+    }
   }
 
   return (
@@ -202,11 +335,16 @@ export default function MoneyDonationsPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Money Donations Management</h1>
         <div className="flex gap-2">
-          <Button onClick={exportDonations} variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export CSV
+          <Button 
+            onClick={exportDonations} 
+            variant="outline" 
+            size="sm"
+            disabled={exporting}
+          >
+            <Download className={`h-4 w-4 mr-2 ${exporting ? 'animate-spin' : ''}`} />
+            {exporting ? 'Exporting...' : 'Export CSV'}
           </Button>
-          <Button onClick={loadDonations} variant="outline" size="sm">
+          <Button onClick={() => loadDonations()} variant="outline" size="sm">
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
@@ -286,30 +424,26 @@ export default function MoneyDonationsPage() {
       {/* Filters */}
       <Card className="mb-6">
         <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search by donor name, email, program, or campaign..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+          <div className="flex flex-col md:flex-row gap-4 mb-4">
+            <MoneyDonationFilters
+              value={filters}
+              onChange={handleFiltersChange}
+              onClear={clearAllFilters}
+            />
+            
+            <div className="flex gap-2 ml-auto">
+              <Select value={pagination.limit.toString()} onValueChange={(value) => handleLimitChange(Number(value))}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10 per page</SelectItem>
+                  <SelectItem value="25">25 per page</SelectItem>
+                  <SelectItem value="50">50 per page</SelectItem>
+                  <SelectItem value="100">100 per page</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="failed">Failed</SelectItem>
-                <SelectItem value="refunded">Refunded</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </CardContent>
       </Card>
@@ -365,6 +499,29 @@ export default function MoneyDonationsPage() {
                   {donation.razorpayPaymentId && (
                     <p className="text-xs mt-1">ID: {donation.razorpayPaymentId}</p>
                   )}
+                </div>
+
+                {/* PAN Number and Payment Verification Status */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">PAN Number:</span>
+                    {donation.donorPAN ? (
+                      <Badge variant="secondary" className="text-xs">
+                        {donation.donorPAN}
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Not Provided</span>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Payment Verification:</span>
+                    <Badge 
+                      variant={donation.paymentVerified ? "default" : "destructive"}
+                      className="text-xs"
+                    >
+                      {donation.paymentVerified ? "Verified" : "Unverified"}
+                    </Badge>
+                  </div>
                 </div>
 
                 {donation.message && (
@@ -430,10 +587,83 @@ export default function MoneyDonationsPage() {
           <CardContent className="p-8 text-center">
             <DollarSign className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground">
-              {searchTerm || statusFilter !== 'all' ? 'No donations match your filters' : 'No money donations found'}
+              {filters.searchTerm || (filters.statusFilter && filters.statusFilter !== 'all') || filters.dateRange?.from ? 'No donations match your filters' : 'No money donations found'}
             </p>
           </CardContent>
         </Card>
+      )}
+
+      {/* Pagination Controls */}
+      {!loading && pagination.pages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+          <div className="text-sm text-muted-foreground">
+            Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} donations
+          </div>
+          
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  onClick={(e) => {
+                    e.preventDefault()
+                    if (pagination.page > 1) {
+                      handlePageChange(pagination.page - 1)
+                    }
+                  }}
+                  className={pagination.page <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+              
+              {/* Page numbers */}
+              {Array.from({ length: pagination.pages }, (_, i) => i + 1)
+                .filter(page => {
+                  // Show first page, last page, current page, and 2 pages around current
+                  return page === 1 || 
+                         page === pagination.pages || 
+                         Math.abs(page - pagination.page) <= 2
+                })
+                .map((page, index, array) => {
+                  // Add ellipsis if there's a gap
+                  const prevPage = array[index - 1]
+                  const showEllipsis = prevPage && page - prevPage > 1
+                  
+                  return (
+                    <React.Fragment key={page}>
+                      {showEllipsis && (
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      )}
+                      <PaginationItem>
+                        <PaginationLink
+                          onClick={(e) => {
+                            e.preventDefault()
+                            handlePageChange(page)
+                          }}
+                          isActive={page === pagination.page}
+                          className="cursor-pointer"
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    </React.Fragment>
+                  )
+                })}
+              
+              <PaginationItem>
+                <PaginationNext 
+                  onClick={(e) => {
+                    e.preventDefault()
+                    if (pagination.page < pagination.pages) {
+                      handlePageChange(pagination.page + 1)
+                    }
+                  }}
+                  className={pagination.page >= pagination.pages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
       )}
 
       {/* Donation Details Modal */}
@@ -465,6 +695,29 @@ export default function MoneyDonationsPage() {
                 <div>
                   <label className="text-sm font-medium">Donor Email</label>
                   <p className="text-sm text-muted-foreground">{selectedDonation.donorEmail}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">PAN Number</label>
+                  {selectedDonation.donorPAN ? (
+                    <Badge variant="secondary">{selectedDonation.donorPAN}</Badge>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Not Provided</p>
+                  )}
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Payment Verification</label>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={selectedDonation.paymentVerified ? "default" : "destructive"}>
+                      {selectedDonation.paymentVerified ? "Verified" : "Unverified"}
+                    </Badge>
+                    {selectedDonation.paymentVerifiedAt && (
+                      <span className="text-xs text-muted-foreground">
+                        on {new Date(selectedDonation.paymentVerifiedAt).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               <div>

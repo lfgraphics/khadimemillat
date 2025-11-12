@@ -57,6 +57,31 @@ export interface ICampaignDonation extends Document {
     // Notification tracking
     notificationsSent?: boolean
     notificationsSentAt?: Date
+    // Audit and visibility controls
+    auditStatus?: 'pending' | 'verified' | 'rejected' | 'under_review'
+    isVisibleInReports?: boolean
+    isVisibleInPublic?: boolean
+    // Audit trail
+    auditLog?: Array<{
+        action: 'created' | 'payment_verified' | 'audit_approved' | 'audit_rejected' | 'visibility_changed' | 'payment_rechecked'
+        performedBy: string // Clerk user ID
+        performedAt: Date
+        details?: string
+        previousValues?: Record<string, any>
+    }>
+    // Payment recheck tracking
+    paymentRecheckHistory?: Array<{
+        recheckId: string
+        performedBy: string // Clerk user ID
+        performedAt: Date
+        razorpayPaymentId: string
+        previousStatus: string
+        newStatus: string
+        razorpayResponse: any
+        success: boolean
+        errorMessage?: string
+        retryAttempt: number
+    }>
 }
 
 const campaignDonationSchema = new Schema<ICampaignDonation>({
@@ -150,13 +175,80 @@ const campaignDonationSchema = new Schema<ICampaignDonation>({
     },
     // Notification tracking
     notificationsSent: { type: Boolean, default: false },
-    notificationsSentAt: { type: Date }
+    notificationsSentAt: { type: Date },
+    // Audit and visibility controls
+    auditStatus: { 
+        type: String, 
+        enum: ['pending', 'verified', 'rejected', 'under_review'], 
+        default: 'pending' 
+    },
+    isVisibleInReports: { type: Boolean, default: false },
+    isVisibleInPublic: { type: Boolean, default: false },
+    // Audit trail
+    auditLog: [{
+        action: { 
+            type: String, 
+            enum: ['created', 'payment_verified', 'audit_approved', 'audit_rejected', 'visibility_changed', 'payment_rechecked'],
+            required: true
+        },
+        performedBy: { type: String, required: true },
+        performedAt: { type: Date, required: true },
+        details: { type: String },
+        previousValues: { type: Schema.Types.Mixed }
+    }],
+    // Payment recheck tracking
+    paymentRecheckHistory: [{
+        recheckId: { type: String, required: true },
+        performedBy: { type: String, required: true },
+        performedAt: { type: Date, required: true },
+        razorpayPaymentId: { type: String, required: true },
+        previousStatus: { type: String, required: true },
+        newStatus: { type: String, required: true },
+        razorpayResponse: { type: Schema.Types.Mixed },
+        success: { type: Boolean, required: true },
+        errorMessage: { type: String },
+        retryAttempt: { type: Number, required: true }
+    }]
 }, { timestamps: true })
+
+// Pre-save middleware to automatically update visibility rules
+campaignDonationSchema.pre('save', function(next) {
+  // Initialize audit fields if not set
+  if (this.auditStatus === undefined) {
+    this.auditStatus = 'pending'
+  }
+  
+  // Update visibility based on payment verification and audit status
+  const isPaymentVerified = this.paymentVerified === true
+  const isAuditVerified = this.auditStatus === 'verified'
+  const isCompleted = this.status === 'completed'
+  
+  // Set visibility rules
+  this.isVisibleInReports = isPaymentVerified && isCompleted
+  this.isVisibleInPublic = isPaymentVerified && isAuditVerified && isCompleted
+  
+  // Initialize audit log if not exists
+  if (!this.auditLog) {
+    this.auditLog = []
+  }
+  
+  // Initialize recheck history if not exists
+  if (!this.paymentRecheckHistory) {
+    this.paymentRecheckHistory = []
+  }
+  
+  next()
+})
 
 campaignDonationSchema.index({ campaignId: 1 })
 campaignDonationSchema.index({ programId: 1 })
 campaignDonationSchema.index({ donorId: 1 })
 campaignDonationSchema.index({ status: 1 })
 campaignDonationSchema.index({ createdAt: -1 })
+campaignDonationSchema.index({ auditStatus: 1 })
+campaignDonationSchema.index({ paymentVerified: 1 })
+campaignDonationSchema.index({ isVisibleInReports: 1 })
+campaignDonationSchema.index({ isVisibleInPublic: 1 })
+campaignDonationSchema.index({ 'paymentRecheckHistory.recheckId': 1 })
 
 export default mongoose.models.CampaignDonation || mongoose.model<ICampaignDonation>("CampaignDonation", campaignDonationSchema, 'campaign-donations')
