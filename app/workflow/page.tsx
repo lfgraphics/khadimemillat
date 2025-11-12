@@ -49,7 +49,8 @@ import {
     AlertCircle,
     Info,
     HelpCircle,
-    Mail
+    Mail,
+    UtensilsCrossed
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -73,13 +74,14 @@ export default function WorkflowPage() {
         { id: "clothing-redistribution", title: "6. Clothing Redistribution & Fabric Recycling", sections: ["Sorting Process", "Distribution", "Fabric to Cotton Conversion"] },
         { id: "sadqa-subscription", title: "7. Sadqa Subscription Program", sections: ["Subscription Types", "Continuous Support", "Flexibility"] },
         { id: "golak-system", title: "8. Neki Bank (Golak) Contribution System", sections: ["Registration", "Collection Workflow", "GPS Mapping"] },
-        { id: "employment-support", title: "9. Employment & Dignity Support", sections: ["Work Opportunities", "Stipend Support", "Skill Development"] },
-        { id: "roles-responsibilities", title: "10. Roles & Responsibilities", sections: ["Staff Structure", "Role Definitions", "Ethical Standards"] },
-        { id: "internal-workflows", title: "11. Internal Workflows", sections: ["Beneficiary Intake", "Sponsorship Activation", "Financial Tracking"] },
-        { id: "monitoring-accountability", title: "12. Monitoring & Accountability", sections: ["Quarterly Reviews", "Audits", "Complaint Resolution"] },
-        { id: "glossary", title: "13. Glossary of Terms", sections: ["Key Definitions"] },
-        { id: "faq", title: "14. Frequently Asked Questions", sections: ["Common Questions"] },
-        { id: "closing", title: "15. Closing Message", sections: ["Our Philosophy"] }
+        { id: "bulk-food-redistribution", title: "9. Bulk Food Recovery & Redistribution", sections: ["Collection Process", "Distribution Network", "Quality Assurance"] },
+        { id: "employment-support", title: "10. Employment & Dignity Support", sections: ["Work Opportunities", "Stipend Support", "Skill Development"] },
+        { id: "roles-responsibilities", title: "11. Roles & Responsibilities", sections: ["Staff Structure", "Role Definitions", "Ethical Standards"] },
+        { id: "internal-workflows", title: "12. Internal Workflows", sections: ["Beneficiary Intake", "Sponsorship Activation", "Financial Tracking"] },
+        { id: "monitoring-accountability", title: "13. Monitoring & Accountability", sections: ["Quarterly Reviews", "Audits", "Complaint Resolution"] },
+        { id: "glossary", title: "14. Glossary of Terms", sections: ["Key Definitions"] },
+        { id: "faq", title: "15. Frequently Asked Questions", sections: ["Common Questions"] },
+        { id: "closing", title: "16. Closing Message", sections: ["Our Philosophy"] }
     ];
 
     return (
@@ -1023,7 +1025,7 @@ export default function WorkflowPage() {
                     </div>
                 </section>
                 {/* Call to Action */}
-                <section className="py-16 md:py-24 bg-gradient-to-br from-primary/20 via-purple-500/10 to-background">
+                {/* <section className="py-16 md:py-24 bg-gradient-to-br from-primary/20 via-purple-500/10 to-background">
                     <div className="container mx-auto px-4">
                         <AnimatedSection variant="fade" className="max-w-4xl mx-auto" triggerOnce>
                             <Card className="bg-gradient-to-br from-primary to-purple-500 border-0">
@@ -1057,68 +1059,7 @@ export default function WorkflowPage() {
                             </Card>
                         </AnimatedSection>
                     </div>
-                </section>
-
-                {/* Contact Information */}
-                <section className="py-16 md:py-24">
-                    <div className="container mx-auto px-4">
-                        <AnimatedSection variant="fade" className="text-center mb-12" triggerOnce>
-                            <h2 className="text-3xl md:text-4xl mb-4">
-                                Get Involved in Our Mission
-                            </h2>
-                            <p className="text-lg text-muted-foreground">
-                                Whether you need assistance, want to contribute, or wish to volunteer — we're here to help
-                            </p>
-                        </AnimatedSection>
-
-                        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-                            <AnimatedSection variant="slideUp" delay={0.1}>
-                                <Card className="bg-card/50 backdrop-blur-sm border-border/50 text-center hover:border-primary/50 transition-all duration-300">
-                                    <CardContent className="p-6">
-                                        <Phone className="w-10 h-10 text-primary mx-auto mb-4" />
-                                        <h3 className="text-lg mb-2">Request Assistance</h3>
-                                        <p className="text-sm text-muted-foreground mb-4">
-                                            Call our helpline to start the verification process
-                                        </p>
-                                        <Button variant="outline" size="sm">
-                                            Contact Us
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            </AnimatedSection>
-
-                            <AnimatedSection variant="slideUp" delay={0.2}>
-                                <Card className="bg-card/50 backdrop-blur-sm border-border/50 text-center hover:border-primary/50 transition-all duration-300">
-                                    <CardContent className="p-6">
-                                        <Heart className="w-10 h-10 text-primary mx-auto mb-4" />
-                                        <h3 className="text-lg mb-2">Make a Donation</h3>
-                                        <p className="text-sm text-muted-foreground mb-4">
-                                            Contribute through our secure, transparent channels
-                                        </p>
-                                        <Button variant="outline" size="sm">
-                                            Donate Now
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            </AnimatedSection>
-
-                            <AnimatedSection variant="slideUp" delay={0.3}>
-                                <Card className="bg-card/50 backdrop-blur-sm border-border/50 text-center hover:border-primary/50 transition-all duration-300">
-                                    <CardContent className="p-6">
-                                        <Users className="w-10 h-10 text-primary mx-auto mb-4" />
-                                        <h3 className="text-lg mb-2">Volunteer With Us</h3>
-                                        <p className="text-sm text-muted-foreground mb-4">
-                                            Join our field team and be part of the workflow
-                                        </p>
-                                        <Button variant="outline" size="sm">
-                                            Join Us
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            </AnimatedSection>
-                        </div>
-                    </div>
-                </section>
+                </section> */}
             </div>
             {/* Section 7: Sadqa Subscription Program */}
             <section id="sadqa-subscription" className="py-16 md:py-24">
@@ -1282,13 +1223,90 @@ export default function WorkflowPage() {
                 </div>
             </section>
 
-            {/* Section 9: Employment & Dignity Support */}
-            <section id="employment-support" className="py-16 md:py-24">
+            {/* Section 9: Bulk Food Recovery & Redistribution */}
+            <section id="bulk-food-redistribution" className="py-16 md:py-24">
+                <div className="container mx-auto px-4 max-w-6xl">
+                    <AnimatedSection variant="fade" className="text-center mb-16" triggerOnce>
+                        <Badge className="mb-4 bg-orange-500/10 text-orange-600 border-orange-500/20">
+                            <UtensilsCrossed className="w-4 h-4 mr-2" />
+                            Section 9
+                        </Badge>
+                        <h2 className="text-4xl md:text-5xl mb-6">Bulk Food Recovery & Redistribution</h2>
+                        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+                            Transforming surplus into sustenance
+                        </p>
+                    </AnimatedSection>
+
+                    <div className="space-y-12">
+                        {/* Main Description */}
+                        <AnimatedSection variant="slideUp" triggerOnce>
+                            <Card className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20 border-orange-200/50">
+                                <CardContent className="p-8">
+                                    <div className="prose prose-lg max-w-none text-muted-foreground">
+                                        <p className="mb-4">
+                                            Not all generosity starts with money — sometimes, it starts with food that would otherwise go to waste. Through this model, KMWF collects and redistributes leftover food from community events, weddings, restaurants, and households to families who need it most.
+                                        </p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </AnimatedSection>
+
+                        {/* How It Works */}
+                        <AnimatedSection variant="slideUp" triggerOnce>
+                            <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+                                <CardContent className="p-8">
+                                    <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3">
+                                        <Workflow className="w-6 h-6 text-orange-600" />
+                                        How it works:
+                                    </h3>
+                                    <div className="space-y-6">
+                                        {[
+                                            "Anyone can report excess food using the KMWF website or helpline.",
+                                            "Our field team inspects, collects, and safely packs the food within hours.",
+                                            "The collected food is distributed across identified underprivileged neighborhoods and rural areas.",
+                                            "Every pickup and delivery is documented for transparency and hygiene assurance."
+                                        ].map((step, idx) => (
+                                            <div key={idx} className="flex items-start gap-4">
+                                                <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center flex-shrink-0 text-white font-semibold text-sm">
+                                                    {idx + 1}
+                                                </div>
+                                                <p className="text-muted-foreground pt-1">{step}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </AnimatedSection>
+
+                        {/* Impact Statement */}
+                        <AnimatedSection variant="slideUp" triggerOnce>
+                            <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200/50">
+                                <CardContent className="p-8">
+                                    <div className="prose prose-lg max-w-none text-muted-foreground mb-6">
+                                        <p>
+                                            This process ensures that good food never goes to waste, and no one sleeps hungry while blessings go uneaten. It's a system that turns gratitude into nourishment — where every leftover becomes a lifeline.
+                                        </p>
+                                    </div>
+                                    <div className="text-center">
+                                        <Button className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 hover:opacity-90">
+                                            Report Extra Food
+                                            <ArrowRight className="ml-2 w-5 h-5" />
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </AnimatedSection>
+                    </div>
+                </div>
+            </section>
+
+            {/* Section 10: Employment & Dignity Support */}
+            <section id="employment-support" className="py-16 md:py-24 bg-muted/30">
                 <div className="container mx-auto px-4 max-w-6xl">
                     <AnimatedSection variant="fade" className="text-center mb-16" triggerOnce>
                         <Badge className="mb-4 bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
                             <Users className="w-4 h-4 mr-2" />
-                            Section 9
+                            Section 10
                         </Badge>
                         <h2 className="text-4xl md:text-5xl mb-6">Employment & Dignity Support</h2>
                         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -1304,7 +1322,7 @@ export default function WorkflowPage() {
                                     <CardContent className="p-8">
                                         <h3 className="text-2xl font-semibold mb-4 flex items-center gap-3">
                                             <Building2 className="w-6 h-6 text-emerald-600" />
-                                            9.1 Work Opportunities & Skills Matching
+                                            10.1 Work Opportunities & Skills Matching
                                         </h3>
                                         <p className="text-muted-foreground mb-4">
                                             Many individuals in need are not lacking ability — they lack opportunity, tools, or access to work.
@@ -1330,7 +1348,7 @@ export default function WorkflowPage() {
                                     <CardContent className="p-8">
                                         <h3 className="text-2xl font-semibold mb-4 flex items-center gap-3">
                                             <Heart className="w-6 h-6 text-blue-600" />
-                                            9.2 Stipend Support Program
+                                            10.2 Stipend Support Program
                                         </h3>
                                         <p className="text-muted-foreground mb-4">
                                             For individuals whose circumstances make self-sufficiency difficult:
@@ -1365,7 +1383,7 @@ export default function WorkflowPage() {
                                 <CardContent className="p-8">
                                     <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3">
                                         <Star className="w-6 h-6 text-purple-600" />
-                                        9.3 Skill Growth & Future Livelihood Development
+                                        10.3 Skill Growth & Future Livelihood Development
                                     </h3>
                                     <p className="text-muted-foreground mb-6">
                                         Over time, the foundation plans to expand into comprehensive skill development:
@@ -1392,13 +1410,13 @@ export default function WorkflowPage() {
                     </div>
                 </div>
             </section>
-            {/* Section 10: Roles & Responsibilities */}
-            <section id="roles-responsibilities" className="py-16 md:py-24 bg-muted/30">
+            {/* Section 11: Roles & Responsibilities */}
+            <section id="roles-responsibilities" className="py-16 md:py-24">
                 <div className="container mx-auto px-4 max-w-6xl">
                     <AnimatedSection variant="fade" className="text-center mb-16" triggerOnce>
                         <Badge className="mb-4 bg-red-500/10 text-red-600 border-red-500/20">
                             <Users className="w-4 h-4 mr-2" />
-                            Section 10
+                            Section 11
                         </Badge>
                         <h2 className="text-4xl md:text-5xl mb-6">Roles & Responsibilities</h2>
                         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -1412,7 +1430,7 @@ export default function WorkflowPage() {
                             <CardContent className="p-8">
                                 <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3">
                                     <Building2 className="w-6 h-6 text-red-600" />
-                                    10.1 System Hierarchy Overview
+                                    11.1 System Hierarchy Overview
                                 </h3>
                                 <div className="space-y-4">
                                     {[
@@ -1447,7 +1465,7 @@ export default function WorkflowPage() {
                                     <CardContent className="p-8">
                                         <h3 className="text-2xl font-semibold mb-4 flex items-center gap-3">
                                             <UserCheck className="w-6 h-6 text-red-600" />
-                                            10.2 Role: Sponsorship Coordinator
+                                            11.2 Role: Sponsorship Coordinator
                                         </h3>
                                         <div className="space-y-4">
                                             <div>
@@ -1479,7 +1497,7 @@ export default function WorkflowPage() {
                                     <CardContent className="p-8">
                                         <h3 className="text-2xl font-semibold mb-4 flex items-center gap-3">
                                             <Search className="w-6 h-6 text-red-600" />
-                                            10.3 Role: Surveyor (Field Verification Staff)
+                                            11.3 Role: Surveyor (Field Verification Staff)
                                         </h3>
                                         <div className="space-y-4">
                                             <div>
@@ -1516,7 +1534,7 @@ export default function WorkflowPage() {
                                 <CardContent className="p-8">
                                     <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3">
                                         <Shield className="w-6 h-6 text-gray-600" />
-                                        10.4 Ethical Conduct & Confidentiality Standards
+                                        11.4 Ethical Conduct & Confidentiality Standards
                                     </h3>
                                     <p className="text-muted-foreground mb-6">
                                         All staff, volunteers, and participants must adhere to strict ethical guidelines:
@@ -1541,13 +1559,13 @@ export default function WorkflowPage() {
                 </div>
             </section>
 
-            {/* Section 11: Internal Workflows */}
-            <section id="internal-workflows" className="py-16 md:py-24">
+            {/* Section 12: Internal Workflows */}
+            <section id="internal-workflows" className="py-16 md:py-24 bg-muted/30">
                 <div className="container mx-auto px-4 max-w-6xl">
                     <AnimatedSection variant="fade" className="text-center mb-16" triggerOnce>
                         <Badge className="mb-4 bg-cyan-500/10 text-cyan-600 border-cyan-500/20">
                             <Workflow className="w-4 h-4 mr-2" />
-                            Section 11
+                            Section 12
                         </Badge>
                         <h2 className="text-4xl md:text-5xl mb-6">Internal Workflows</h2>
                         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -1562,7 +1580,7 @@ export default function WorkflowPage() {
                                 <CardContent className="p-8">
                                     <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3">
                                         <ArrowDown className="w-6 h-6 text-cyan-600" />
-                                        11.1 Beneficiary Intake & Approval Flow
+                                        12.1 Beneficiary Intake & Approval Flow
                                     </h3>
                                     <p className="text-muted-foreground mb-6">
                                         This workflow describes how a new family or individual enters the welfare system:
@@ -1604,7 +1622,7 @@ export default function WorkflowPage() {
                                 <CardContent className="p-8">
                                     <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3">
                                         <BarChart3 className="w-6 h-6 text-cyan-600" />
-                                        11.2 Financial Record & Audit Flow
+                                        12.2 Financial Record & Audit Flow
                                     </h3>
                                     <p className="text-muted-foreground mb-6">
                                         All financial transactions are traceable, documented, and reviewable:
@@ -1652,13 +1670,13 @@ export default function WorkflowPage() {
                 </div>
             </section>
 
-            {/* Section 12: Monitoring & Accountability */}
-            <section id="monitoring-accountability" className="py-16 md:py-24 bg-muted/30">
+            {/* Section 13: Monitoring & Accountability */}
+            <section id="monitoring-accountability" className="py-16 md:py-24">
                 <div className="container mx-auto px-4 max-w-6xl">
                     <AnimatedSection variant="fade" className="text-center mb-16" triggerOnce>
                         <Badge className="mb-4 bg-orange-500/10 text-orange-600 border-orange-500/20">
                             <Eye className="w-4 h-4 mr-2" />
-                            Section 12
+                            Section 13
                         </Badge>
                         <h2 className="text-4xl md:text-5xl mb-6">Monitoring & Accountability</h2>
                         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -1674,7 +1692,7 @@ export default function WorkflowPage() {
                                     <CardContent className="p-8">
                                         <h3 className="text-2xl font-semibold mb-4 flex items-center gap-3">
                                             <Calendar className="w-6 h-6 text-orange-600" />
-                                            12.1 Quarterly Case Review
+                                            13.1 Quarterly Case Review
                                         </h3>
                                         <p className="text-muted-foreground mb-4">
                                             Beneficiary situations may improve or change over time:
@@ -1698,7 +1716,7 @@ export default function WorkflowPage() {
                                     <CardContent className="p-8">
                                         <h3 className="text-2xl font-semibold mb-4 flex items-center gap-3">
                                             <BarChart3 className="w-6 h-6 text-blue-600" />
-                                            12.2 Financial Tracking
+                                            13.2 Financial Tracking
                                         </h3>
                                         <p className="text-muted-foreground mb-4">
                                             All contributions are:
@@ -1722,7 +1740,7 @@ export default function WorkflowPage() {
                                     <CardContent className="p-8">
                                         <h3 className="text-2xl font-semibold mb-4 flex items-center gap-3">
                                             <Shield className="w-6 h-6 text-green-600" />
-                                            12.3 Audits & Compliance
+                                            13.3 Audits & Compliance
                                         </h3>
                                         <div className="space-y-3">
                                             {[
@@ -1751,7 +1769,7 @@ export default function WorkflowPage() {
                                 <CardContent className="p-8">
                                     <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3">
                                         <MessageSquare className="w-6 h-6 text-orange-600" />
-                                        12.4 Complaint Resolution & Reporting Channels
+                                        13.4 Complaint Resolution & Reporting Channels
                                     </h3>
                                     <p className="text-muted-foreground mb-6">
                                         Concerns, suggestions, or complaints can be raised through multiple channels:
@@ -1783,13 +1801,13 @@ export default function WorkflowPage() {
                     </div>
                 </div>
             </section>
-            {/* Section 13: Glossary */}
-            <section id="glossary" className="py-16 md:py-24">
+            {/* Section 14: Glossary */}
+            <section id="glossary" className="py-16 md:py-24 bg-muted/30">
                 <div className="container mx-auto px-4 max-w-6xl">
                     <AnimatedSection variant="fade" className="text-center mb-16" triggerOnce>
                         <Badge className="mb-4 bg-violet-500/10 text-violet-600 border-violet-500/20">
                             <BookOpen className="w-4 h-4 mr-2" />
-                            Section 13
+                            Section 14
                         </Badge>
                         <h2 className="text-4xl md:text-5xl mb-6">Glossary of Terms</h2>
                         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -1832,13 +1850,13 @@ export default function WorkflowPage() {
                 </div>
             </section>
 
-            {/* Section 14: FAQ */}
-            <section id="faq" className="py-16 md:py-24 bg-muted/30">
+            {/* Section 15: FAQ */}
+            <section id="faq" className="py-16 md:py-24">
                 <div className="container mx-auto px-4 max-w-6xl">
                     <AnimatedSection variant="fade" className="text-center mb-16" triggerOnce>
                         <Badge className="mb-4 bg-teal-500/10 text-teal-600 border-teal-500/20">
                             <HelpCircle className="w-4 h-4 mr-2" />
-                            Section 14
+                            Section 15
                         </Badge>
                         <h2 className="text-4xl md:text-5xl mb-6">Frequently Asked Questions</h2>
                         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -1911,13 +1929,13 @@ export default function WorkflowPage() {
                 </div>
             </section>
 
-            {/* Section 15: Closing Message */}
-            <section id="closing" className="py-16 md:py-24">
+            {/* Section 16: Closing Message */}
+            <section id="closing" className="py-16 md:py-24 bg-muted/30">
                 <div className="container mx-auto px-4 max-w-6xl">
                     <AnimatedSection variant="fade" className="text-center mb-16" triggerOnce>
                         <Badge className="mb-4 bg-rose-500/10 text-rose-600 border-rose-500/20">
                             <Heart className="w-4 h-4 mr-2" />
-                            Section 15
+                            Section 16
                         </Badge>
                         <h2 className="text-4xl md:text-5xl mb-6">Closing Message</h2>
                         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -1990,6 +2008,74 @@ export default function WorkflowPage() {
                                             </div>
                                         </div>
                                     </div>
+                                </CardContent>
+                            </Card>
+                        </AnimatedSection>
+                    </div>
+                </div>
+            </section>
+
+
+            {/* Contact Information */}
+            <section className="py-16 md:py-24">
+                <div className="container mx-auto px-4">
+                    <AnimatedSection variant="fade" className="text-center mb-12" triggerOnce>
+                        <h2 className="text-3xl md:text-4xl mb-4">
+                            Get Involved in Our Mission
+                        </h2>
+                        <p className="text-lg text-muted-foreground">
+                            Whether you need assistance, want to contribute, or wish to volunteer — we're here to help
+                        </p>
+                    </AnimatedSection>
+
+                    <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                        <AnimatedSection variant="slideUp" delay={0.1}>
+                            <Card className="bg-card/50 backdrop-blur-sm border-border/50 text-center hover:border-primary/50 transition-all duration-300">
+                                <CardContent className="p-6">
+                                    <Phone className="w-10 h-10 text-primary mx-auto mb-4" />
+                                    <h3 className="text-lg mb-2">Request Assistance</h3>
+                                    <p className="text-sm text-muted-foreground mb-4">
+                                        Call our helpline to start the verification process
+                                    </p>
+                                    <Link href="/contact">
+                                        <Button variant="outline" size="sm">
+                                            Contact Us
+                                        </Button>
+                                    </Link>
+                                </CardContent>
+                            </Card>
+                        </AnimatedSection>
+
+                        <AnimatedSection variant="slideUp" delay={0.2}>
+                            <Card className="bg-card/50 backdrop-blur-sm border-border/50 text-center hover:border-primary/50 transition-all duration-300">
+                                <CardContent className="p-6">
+                                    <Heart className="w-10 h-10 text-primary mx-auto mb-4" />
+                                    <h3 className="text-lg mb-2">Make a Donation</h3>
+                                    <p className="text-sm text-muted-foreground mb-4">
+                                        Contribute through our secure, transparent channels
+                                    </p>
+                                    <Link href="/donate">
+                                        <Button variant="outline" size="sm">
+                                            Donate Now
+                                        </Button>
+                                    </Link>
+                                </CardContent>
+                            </Card>
+                        </AnimatedSection>
+
+                        <AnimatedSection variant="slideUp" delay={0.3}>
+                            <Card className="bg-card/50 backdrop-blur-sm border-border/50 text-center hover:border-primary/50 transition-all duration-300">
+                                <CardContent className="p-6">
+                                    <Users className="w-10 h-10 text-primary mx-auto mb-4" />
+                                    <h3 className="text-lg mb-2">Volunteer With Us</h3>
+                                    <p className="text-sm text-muted-foreground mb-4">
+                                        Join our field team and be part of the workflow
+                                    </p>
+                                    <Link href="/contact">
+                                        <Button variant="outline" size="sm">
+                                            Apply to Join
+                                        </Button>
+                                    </Link>
                                 </CardContent>
                             </Card>
                         </AnimatedSection>

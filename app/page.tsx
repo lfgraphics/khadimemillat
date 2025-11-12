@@ -1,4 +1,4 @@
-import { ArrowRight, ClipboardCheck, Headphones, Heart, HeartHandshake, HandHeart, HomeIcon, Mail, Package, Phone, Recycle, ShoppingBag, Truck, Users, HandHelping } from "lucide-react";
+import { ArrowRight, ClipboardCheck, Headphones, Heart, HeartHandshake, HandHeart, HomeIcon, Mail, Package, Phone, Recycle, ShoppingBag, Truck, Users, HandHelping, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 import SuspenseSection from "@/components/SuspenseSection";
 import Loading from "@/components/Loading";
@@ -78,12 +78,12 @@ const supportOptions = [
     color: "from-cyan-500 to-blue-500"
   },
   {
-    icon: HandHelping,
+    icon: UtensilsCrossed,
     title: "Bulk Food Recovery Program",
     description: `From surplus to sustenance.\nThrough our Food Recovery Initiative, leftover food from events and gatherings is collected, inspected, and safely distributed to impoverished communities. A quick call prevents waste and feeds hundreds. Compassion shouldn’t end with the meal — let your occasion nourish others.`,
     cta: "Report Extra Food",
     link: "/donate",
-    color: "from-orange-500 to-green-500"
+    color: "from-orange-500 to-red-500"
   }
 ];
 
