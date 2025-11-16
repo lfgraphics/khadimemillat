@@ -855,13 +855,6 @@ export default function WorkflowPage() {
                                         <div className="grid lg:grid-cols-3 gap-6">
                                             {[
                                                 {
-                                                    category: "Usable Clothing",
-                                                    desc: "Clean and wearable without repair",
-                                                    action: "Distributed directly to families in need",
-                                                    icon: CheckCircle2,
-                                                    color: "from-green-500 to-emerald-500"
-                                                },
-                                                {
                                                     category: "Repairable Clothing",
                                                     desc: "Requires stitching, cleaning, or minor adjustment",
                                                     action: "Repaired and then distributed or sold at minimal charity value",

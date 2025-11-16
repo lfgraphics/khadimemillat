@@ -252,7 +252,9 @@ export class TemplateService {
       title: template.title,
       message: template.message,
       channels: template.channels,
-      targetRoles: template.targetRoles,
+      targetRoles: template.targetRoles.filter(role => 
+        ['admin', 'moderator', 'scrapper', 'user', 'everyone'].includes(role)
+      ) as ('admin' | 'moderator' | 'scrapper' | 'user' | 'everyone')[],
       sentBy,
       templateId: template._id?.toString(),
       metadata

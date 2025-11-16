@@ -15,7 +15,13 @@ import {
 } from "@/components/ui/pagination"
 import { Skeleton } from "@/components/ui/skeleton"
 import UserManagementClient from "@/components/admin/UserManagementClient"
-import { Phone, MapPin, Mail } from "lucide-react"
+import { 
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion"
+import { Phone, MapPin, Mail, Clipboard, UserCheck, Shield, AlertTriangle } from "lucide-react"
 
 export default async function AdminDashboard(params: {
     searchParams: Promise<{ search?: string; page?: string }>
@@ -93,6 +99,75 @@ export default async function AdminDashboard(params: {
     return (
         <div className="space-y-6 p-6">
             <UserManagementClient>
+                {/* Sponsorship Workflow Guide */}
+                <Accordion type="single" collapsible className="mb-6">
+                    <AccordionItem value="workflow-guide">
+                        <AccordionTrigger className="text-lg font-semibold">
+                            📋 Sponsorship Workflow & Role Guide
+                        </AccordionTrigger>
+                        <AccordionContent>
+                            <div className="grid md:grid-cols-3 gap-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-full bg-blue-100 text-blue-800">
+                                            <Clipboard className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-medium text-blue-900">Survey Officer</h3>
+                                            <p className="text-xs text-blue-700">inquiry_officer role</p>
+                                        </div>
+                                    </div>
+                                    <p className="text-sm text-blue-800">
+                                        Conducts field surveys and assessments. Visits applicants' homes to verify information and collect detailed data.
+                                    </p>
+                                </div>
+                                
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-full bg-purple-100 text-purple-800">
+                                            <UserCheck className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-medium text-purple-900">Moderator</h3>
+                                            <p className="text-xs text-purple-700">moderator role</p>
+                                        </div>
+                                    </div>
+                                    <p className="text-sm text-purple-800">
+                                        Reviews survey results and makes approval decisions. Can approve or reject sponsorship requests based on assessments.
+                                    </p>
+                                </div>
+                                
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-full bg-red-100 text-red-800">
+                                            <Shield className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-medium text-red-900">Administrator</h3>
+                                            <p className="text-xs text-red-700">admin role</p>
+                                        </div>
+                                    </div>
+                                    <p className="text-sm text-red-800">
+                                        Full system access. Can assign survey officers, manage all requests, and oversee the entire workflow.
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                <div className="flex items-start gap-2">
+                                    <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5" />
+                                    <div className="text-xs text-amber-800">
+                                        <p className="font-medium">Workflow Process:</p>
+                                        <p className="mt-1">
+                                            1. User submits request → 2. Admin assigns Survey Officer → 3. Officer conducts survey → 4. Moderator reviews & approves → 5. Beneficiary card generated
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
+
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-xl font-semibold text-foreground">
@@ -183,6 +258,7 @@ export default async function AdminDashboard(params: {
                                                 {user.publicMetadata.role as string && <RoleForm userId={user.id} actionType="remove" />}
                                             </div>
                                         </div>
+                
                                     </CardContent>
                                 </Card>
                             ))}

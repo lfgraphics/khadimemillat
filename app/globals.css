@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+html {
+  scroll-behavior: smooth;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -352,6 +356,7 @@
   }
 
   @keyframes float {
+
     0%,
     100% {
       transform: translateY(0px);
@@ -363,6 +368,7 @@
   }
 
   @keyframes bounce-slow {
+
     0%,
     100% {
       transform: translateY(0px);

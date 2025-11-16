@@ -75,6 +75,11 @@ const protectedRoutes = [
         matcher: createRouteMatcher(['/dashboard(.*)']),
         allowedRoles: ['admin', 'moderator', 'user', 'scrapper'],
         routeName: 'Dashboard'
+    },
+    {
+        matcher: createRouteMatcher(['/surveyor(.*)', '/api/sponsorship(.*)','/api/sponsorship/survey/draft']),
+        allowedRoles: ['admin', 'moderator', 'inquiry_officer'],
+        routeName: 'Dashboard'
     }
 ]
 

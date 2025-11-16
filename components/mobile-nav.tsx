@@ -24,7 +24,8 @@ import {
     Image as ImageIcon,
     Menu,
     HeartPlus,
-    BookOpenCheck
+    BookOpenCheck,
+    ChartNoAxesGantt
 } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import Link from "next/link"
@@ -150,6 +151,14 @@ export function MobileNav() {
                                     Manage Notifications
                                 </Link>
                                 <Link
+                                    href="/admin/sponsorship"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <UserIcon className="h-4 w-4" />
+                                    Sponsorship
+                                </Link>
+                                <Link
                                     href="/admin/activities"
                                     className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                     onClick={() => setOpen(false)}
@@ -181,6 +190,23 @@ export function MobileNav() {
                                 >
                                     <ListIcon className="h-4 w-4" />
                                     List Donation
+                                </Link>
+                            </div>
+                        </div>
+                    </RoleGuard>
+
+                    {/* Surveyor Section */}
+                    <RoleGuard allowedRoles={["inquiry_officer", "admin"]}>
+                        <div className="mb-6">
+                            <h3 className="mb-2 px-2 text-sm font-semibold text-muted-foreground">Surveyor</h3>
+                            <div className="space-y-1">
+                                <Link
+                                    href="/surveyor"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <ClipboardCheck className="h-4 w-4" />
+                                    Dashboard
                                 </Link>
                             </div>
                         </div>
@@ -224,20 +250,20 @@ export function MobileNav() {
                                 Transparency
                             </Link>
                             <Link
+                                href="/workflow"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                onClick={() => setOpen(false)}
+                            >
+                                <ChartNoAxesGantt className="h-4 w-4" />
+                                Our Workflow
+                            </Link>
+                            <Link
                                 href="/contribute"
                                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <HeartPlus className="h-4 w-4" />
                                 Ways To Contribute
-                            </Link>
-                            <Link
-                                href="/donate"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
-                                onClick={() => setOpen(false)}
-                            >
-                                <Heart className="h-4 w-4" />
-                                Donate
                             </Link>
                             <Link
                                 href="/welfare-programs"
@@ -248,20 +274,44 @@ export function MobileNav() {
                                 Welfare Programs
                             </Link>
                             <Link
-                                href="/marketplace"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
-                                onClick={() => setOpen(false)}
-                            >
-                                <Store className="h-4 w-4" />
-                                Marketplace
-                            </Link>
-                            <Link
                                 href="/activities"
                                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <ImageIcon className="h-4 w-4" />
                                 Activities
+                            </Link>
+                            <Link
+                                href="/sponsorship/request"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                onClick={() => setOpen(false)}
+                            >
+                                <UserIcon className="h-4 w-4" />
+                                <span>Apply for Sponsorship</span>
+                            </Link>
+                            <Link
+                                href="/sponsorship/status"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                onClick={() => setOpen(false)}
+                            >
+                                <ClipboardCheck className="h-4 w-4" />
+                                <span>Track My Request</span>
+                            </Link>
+                            <Link
+                                href="/donate"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                onClick={() => setOpen(false)}
+                            >
+                                <Heart className="h-4 w-4" />
+                                Donate
+                            </Link>
+                            <Link
+                                href="/marketplace"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                onClick={() => setOpen(false)}
+                            >
+                                <Store className="h-4 w-4" />
+                                Marketplace
                             </Link>
                             <Link
                                 href="/my-donations"
