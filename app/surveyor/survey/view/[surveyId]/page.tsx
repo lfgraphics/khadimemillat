@@ -45,14 +45,39 @@ export default async function SurveyViewPage({ params }: SurveyViewPageProps) {
     redirect("/unauthorized");
   }
 
-  // Get survey response
-  const survey = await SurveyResponse.findById((await params).surveyId)
-    .populate('requestId')
-    .populate('officerId', 'name email');
+  // Helper function to deeply serialize objects
+  const deepSerialize = (obj: any): any => {
+    return JSON.parse(JSON.stringify(obj, (key, value) => {
+      // Convert ObjectIds to strings
+      if (value && typeof value === 'object' && value.constructor && value.constructor.name === 'ObjectId') {
+        return value.toString();
+      }
+      // Convert Dates to ISO strings
+      if (value instanceof Date) {
+        return value.toISOString();
+      }
+      // Convert Buffer objects to empty strings (remove buffer data)
+      if (value && typeof value === 'object' && value.type === 'Buffer') {
+        return '';
+      }
+      return value;
+    }));
+  };
 
-  if (!survey) {
+  // Get survey response
+  const surveyRaw = await SurveyResponse.findById((await params).surveyId)
+    .populate('requestId')
+    .populate('officerId', 'name email')
+    .lean();
+
+  if (!surveyRaw) {
     notFound();
   }
+
+  // Serialize survey data
+  const survey = deepSerialize(surveyRaw);
+
+
 
   // Check if user can view this survey (own survey or admin/moderator)
   if (survey.officerId._id.toString() !== user._id.toString() && 

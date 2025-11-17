@@ -98,7 +98,7 @@ export default function RequestDetailPage() {
   }
 
   useEffect(() => {
-    if (params.id) {
+    if (await params).id) {
       fetchRequestDetails()
     }
   }, [params.id])

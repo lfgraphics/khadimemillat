@@ -1,117 +1,90 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import connectDB from "@/lib/db";
-import SponsorshipRequest from "@/models/SponsorshipRequest";
-import User from "@/models/User";
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
+import connectDB from '@/lib/db';
+import User from '@/models/User';
+import SponsorshipRequest from '@/models/SponsorshipRequest';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const { userId } = await auth();
     
     if (!userId) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     await connectDB();
-
-    // Check if user has permission (admin, moderator, or inquiry_officer)
+    
     const user = await User.findOne({ clerkUserId: userId });
+    
     if (!user || !['admin', 'moderator', 'inquiry_officer'].includes(user.role)) {
-      return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
-    const { id } = await params;
-    const requestId = id;
-
-    // Fetch the sponsorship request with populated references
-    const sponsorshipRequest = await SponsorshipRequest.findById(requestId)
-      .populate('submittedBy', 'name email')
-      .populate('assignedOfficer', 'name email')
-      .lean();
-
-    if (!sponsorshipRequest) {
-      return NextResponse.json(
-        { error: "Request not found" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: sponsorshipRequest
-    });
-
-  } catch (error) {
-    console.error("Error fetching sponsorship request:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { userId } = await auth();
+    // Get sponsorship request
+    const sponsorshipRequest = await SponsorshipRequest.findById(await params).id).lean() as any;
     
-    if (!userId) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
+    if (!sponsorshipRequest) {
+      return NextResponse.json({ error: 'Request not found' }, { status: 404 });
     }
 
-    await connectDB();
-
-    // Check if user has permission (admin or moderator)
-    const user = await User.findOne({ clerkUserId: userId });
-    if (!user || !['admin', 'moderator'].includes(user.role)) {
-      return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
-      );
+    // If there's an assigned officer, fetch their details from Clerk
+    let assignedOfficerDetails = null;
+    if (sponsorshipRequest.assignedOfficer) {
+      try {
+        const { clerkClient } = await import('@clerk/nextjs/server');
+        const client = await clerkClient();
+        const officer = await client.users.getUser(sponsorshipRequest.assignedOfficer);
+        
+        assignedOfficerDetails = {
+          _id: officer.id,
+          name: officer.firstName && officer.lastName 
+            ? `${officer.firstName} ${officer.lastName}` 
+            : (officer.username || 'Officer'),
+          email: officer.emailAddresses?.[0]?.emailAddress
+        };
+      } catch (error) {
+        console.error('Error fetching officer details:', error);
+      }
     }
 
-    const { id } = await params;
-    const requestId = id;
-    const body = await request.json();
-
-    // Update the sponsorship request
-    const updatedRequest = await SponsorshipRequest.findByIdAndUpdate(
-      requestId,
-      body,
-      { new: true }
-    ).populate('submittedBy', 'name email')
-     .populate('assignedOfficer', 'name email');
-
-    if (!updatedRequest) {
-      return NextResponse.json(
-        { error: "Request not found" },
-        { status: 404 }
-      );
+    // If there's a submittedBy user, fetch their details from Clerk
+    let submittedByDetails = null;
+    if (sponsorshipRequest.submittedBy) {
+      try {
+        const { clerkClient } = await import('@clerk/nextjs/server');
+        const client = await clerkClient();
+        const submitter = await client.users.getUser(sponsorshipRequest.submittedBy);
+        
+        submittedByDetails = {
+          _id: submitter.id,
+          name: submitter.firstName && submitter.lastName 
+            ? `${submitter.firstName} ${submitter.lastName}` 
+            : (submitter.username || 'User'),
+          email: submitter.emailAddresses?.[0]?.emailAddress
+        };
+      } catch (error) {
+        console.error('Error fetching submitter details:', error);
+      }
     }
+
+    const responseData = {
+      ...sponsorshipRequest,
+      assignedOfficer: assignedOfficerDetails,
+      submittedBy: submittedByDetails
+    };
 
     return NextResponse.json({
       success: true,
-      data: updatedRequest
+      data: responseData
     });
 
   } catch (error) {
-    console.error("Error updating sponsorship request:", error);
+    console.error('Error fetching sponsorship request:', error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

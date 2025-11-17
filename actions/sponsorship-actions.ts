@@ -25,17 +25,6 @@ export async function submitSponsorshipRequest(formData: any) {
       throw new Error("User not found");
     }
 
-    // Check for duplicate Aadhaar (if provided)
-    if (formData.aadhaar) {
-      const existingRequest = await SponsorshipRequest.findOne({ 
-        aadhaar: formData.aadhaar 
-      });
-      
-      if (existingRequest) {
-        throw new Error("A sponsorship request with this Aadhaar already exists");
-      }
-    }
-
     // Create sponsorship request
     const sponsorshipRequest = new SponsorshipRequest({
       applicantName: formData.applicantName,

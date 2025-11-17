@@ -109,7 +109,7 @@ export default function ItemDetailPage() {
   }
 
   useEffect(() => {
-    if (params.id) {
+    if (await params).id) {
       fetchItemDetails()
     }
   }, [params.id])

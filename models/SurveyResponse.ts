@@ -195,11 +195,41 @@ export interface ISurveyResponse extends Document {
   documentation: Documentation[];
   officerReport: OfficerReport;
   calculatedScores?: AssessmentScores;
-  status: 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'revision_required';
+  status: 'draft' | 'submitted' | 'under_review' | 'verified' | 'approved' | 'rejected' | 'revision_required';
   reviewedBy?: mongoose.Types.ObjectId;
   reviewedAt?: Date;
   reviewComments?: string;
   submittedAt?: Date;
+  
+  // Admin review fields
+  approvedAt?: Date;
+  approvedBy?: mongoose.Types.ObjectId;
+  rejectedAt?: Date;
+  rejectedBy?: mongoose.Types.ObjectId;
+  revisionRequestedAt?: Date;
+  revisionRequestedBy?: mongoose.Types.ObjectId;
+  adminComments?: string;
+  category?: string; // category_1, category_2, category_3
+  
+  // Relief card information
+  reliefCard?: {
+    cardId: string;
+    assignedAt: Date;
+    assignedBy: mongoose.Types.ObjectId;
+    status: 'active' | 'inactive' | 'suspended';
+    comments?: string;
+  };
+  
+  // Action history
+  actionHistory?: Array<{
+    action: string;
+    performedBy: mongoose.Types.ObjectId;
+    performedAt: Date;
+    comments?: string;
+    category?: string;
+    details?: any;
+  }>;
+  
   lastSyncedAt?: Date; // For offline sync
   lastModifiedAt?: Date; // Updated by FamilyMember hooks
   lastModifiedBy?: mongoose.Types.ObjectId;
@@ -474,13 +504,50 @@ const surveyResponseSchema = new Schema<ISurveyResponse>({
 
   status: { 
     type: String, 
-    enum: ['draft', 'submitted', 'under_review', 'approved', 'rejected', 'revision_required'],
+    enum: ['draft', 'submitted', 'under_review', 'verified', 'approved', 'rejected', 'revision_required'],
     default: 'draft'
   },
   reviewedBy: { type: Schema.Types.ObjectId, ref: 'User' },
   reviewedAt: { type: Date },
   reviewComments: { type: String },
   submittedAt: { type: Date },
+  
+  // Admin review fields
+  approvedAt: { type: Date },
+  approvedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+  rejectedAt: { type: Date },
+  rejectedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+  revisionRequestedAt: { type: Date },
+  revisionRequestedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+  adminComments: { type: String },
+  category: { 
+    type: String,
+    enum: ['category_1', 'category_2', 'category_3']
+  },
+  
+  // Relief card information
+  reliefCard: {
+    cardId: { type: String },
+    assignedAt: { type: Date },
+    assignedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    status: { 
+      type: String,
+      enum: ['active', 'inactive', 'suspended'],
+      default: 'active'
+    },
+    comments: { type: String }
+  },
+  
+  // Action history
+  actionHistory: [{
+    action: { type: String, required: true },
+    performedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    performedAt: { type: Date, default: Date.now },
+    comments: { type: String },
+    category: { type: String },
+    details: { type: Schema.Types.Mixed }
+  }],
+  
   lastSyncedAt: { type: Date },
   lastModifiedAt: { type: Date },
   lastModifiedBy: { type: Schema.Types.ObjectId, ref: 'User' }

@@ -27,7 +27,7 @@ export default async function SponsorshipStatusPage() {
   // Get user's sponsorship requests
   const requests = await SponsorshipRequest.find({
     submittedBy: user._id
-  }).populate('assignedOfficer', 'name').sort({ createdAt: -1 });
+  }).sort({ createdAt: -1 });
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -79,7 +79,7 @@ export default async function SponsorshipStatusPage() {
                 <WorkflowStatus
                   status={request.status}
                   priority={request.priority}
-                  assignedOfficer={(request.assignedOfficer as any)?.name}
+                  assignedOfficer={request.assignedOfficer}
                 />
                 
                 <div className="grid md:grid-cols-2 gap-4 text-sm">

@@ -53,13 +53,32 @@ async function getRecentRequests() {
   await connectDB();
   
   const requests = await SponsorshipRequest.find()
-    .populate('submittedBy', 'name email')
-    .populate('assignedOfficer', 'name email')
     .sort({ createdAt: -1 })
     .limit(10)
     .lean();
 
-  return requests;
+  // Fetch user details from Clerk for assigned officers
+  const { clerkClient } = await import('@clerk/nextjs/server');
+  const client = await clerkClient();
+  
+  const requestsWithUserDetails = await Promise.all(
+    requests.map(async (request: any) => {
+      if (request.assignedOfficer) {
+        try {
+          const officer = await client.users.getUser(request.assignedOfficer);
+          request.assignedOfficerName = officer.firstName && officer.lastName 
+            ? `${officer.firstName} ${officer.lastName}` 
+            : (officer.username || 'Officer');
+        } catch (error) {
+          console.error('Error fetching officer details:', error);
+          request.assignedOfficerName = 'Unknown Officer';
+        }
+      }
+      return request;
+    })
+  );
+
+  return requestsWithUserDetails;
 }
 
 async function getInquiryOfficers() {
@@ -241,7 +260,7 @@ export default async function SponsorshipManagementPage() {
                     
                     {request.assignedOfficer && (
                       <div className="text-xs text-muted-foreground">
-                        Assigned to: {request.assignedOfficer.name}
+                        Assigned to: {request.assignedOfficerName || request.assignedOfficer}
                       </div>
                     )}
                   </div>

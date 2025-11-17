@@ -27,7 +27,7 @@ import {
     BookOpenCheck,
     ChartNoAxesGantt
 } from 'lucide-react'
-import { usePathname } from 'next/navigation'
+
 import Link from "next/link"
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs"
 
@@ -66,7 +66,7 @@ export function MobileNav() {
                 <div className="flex-1 overflow-auto p-4">
                     <Link
                         href="/notifications"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                         onClick={() => setOpen(false)}
                     >
                         <BellIcon className="h-4 w-4" />
@@ -80,55 +80,128 @@ export function MobileNav() {
                             <div className="space-y-1">
                                 <Link
                                     href="/admin"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <LayoutDashboard className="h-4 w-4" />
                                     Dashboard
                                 </Link>
                                 <Link
-                                    href="/admin/verify-requests"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                    href="/admin/navigation"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
-                                    <ClipboardCheck className="h-4 w-4" />
-                                    Verify Requests
+                                    <ChartNoAxesGantt className="h-4 w-4" />
+                                    All Admin Tools
                                 </Link>
-                                <Link
-                                    href="/admin/create-collection-request"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
-                                    onClick={() => setOpen(false)}
-                                >
-                                    <Plus className="h-4 w-4" />
-                                    Create Collection Request
-                                </Link>
+                                
+                                {/* Core Management */}
+                                <div className="mt-3 mb-2">
+                                    <p className="px-2 text-xs font-medium text-muted-foreground">CORE MANAGEMENT</p>
+                                </div>
                                 <Link
                                     href="/admin/manage-users"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <UserCog2Icon className="h-4 w-4" />
                                     Manage Users
                                 </Link>
                                 <Link
+                                    href="/admin/categories"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <ChartNoAxesGantt className="h-4 w-4" />
+                                    Categories
+                                </Link>
+
+                                {/* Request Management */}
+                                <div className="mt-3 mb-2">
+                                    <p className="px-2 text-xs font-medium text-muted-foreground">REQUESTS & SURVEYS</p>
+                                </div>
+                                <Link
+                                    href="/admin/verify-requests"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <ClipboardCheck className="h-4 w-4" />
+                                    Verify Requests
+                                </Link>
+                                <Link
+                                    href="/admin/requests"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <FileCheck className="h-4 w-4" />
+                                    All Requests
+                                </Link>
+                                <Link
+                                    href="/admin/surveys"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <ClipboardCheck className="h-4 w-4" />
+                                    Survey Management
+                                </Link>
+                                <Link
+                                    href="/admin/sponsorship"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <UserIcon className="h-4 w-4" />
+                                    Sponsorship
+                                </Link>
+
+                                {/* Collection Management */}
+                                <div className="mt-3 mb-2">
+                                    <p className="px-2 text-xs font-medium text-muted-foreground">COLLECTIONS</p>
+                                </div>
+                                <Link
+                                    href="/admin/create-collection-request"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    Create Collection
+                                </Link>
+                                <Link
                                     href="/list-donation"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <ListIcon className="h-4 w-4" />
-                                    List Donation
+                                    List Donations
                                 </Link>
                                 <Link
+                                    href="/admin/items"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <ShoppingBag className="h-4 w-4" />
+                                    Items Management
+                                </Link>
+
+                                {/* Financial */}
+                                <div className="mt-3 mb-2">
+                                    <p className="px-2 text-xs font-medium text-muted-foreground">FINANCIAL</p>
+                                </div>
+                                <Link
                                     href="/admin/money-donations"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <Heart className="h-4 w-4" />
                                     Money Donations
                                 </Link>
+
+                                {/* Programs */}
+                                <div className="mt-3 mb-2">
+                                    <p className="px-2 text-xs font-medium text-muted-foreground">PROGRAMS</p>
+                                </div>
                                 <Link
                                     href="/admin/welfare-programs"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <HandHeart className="h-4 w-4" />
@@ -136,35 +209,32 @@ export function MobileNav() {
                                 </Link>
                                 <Link
                                     href="/admin/campaigns"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <Target className="h-4 w-4" />
                                     Campaigns
                                 </Link>
                                 <Link
-                                    href="/admin/notifications"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
-                                    onClick={() => setOpen(false)}
-                                >
-                                    <BellDot className="h-4 w-4" />
-                                    Manage Notifications
-                                </Link>
-                                <Link
-                                    href="/admin/sponsorship"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
-                                    onClick={() => setOpen(false)}
-                                >
-                                    <UserIcon className="h-4 w-4" />
-                                    Sponsorship
-                                </Link>
-                                <Link
                                     href="/admin/activities"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <ImageIcon className="h-4 w-4" />
-                                    Manage Activities
+                                    Activities
+                                </Link>
+
+                                {/* Communication */}
+                                <div className="mt-3 mb-2">
+                                    <p className="px-2 text-xs font-medium text-muted-foreground">COMMUNICATION</p>
+                                </div>
+                                <Link
+                                    href="/admin/notifications"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <BellDot className="h-4 w-4" />
+                                    Notifications
                                 </Link>
                             </div>
                         </div>
@@ -177,7 +247,7 @@ export function MobileNav() {
                             <div className="space-y-1">
                                 <Link
                                     href="/scrapper/assigned"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <Truck className="h-4 w-4" />
@@ -185,7 +255,7 @@ export function MobileNav() {
                                 </Link>
                                 <Link
                                     href="/list-donation"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <ListIcon className="h-4 w-4" />
@@ -202,7 +272,7 @@ export function MobileNav() {
                             <div className="space-y-1">
                                 <Link
                                     href="/surveyor"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <ClipboardCheck className="h-4 w-4" />
@@ -219,11 +289,35 @@ export function MobileNav() {
                             <div className="space-y-1">
                                 <Link
                                     href="/moderator/review"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <FileCheck className="h-4 w-4" />
-                                    Review
+                                    Review Items
+                                </Link>
+                                <Link
+                                    href="/admin/surveys"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <ClipboardCheck className="h-4 w-4" />
+                                    Review Surveys
+                                </Link>
+                                <Link
+                                    href="/admin/sponsorship"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <UserIcon className="h-4 w-4" />
+                                    Manage Sponsorship
+                                </Link>
+                                <Link
+                                    href="/admin/categories"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <ChartNoAxesGantt className="h-4 w-4" />
+                                    Categories
                                 </Link>
                             </div>
                         </div>
@@ -235,7 +329,7 @@ export function MobileNav() {
                         <div className="space-y-1">
                             <Link
                                 href="/about"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <Info className="h-4 w-4" />
@@ -243,7 +337,7 @@ export function MobileNav() {
                             </Link>
                             <Link
                                 href="/transparency"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <BookOpenCheck className="h-4 w-4" />
@@ -251,7 +345,7 @@ export function MobileNav() {
                             </Link>
                             <Link
                                 href="/workflow"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <ChartNoAxesGantt className="h-4 w-4" />
@@ -259,7 +353,7 @@ export function MobileNav() {
                             </Link>
                             <Link
                                 href="/contribute"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <HeartPlus className="h-4 w-4" />
@@ -267,7 +361,7 @@ export function MobileNav() {
                             </Link>
                             <Link
                                 href="/welfare-programs"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <HandHeart className="h-4 w-4" />
@@ -275,7 +369,7 @@ export function MobileNav() {
                             </Link>
                             <Link
                                 href="/activities"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <ImageIcon className="h-4 w-4" />
@@ -283,7 +377,7 @@ export function MobileNav() {
                             </Link>
                             <Link
                                 href="/sponsorship/request"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <UserIcon className="h-4 w-4" />
@@ -291,7 +385,7 @@ export function MobileNav() {
                             </Link>
                             <Link
                                 href="/sponsorship/status"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <ClipboardCheck className="h-4 w-4" />
@@ -299,7 +393,7 @@ export function MobileNav() {
                             </Link>
                             <Link
                                 href="/donate"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <Heart className="h-4 w-4" />
@@ -307,7 +401,7 @@ export function MobileNav() {
                             </Link>
                             <Link
                                 href="/marketplace"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <Store className="h-4 w-4" />
@@ -315,7 +409,7 @@ export function MobileNav() {
                             </Link>
                             <Link
                                 href="/my-donations"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <Heart className="h-4 w-4" />
@@ -323,7 +417,7 @@ export function MobileNav() {
                             </Link>
                             <Link
                                 href="/account#purchases"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <ShoppingBag className="h-4 w-4" />
@@ -331,7 +425,7 @@ export function MobileNav() {
                             </Link>
                             <Link
                                 href="/conversations"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <MessageSquare className="h-4 w-4" />
@@ -340,7 +434,7 @@ export function MobileNav() {
                             <RoleGuard allowedRoles={["admin", "moderator", "scrapper"]}>
                                 <Link
                                     href="/scanner"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
                                     <Scan className="h-4 w-4" />
@@ -349,7 +443,7 @@ export function MobileNav() {
                             </RoleGuard>
                             <Link
                                 href="/account"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hoact:bg-accent"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
                                 <UserIcon className="h-4 w-4" />

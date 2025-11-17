@@ -43,7 +43,7 @@ export interface IFamilyMember extends Document {
   // Sponsorship Properties (Moderator Managed)
   sponsorship: {
     availableForSponsorship: boolean;
-    category?: 'child_education' | 'medical_support' | 'elderly_care' | 'disability_support' | 'widow_support' | 'orphan_care' | 'general_welfare';
+    category?: string; // Use centralized categories from lib/categories.ts
     description?: string;
     memberHumanId?: string; // Human readable member ID (e.g., KMWF-2024-001-M01)
     priority?: 'low' | 'medium' | 'high' | 'urgent';
@@ -132,8 +132,7 @@ const FamilyMemberSchema = new Schema<IFamilyMember>({
   sponsorship: {
     availableForSponsorship: { type: Boolean, default: false },
     category: { 
-      type: String, 
-      enum: ['child_education', 'medical_support', 'elderly_care', 'disability_support', 'widow_support', 'orphan_care', 'general_welfare']
+      type: String // Use centralized categories from lib/categories.ts
     },
     description: { type: String },
     memberHumanId: { type: String }, // Will be generated: KMWF-YYYY-XXX-M##
@@ -174,7 +173,7 @@ const FamilyMemberSchema = new Schema<IFamilyMember>({
 // Indexes for better performance
 FamilyMemberSchema.index({ surveyId: 1, memberIndex: 1 });
 FamilyMemberSchema.index({ 'sponsorship.availableForSponsorship': 1 });
-FamilyMemberSchema.index({ 'sponsorship.memberHumanId': 1 });
+FamilyMemberSchema.index({ 'sponsorship.memberHumanId': 1 }, { sparse: true, unique: true });
 FamilyMemberSchema.index({ 'sponsorship.category': 1 });
 FamilyMemberSchema.index({ 'sponsorship.sponsorshipStatus': 1 });
 

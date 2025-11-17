@@ -1,141 +1,183 @@
-import mongoose, { Schema, Document } from "mongoose";
-
-export interface ContactInfo {
-  phone: string;
-  email?: string;
-  alternatePhone?: string;
-}
-
-export interface FamilyMember {
-  name: string;
-  age: number;
-  relationship: string;
-  education?: string;
-  occupation?: string;
-  monthlyIncome?: number;
-  maritalStatus?: string;
-  healthStatus?: string;
-  isDependent: boolean;
-}
-
-export interface BasicRequest {
-  reasonForRequest: string;
-}
+import mongoose, { Document, Schema } from 'mongoose';
 
 export interface ISponsorshipRequest extends Document {
+  // Request Information
   requestId: string;
   applicantName: string;
   fatherName: string;
-  aadhaar?: string; // Optional Aadhaar number
-  contactInfo: ContactInfo;
+  
+  // Contact Information
+  contactInfo: {
+    phone: string;
+    alternatePhone?: string;
+  };
+  
+  // Address
   fullAddress: string;
-  basicRequest: BasicRequest;
+  
+  // Request Details
+  basicRequest: {
+    reasonForRequest: string;
+  };
+  
+  // Status and Assignment
   status: 'pending' | 'assigned' | 'surveyed' | 'approved' | 'rejected' | 'cancelled';
-  assignedOfficer?: mongoose.Types.ObjectId;
-  assignedDate?: Date;
-  submittedBy?: mongoose.Types.ObjectId; // User who submitted the request
-  notes?: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
+  
+  // Assignment (Clerk user IDs as strings)
+  assignedOfficer?: string; // Clerk user ID
+  assignedDate?: Date;
+  
+  // Survey Connection
+  surveyId?: mongoose.Types.ObjectId;
+  
+  // Submission Details (Clerk user ID as string)
+  submittedBy?: string; // Clerk user ID
+  
+  // Management
   createdAt: Date;
   updatedAt: Date;
+  
+  // Status History
+  statusHistory?: Array<{
+    status: string;
+    changedAt: Date;
+    changedBy: string; // Clerk user ID
+    reason?: string;
+  }>;
+  
+  // Notes
+  adminNotes?: string;
 }
 
-const sponsorshipRequestSchema = new Schema({
-  requestId: { 
-    type: String, 
-    required: true, 
-    unique: true,
-    default: () => `REQ-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
+const SponsorshipRequestSchema = new Schema<ISponsorshipRequest>({
+  requestId: {
+    type: String,
+    required: true,
+    default: () => `REQ-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
   },
-  applicantName: { type: String, required: true, trim: true },
-  fatherName: { type: String, required: true, trim: true },
-  aadhaar: { 
-    type: String, 
-    required: false, // Optional field
-    sparse: true, // Allow multiple null values
-    validate: {
-      validator: function(v: string) {
-        if (!v) return true; // Allow empty/null values
-        return /^\d{12}$/.test(v); // Only accept 12-digit Aadhaar format
-      },
-      message: 'Aadhaar must be exactly 12 digits'
+  
+  applicantName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  
+  fatherName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  
+  contactInfo: {
+    phone: {
+      type: String,
+      required: true
+    },
+    alternatePhone: {
+      type: String
     }
   },
-  contactInfo: {
-    phone: { 
-      type: String, 
-      required: true,
-      validate: {
-        validator: function(v: string) {
-          // More flexible phone validation - at least 10 digits
-          return /^[\+]?[0-9]{10,15}$/.test(v.replace(/[\s\-\(\)]/g, ''));
-        },
-        message: 'Phone number must be at least 10 digits'
-      }
-    },
-    email: { 
-      type: String,
-      validate: {
-        validator: function(v: string) {
-          return !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-        },
-        message: 'Email must be valid format'
-      }
-    },
-    alternatePhone: { type: String }
+  
+  fullAddress: {
+    type: String,
+    required: true
   },
-  fullAddress: { type: String, required: true },
+  
   basicRequest: {
-    reasonForRequest: { type: String, required: true }
+    reasonForRequest: {
+      type: String,
+      required: true
+    }
   },
-  status: { 
-    type: String, 
+  
+  status: {
+    type: String,
     enum: ['pending', 'assigned', 'surveyed', 'approved', 'rejected', 'cancelled'],
     default: 'pending'
   },
-  assignedOfficer: { type: Schema.Types.ObjectId, ref: 'User' },
-  assignedDate: { type: Date },
-  submittedBy: { type: Schema.Types.ObjectId, ref: 'User' },
-  notes: { type: String },
-  priority: { 
-    type: String, 
+  
+  priority: {
+    type: String,
     enum: ['low', 'medium', 'high', 'urgent'],
     default: 'medium'
+  },
+  
+  // Clerk user IDs stored as strings
+  assignedOfficer: {
+    type: String // Clerk user ID
+  },
+  
+  assignedDate: {
+    type: Date
+  },
+  
+  surveyId: {
+    type: Schema.Types.ObjectId,
+    ref: 'SurveyResponse'
+  },
+  
+  submittedBy: {
+    type: String // Clerk user ID
+  },
+  
+  statusHistory: [{
+    status: {
+      type: String,
+      required: true
+    },
+    changedAt: {
+      type: Date,
+      default: Date.now
+    },
+    changedBy: {
+      type: String, // Clerk user ID
+      required: true
+    },
+    reason: String
+  }],
+  
+  adminNotes: {
+    type: String
   }
-}, { 
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
+}, {
+  timestamps: true
 });
 
-// Indexes for better query performance (requestId already indexed via unique: true)
-sponsorshipRequestSchema.index({ status: 1 });
-sponsorshipRequestSchema.index({ assignedOfficer: 1 });
-sponsorshipRequestSchema.index({ createdAt: -1 });
-sponsorshipRequestSchema.index({ priority: 1, status: 1 });
+// Indexes
+SponsorshipRequestSchema.index({ requestId: 1 }, { unique: true });
+SponsorshipRequestSchema.index({ status: 1 });
+SponsorshipRequestSchema.index({ priority: 1 });
+SponsorshipRequestSchema.index({ assignedOfficer: 1 });
+SponsorshipRequestSchema.index({ submittedBy: 1 });
+SponsorshipRequestSchema.index({ createdAt: -1 });
 
-// Virtual for basic request info
-sponsorshipRequestSchema.virtual('requestSummary').get(function() {
-  return {
-    name: this.applicantName,
-    reason: this.basicRequest?.reasonForRequest || 'No reason provided',
-    contact: this.contactInfo?.phone || 'No contact provided'
-  };
-});
-
-// Pre-save middleware to set default priority
-sponsorshipRequestSchema.pre('save', function(next) {
-  if (this.isNew) {
-    // All new requests start with medium priority
-    // Priority will be updated after survey completion
-    this.priority = 'medium';
+// Pre-save middleware to add status history
+SponsorshipRequestSchema.pre('save', function(next) {
+  if (this.isModified('status') && !this.isNew && this.submittedBy) {
+    this.statusHistory = this.statusHistory || [];
+    this.statusHistory.push({
+      status: this.status,
+      changedAt: new Date(),
+      changedBy: this.submittedBy,
+      reason: 'Status updated'
+    });
   }
   next();
 });
 
-// Clear any existing model to avoid conflicts
-if (mongoose.models.SponsorshipRequest) {
-  delete mongoose.models.SponsorshipRequest;
-}
+// Virtual for survey details
+SponsorshipRequestSchema.virtual('surveyDetails', {
+  ref: 'SurveyResponse',
+  localField: 'surveyId',
+  foreignField: '_id',
+  justOne: true
+});
 
-export default mongoose.model<ISponsorshipRequest>("SponsorshipRequest", sponsorshipRequestSchema);
+// Ensure virtuals are included in JSON output
+SponsorshipRequestSchema.set('toJSON', { virtuals: true });
+SponsorshipRequestSchema.set('toObject', { virtuals: true });
+
+const SponsorshipRequest = mongoose.models.SponsorshipRequest || mongoose.model<ISponsorshipRequest>('SponsorshipRequest', SponsorshipRequestSchema);
+
+export default SponsorshipRequest;
