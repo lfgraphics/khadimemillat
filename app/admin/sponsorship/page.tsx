@@ -65,13 +65,28 @@ async function getRecentRequests() {
     requests.map(async (request: any) => {
       if (request.assignedOfficer) {
         try {
-          const officer = await client.users.getUser(request.assignedOfficer);
+          // Check if assignedOfficer is a Clerk user ID (string) or MongoDB ObjectId
+          let clerkUserId = request.assignedOfficer;
+          
+          // If it's a MongoDB ObjectId, try to find the corresponding Clerk user ID
+          if (request.assignedOfficer.length === 24 && /^[0-9a-fA-F]{24}$/.test(request.assignedOfficer)) {
+            // This looks like a MongoDB ObjectId, find the corresponding user
+            const officerUser = await User.findById(request.assignedOfficer);
+            if (officerUser?.clerkUserId) {
+              clerkUserId = officerUser.clerkUserId;
+            } else {
+              request.assignedOfficerName = 'Officer (Legacy)';
+              return request;
+            }
+          }
+          
+          const officer = await client.users.getUser(clerkUserId);
           request.assignedOfficerName = officer.firstName && officer.lastName 
             ? `${officer.firstName} ${officer.lastName}` 
-            : (officer.username || 'Officer');
+            : (officer.username || officer.emailAddresses?.[0]?.emailAddress || 'Officer');
         } catch (error) {
-          console.error('Error fetching officer details:', error);
-          request.assignedOfficerName = 'Unknown Officer';
+          console.error('Error fetching officer details for request:', request._id, error);
+          request.assignedOfficerName = 'Officer (Unavailable)';
         }
       }
       return request;

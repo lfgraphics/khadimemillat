@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -61,14 +61,61 @@ const limbLossOptions = [
 
 export function FamilyMemberForm({ form, index, onRemove, canRemove }: FamilyMemberFormProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [autoEmploymentStatus, setAutoEmploymentStatus] = useState(false);
   
   const watchedValues = {
     hasDisability: form.watch(`familyMembers.${index}.hasDisability`),
     socialStatus: form.watch(`familyMembers.${index}.socialStatus`) || [],
     age: form.watch(`familyMembers.${index}.age`),
     relationship: form.watch(`familyMembers.${index}.relationship`),
-    disabilityType: form.watch(`familyMembers.${index}.disabilityDetails.type`)
+    disabilityType: form.watch(`familyMembers.${index}.disabilityDetails.type`),
+    monthlyIncome: form.watch(`familyMembers.${index}.monthlyIncome`),
+    employmentStatus: form.watch(`familyMembers.${index}.employmentStatus`)
   };
+
+  // Auto-determine employment status based on income and other factors
+  const determineEmploymentStatus = () => {
+    const income = watchedValues.monthlyIncome || 0;
+    const age = watchedValues.age || 0;
+    const hasDisability = watchedValues.hasDisability;
+    
+    if (hasDisability) return 'disabled';
+    if (age >= 60) return 'retired';
+    if (age < 18) return 'student';
+    if (income > 0) return 'employed';
+    return 'unemployed';
+  };
+
+  // Auto-suggest occupation based on employment status
+  const suggestOccupation = (employmentStatus: string) => {
+    switch (employmentStatus) {
+      case 'student': return 'Student';
+      case 'retired': return 'Retired';
+      case 'disabled': return 'Unable to work';
+      case 'homemaker': return 'Homemaker';
+      case 'unemployed': return 'Unemployed';
+      default: return '';
+    }
+  };
+
+  // Auto-update employment status when income changes (if auto mode is enabled)
+  React.useEffect(() => {
+    if (autoEmploymentStatus) {
+      const autoStatus = determineEmploymentStatus();
+      if (autoStatus !== watchedValues.employmentStatus) {
+        form.setValue(`familyMembers.${index}.employmentStatus`, autoStatus);
+        
+        // Also suggest occupation based on employment status
+        const currentOccupation = form.watch(`familyMembers.${index}.occupation`);
+        if (!currentOccupation || currentOccupation.trim() === '') {
+          const suggestedOccupation = suggestOccupation(autoStatus);
+          if (suggestedOccupation) {
+            form.setValue(`familyMembers.${index}.occupation`, suggestedOccupation);
+          }
+        }
+      }
+    }
+  }, [watchedValues.monthlyIncome, watchedValues.age, watchedValues.hasDisability, autoEmploymentStatus]);
 
   const handleSocialStatusChange = (status: string, checked: boolean) => {
     const currentStatus = watchedValues.socialStatus;
@@ -121,7 +168,7 @@ export function FamilyMemberForm({ form, index, onRemove, canRemove }: FamilyMem
 
       <CardContent className="space-y-6">
         {/* Basic Information */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
             <Label>Name *</Label>
             <Input
@@ -153,6 +200,131 @@ export function FamilyMemberForm({ form, index, onRemove, canRemove }: FamilyMem
               {...form.register(`familyMembers.${index}.relationship`)}
               placeholder="Relationship to applicant"
             />
+          </div>
+
+          <div>
+            <Label>Employment Status *</Label>
+            <Select
+              value={watchedValues.employmentStatus}
+              onValueChange={(value) => {
+                form.setValue(`familyMembers.${index}.employmentStatus`, value);
+                setAutoEmploymentStatus(false); // Disable auto mode when manually set
+              }}
+              disabled={autoEmploymentStatus}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select employment status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="employed">Employed</SelectItem>
+                <SelectItem value="unemployed">Unemployed</SelectItem>
+                <SelectItem value="student">Student</SelectItem>
+                <SelectItem value="retired">Retired</SelectItem>
+                <SelectItem value="disabled">Disabled</SelectItem>
+                <SelectItem value="homemaker">Homemaker</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex items-center space-x-2 mt-2">
+              <Checkbox
+                id={`auto-employment-${index}`}
+                checked={autoEmploymentStatus}
+                onCheckedChange={(checked) => {
+                  setAutoEmploymentStatus(!!checked);
+                  if (checked) {
+                    const autoStatus = determineEmploymentStatus();
+                    form.setValue(`familyMembers.${index}.employmentStatus`, autoStatus);
+                  }
+                }}
+              />
+              <Label htmlFor={`auto-employment-${index}`} className="text-sm text-muted-foreground">
+                Auto-determine based on income & age
+              </Label>
+            </div>
+          </div>
+
+          <div>
+            <Label>Education Level *</Label>
+            <Select
+              value={form.watch(`familyMembers.${index}.educationLevel`)}
+              onValueChange={(value) => form.setValue(`familyMembers.${index}.educationLevel`, value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select education level" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="illiterate">Illiterate</SelectItem>
+                <SelectItem value="primary">Primary</SelectItem>
+                <SelectItem value="middle">Middle</SelectItem>
+                <SelectItem value="matric">Matric</SelectItem>
+                <SelectItem value="intermediate">Intermediate</SelectItem>
+                <SelectItem value="graduate">Graduate</SelectItem>
+                <SelectItem value="postgraduate">Post Graduate</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Marital Status *</Label>
+            <Select
+              value={form.watch(`familyMembers.${index}.maritalStatus`)}
+              onValueChange={(value) => form.setValue(`familyMembers.${index}.maritalStatus`, value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select marital status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="single">Single</SelectItem>
+                <SelectItem value="married">Married</SelectItem>
+                <SelectItem value="divorced">Divorced</SelectItem>
+                <SelectItem value="widowed">Widowed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Health Status *</Label>
+            <Select
+              value={form.watch(`familyMembers.${index}.healthStatus`)}
+              onValueChange={(value) => form.setValue(`familyMembers.${index}.healthStatus`, value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select health status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="healthy">Healthy</SelectItem>
+                <SelectItem value="chronically_ill">Chronically Ill</SelectItem>
+                <SelectItem value="disabled">Disabled</SelectItem>
+                <SelectItem value="elderly">Elderly</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Occupation</Label>
+            <div className="flex gap-2">
+              <Input
+                {...form.register(`familyMembers.${index}.occupation`)}
+                placeholder="e.g., Teacher, Farmer, Student, Unemployed"
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const employmentStatus = watchedValues.employmentStatus;
+                  const suggestedOccupation = suggestOccupation(employmentStatus);
+                  if (suggestedOccupation) {
+                    form.setValue(`familyMembers.${index}.occupation`, suggestedOccupation);
+                  }
+                }}
+                className="px-3"
+                title="Auto-suggest based on employment status"
+              >
+                Auto
+              </Button>
+            </div>
           </div>
 
           <div>

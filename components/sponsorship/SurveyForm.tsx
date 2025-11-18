@@ -272,7 +272,10 @@ export function SurveyForm({ request, existingSurvey, officerId }: SurveyFormPro
   const form = useForm({
     resolver: zodResolver(surveySchema) as any,
     defaultValues: existingSurvey ? {
-      personalDetails: existingSurvey.personalDetails,
+      personalDetails: {
+        ...existingSurvey.personalDetails,
+        surveyDate: existingSurvey.personalDetails?.surveyDate ? new Date(existingSurvey.personalDetails.surveyDate) : new Date()
+      },
       familyMembers: existingSurvey.familyMembers,
       bankDetails: existingSurvey.bankDetails || [],
       housingDetails: existingSurvey.housingDetails,
@@ -362,6 +365,57 @@ export function SurveyForm({ request, existingSurvey, officerId }: SurveyFormPro
     }
   });
 
+  // Ensure all required fields are properly set
+  useEffect(() => {
+    // Fix surveyDate if it's a string
+    const personalDetails = form.watch("personalDetails");
+    if (personalDetails?.surveyDate && typeof personalDetails.surveyDate === 'string') {
+      form.setValue("personalDetails.surveyDate", new Date(personalDetails.surveyDate));
+    }
+    
+    // Ensure all family members have required fields set
+    const familyMembers = form.watch("familyMembers") || [];
+    let needsUpdate = false;
+    
+    const updatedMembers = familyMembers.map((member: any) => {
+      const updated = { ...member };
+      
+      // Ensure employment status is set
+      if (!updated.employmentStatus) {
+        updated.employmentStatus = "unemployed";
+        needsUpdate = true;
+      }
+      
+      // Ensure other required fields are set
+      if (!updated.educationLevel) {
+        updated.educationLevel = "primary";
+        needsUpdate = true;
+      }
+      
+      if (!updated.maritalStatus) {
+        updated.maritalStatus = "single";
+        needsUpdate = true;
+      }
+      
+      if (!updated.healthStatus) {
+        updated.healthStatus = "healthy";
+        needsUpdate = true;
+      }
+      
+      // Ensure occupation is set (optional but good to have)
+      if (!updated.occupation) {
+        updated.occupation = "";
+        needsUpdate = true;
+      }
+      
+      return updated;
+    });
+    
+    if (needsUpdate) {
+      form.setValue("familyMembers", updatedMembers);
+    }
+  }, [form]);
+
   // Load draft from localStorage or server on component mount
   useEffect(() => {
     const loadDraft = async () => {
@@ -374,7 +428,17 @@ export function SurveyForm({ request, existingSurvey, officerId }: SurveyFormPro
           // Restore form data
           if (draftData.formData) {
             Object.keys(draftData.formData).forEach(key => {
-              form.setValue(key as any, draftData.formData[key]);
+              let value = draftData.formData[key];
+              
+              // Handle date conversion for surveyDate
+              if (key === 'personalDetails' && value?.surveyDate) {
+                value = {
+                  ...value,
+                  surveyDate: new Date(value.surveyDate)
+                };
+              }
+              
+              form.setValue(key as any, value);
             });
           }
           
@@ -406,7 +470,13 @@ export function SurveyForm({ request, existingSurvey, officerId }: SurveyFormPro
             const { draft } = await response.json();
             
             // Restore form data from server draft
-            if (draft.personalDetails) form.setValue('personalDetails', draft.personalDetails);
+            if (draft.personalDetails) {
+              const personalDetails = {
+                ...draft.personalDetails,
+                surveyDate: draft.personalDetails.surveyDate ? new Date(draft.personalDetails.surveyDate) : new Date()
+              };
+              form.setValue('personalDetails', personalDetails);
+            }
             if (draft.familyMembers) form.setValue('familyMembers', draft.familyMembers);
             if (draft.bankDetails) form.setValue('bankDetails', draft.bankDetails);
             if (draft.housingDetails) form.setValue('housingDetails', draft.housingDetails);
@@ -1147,6 +1217,18 @@ export function SurveyForm({ request, existingSurvey, officerId }: SurveyFormPro
               )}
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Hidden fields */}
+              <input
+                type="hidden"
+                {...form.register("personalDetails.surveyDate", {
+                  setValueAs: (value) => {
+                    if (value instanceof Date) return value;
+                    if (typeof value === 'string') return new Date(value);
+                    return new Date();
+                  }
+                })}
+              />
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="fullName">Full Name *</Label>
@@ -2272,7 +2354,7 @@ export function SurveyForm({ request, existingSurvey, officerId }: SurveyFormPro
                 </div>
               )}
               {(lastSavedAt || isAutoSaving) && (
-                <p className="text-xs flex items-center gap-1 mt-1">
+                <div className="text-xs flex items-center gap-1 mt-1">
                   {isAutoSaving ? (
                     <>
                       <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
@@ -2284,7 +2366,7 @@ export function SurveyForm({ request, existingSurvey, officerId }: SurveyFormPro
                       <span className="text-green-600">Auto-saved at {lastSavedAt?.toLocaleTimeString()}</span>
                     </>
                   )}
-                </p>
+                </div>
               )}
             </div>
           </div>

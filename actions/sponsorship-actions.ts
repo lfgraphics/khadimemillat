@@ -432,7 +432,7 @@ export async function assignOfficer(requestId: string, officerId: string) {
       });
     }
 
-    request.assignedOfficer = officer._id;
+    request.assignedOfficer = officerId; // Store Clerk user ID instead of MongoDB ObjectId
     request.assignedDate = new Date();
     request.status = 'assigned';
     

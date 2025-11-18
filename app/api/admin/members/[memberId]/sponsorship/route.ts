@@ -8,7 +8,7 @@ import Category from '@/models/Category';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { memberId: string } }
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
     const { userId } = await auth();

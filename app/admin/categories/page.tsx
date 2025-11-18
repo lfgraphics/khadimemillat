@@ -187,6 +187,42 @@ export default function CategoriesManagementPage() {
                     variant="outline" 
                     onClick={async () => {
                       try {
+                        const response = await fetch('/api/admin/cleanup-sponsorship-indexes', { method: 'POST' });
+                        const data = await response.json();
+                        if (response.ok) {
+                          toast.success('Sponsorship indexes cleaned up successfully');
+                        } else {
+                          toast.error(`Cleanup failed: ${data.error}`);
+                        }
+                      } catch (error) {
+                        toast.error('Error during cleanup');
+                      }
+                    }}
+                  >
+                    Cleanup Sponsorship Indexes
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/admin/cleanup-pending-sponsorships', { method: 'POST' });
+                        const data = await response.json();
+                        if (response.ok) {
+                          toast.success(`Cleaned up ${data.deletedCount} pending sponsorships`);
+                        } else {
+                          toast.error(`Cleanup failed: ${data.error}`);
+                        }
+                      } catch (error) {
+                        toast.error('Error during cleanup');
+                      }
+                    }}
+                  >
+                    Cleanup Pending Sponsorships
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={async () => {
+                      try {
                         const response = await fetch('/api/admin/fix-sponsorship-index', { method: 'POST' });
                         const data = await response.json();
                         if (response.ok) {

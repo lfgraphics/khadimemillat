@@ -392,6 +392,14 @@ export function MobileNav() {
                                 <span>Track My Request</span>
                             </Link>
                             <Link
+                                href="/sponsor"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                onClick={() => setOpen(false)}
+                            >
+                                <Heart className="h-4 w-4 text-blue-500" />
+                                Sponsor a Family
+                            </Link>
+                            <Link
                                 href="/donate"
                                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                 onClick={() => setOpen(false)}
@@ -414,6 +422,14 @@ export function MobileNav() {
                             >
                                 <Heart className="h-4 w-4" />
                                 My Donations
+                            </Link>
+                            <Link
+                                href="/my-sponsorships"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                onClick={() => setOpen(false)}
+                            >
+                                <Heart className="h-4 w-4 text-blue-500" />
+                                My Sponsorships
                             </Link>
                             <Link
                                 href="/account#purchases"

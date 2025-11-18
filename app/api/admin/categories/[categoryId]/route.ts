@@ -6,7 +6,7 @@ import Category from '@/models/Category';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { categoryId: string } }
+  { params }: { params: Promise<{ categoryId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -43,7 +43,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { categoryId: string } }
+  { params }: { params: Promise<{ categoryId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -84,7 +84,7 @@ export async function PUT(
   } catch (error) {
     console.error('Error updating category:', error);
     
-    if (error.code === 11000) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 11000) {
       return NextResponse.json({ 
         error: 'Category with this name already exists' 
       }, { status: 400 });
@@ -99,7 +99,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { categoryId: string } }
+  { params }: { params: Promise<{ categoryId: string }> }
 ) {
   try {
     const { userId } = await auth();

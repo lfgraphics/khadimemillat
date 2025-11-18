@@ -6,7 +6,7 @@ import SurveyResponse from '@/models/SurveyResponse';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { surveyId: string } }
+  { params }: { params: Promise<{ surveyId: string }> }
 ) {
   try {
     const { userId } = await auth();

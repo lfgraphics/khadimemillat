@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { SponsorshipCategory, SurveyCategory } from '@/lib/categories';
+import { CategoryData } from '@/lib/categories';
 
 interface CategoriesResponse {
-  sponsorshipCategories?: SponsorshipCategory[];
-  surveyCategories?: SurveyCategory[];
-  categories?: SponsorshipCategory[] | SurveyCategory[];
+  sponsorshipCategories?: CategoryData[];
+  surveyCategories?: CategoryData[];
+  categories?: CategoryData[];
 }
 
 export function useCategories(type?: 'sponsorship' | 'survey') {

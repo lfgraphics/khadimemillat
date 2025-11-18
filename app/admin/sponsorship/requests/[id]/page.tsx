@@ -81,6 +81,7 @@ export default function SponsorshipRequestDetailPage() {
       const response = await fetch(`/api/sponsorship/requests/${requestId}`);
       if (response.ok) {
         const data = await response.json();
+        console.log('Request details response:', data);
         setRequest(data.data);
       } else {
         toast.error("Failed to load request details");
@@ -98,7 +99,10 @@ export default function SponsorshipRequestDetailPage() {
       const response = await fetch("/api/users?role=inquiry_officer");
       if (response.ok) {
         const data = await response.json();
-        setSurveyOfficers(data.users || []);
+        console.log('Survey officers response:', data);
+        setSurveyOfficers(data.data || []);
+      } else {
+        console.error("Failed to fetch survey officers:", await response.text());
       }
     } catch (error) {
       console.error("Error fetching survey officers:", error);
@@ -327,7 +331,7 @@ export default function SponsorshipRequestDetailPage() {
                           variant="outline"
                           size="sm"
                           className="w-full justify-start"
-                          onClick={() => handleAssignOfficer(officer._id)}
+                          onClick={() => handleAssignOfficer(officer.clerkUserId || officer._id)}
                           disabled={assigning}
                         >
                           <UserCheck className="w-4 h-4 mr-2" />

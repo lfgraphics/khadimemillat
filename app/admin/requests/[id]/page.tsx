@@ -61,16 +61,17 @@ export default function RequestDetailPage() {
   const [items, setItems] = useState<ScrapItem[]>([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
+  const [requestId, setRequestId] = useState<string>('')
   const [editData, setEditData] = useState({
     status: '',
     notes: '',
     actualPickupTime: ''
   })
 
-  const fetchRequestDetails = async () => {
+  const fetchRequestDetails = async (requestId: string) => {
     try {
       setLoading(true)
-      const res = await fetch(`/api/protected/collection-requests/${params.id}`)
+      const res = await fetch(`/api/protected/collection-requests/${requestId}`)
       if (!res.ok) throw new Error('Failed to fetch request details')
       
       const data = await safeJson<any>(res)
@@ -98,14 +99,20 @@ export default function RequestDetailPage() {
   }
 
   useEffect(() => {
-    if (await params).id) {
-      fetchRequestDetails()
-    }
-  }, [params.id])
+    const loadRequest = async () => {
+      const resolvedParams = await params;
+      if (resolvedParams.id) {
+        const id = resolvedParams.id as string;
+        setRequestId(id);
+        fetchRequestDetails(id);
+      }
+    };
+    loadRequest();
+  }, [])
 
   const handleSave = async () => {
     try {
-      const res = await fetch(`/api/protected/collection-requests/${params.id}`, {
+      const res = await fetch(`/api/protected/collection-requests/${requestId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editData)

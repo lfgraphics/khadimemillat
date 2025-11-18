@@ -8,7 +8,7 @@ import SurveyResponse from '@/models/SurveyResponse';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { categoryId: string } }
+  { params }: { params: Promise<{ categoryId: string }> }
 ) {
   try {
     const { userId } = await auth();

@@ -6,7 +6,7 @@ import SponsorshipRequest from '@/models/SponsorshipRequest';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -24,29 +24,69 @@ export async function GET(
     }
 
     // Get sponsorship request
-    const sponsorshipRequest = await SponsorshipRequest.findById(await params).id).lean() as any;
+    const sponsorshipRequest = await SponsorshipRequest.findById((await params).id).lean() as any;
     
     if (!sponsorshipRequest) {
       return NextResponse.json({ error: 'Request not found' }, { status: 404 });
     }
 
-    // If there's an assigned officer, fetch their details from Clerk
+    // If there's an assigned officer, fetch their details
     let assignedOfficerDetails = null;
     if (sponsorshipRequest.assignedOfficer) {
       try {
-        const { clerkClient } = await import('@clerk/nextjs/server');
-        const client = await clerkClient();
-        const officer = await client.users.getUser(sponsorshipRequest.assignedOfficer);
+        let clerkUserId = sponsorshipRequest.assignedOfficer;
         
-        assignedOfficerDetails = {
-          _id: officer.id,
-          name: officer.firstName && officer.lastName 
-            ? `${officer.firstName} ${officer.lastName}` 
-            : (officer.username || 'Officer'),
-          email: officer.emailAddresses?.[0]?.emailAddress
-        };
+        // Check if assignedOfficer is a MongoDB ObjectId (legacy format)
+        if (sponsorshipRequest.assignedOfficer.length === 24 && /^[0-9a-fA-F]{24}$/.test(sponsorshipRequest.assignedOfficer)) {
+          // This looks like a MongoDB ObjectId, find the corresponding Clerk user ID
+          const officerUser = await User.findById(sponsorshipRequest.assignedOfficer);
+          if (officerUser?.clerkUserId) {
+            clerkUserId = officerUser.clerkUserId;
+          } else {
+            console.warn('Legacy officer assignment found but no corresponding Clerk user ID');
+            assignedOfficerDetails = {
+              _id: sponsorshipRequest.assignedOfficer,
+              name: 'Officer (Legacy)',
+              email: 'N/A'
+            };
+          }
+        }
+        
+        // Fetch from Clerk if we have a valid Clerk user ID
+        if (clerkUserId && clerkUserId !== sponsorshipRequest.assignedOfficer) {
+          const { clerkClient } = await import('@clerk/nextjs/server');
+          const client = await clerkClient();
+          const officer = await client.users.getUser(clerkUserId);
+          
+          assignedOfficerDetails = {
+            _id: officer.id,
+            name: officer.firstName && officer.lastName 
+              ? `${officer.firstName} ${officer.lastName}` 
+              : (officer.username || 'Officer'),
+            email: officer.emailAddresses?.[0]?.emailAddress
+          };
+        } else if (clerkUserId === sponsorshipRequest.assignedOfficer) {
+          // Direct Clerk user ID
+          const { clerkClient } = await import('@clerk/nextjs/server');
+          const client = await clerkClient();
+          const officer = await client.users.getUser(clerkUserId);
+          
+          assignedOfficerDetails = {
+            _id: officer.id,
+            name: officer.firstName && officer.lastName 
+              ? `${officer.firstName} ${officer.lastName}` 
+              : (officer.username || 'Officer'),
+            email: officer.emailAddresses?.[0]?.emailAddress
+          };
+        }
       } catch (error) {
         console.error('Error fetching officer details:', error);
+        // Fallback for when we can't fetch officer details
+        assignedOfficerDetails = {
+          _id: sponsorshipRequest.assignedOfficer,
+          name: 'Officer (Unavailable)',
+          email: 'N/A'
+        };
       }
     }
 

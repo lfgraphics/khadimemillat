@@ -61,6 +61,7 @@ export default function ItemDetailPage() {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [itemId, setItemId] = useState<string>('')
   const [editData, setEditData] = useState({
     name: '',
     description: '',
@@ -76,10 +77,10 @@ export default function ItemDetailPage() {
     saleQuantity: 1
   })
 
-  const fetchItemDetails = async () => {
+  const fetchItemDetails = async (id: string) => {
     try {
       setLoading(true)
-      const res = await fetch(`/api/protected/scrap-items/${params.id}`)
+      const res = await fetch(`/api/protected/scrap-items/${id}`)
       if (!res.ok) throw new Error('Failed to fetch item details')
       
       const data = await safeJson<any>(res)
@@ -109,10 +110,16 @@ export default function ItemDetailPage() {
   }
 
   useEffect(() => {
-    if (await params).id) {
-      fetchItemDetails()
-    }
-  }, [params.id])
+    const loadItem = async () => {
+      const resolvedParams = await params;
+      if (resolvedParams.id) {
+        const id = resolvedParams.id as string;
+        setItemId(id);
+        fetchItemDetails(id);
+      }
+    };
+    loadItem();
+  }, [])
 
   const handleSave = async () => {
     try {
@@ -157,7 +164,7 @@ export default function ItemDetailPage() {
         }
       }
 
-      const res = await fetch(`/api/protected/scrap-items/${params.id}`, {
+      const res = await fetch(`/api/protected/scrap-items/${itemId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updateData)
