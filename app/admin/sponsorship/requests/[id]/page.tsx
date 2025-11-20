@@ -96,7 +96,7 @@ export default function SponsorshipRequestDetailPage() {
 
   const fetchSurveyOfficers = async () => {
     try {
-      const response = await fetch("/api/users?role=inquiry_officer");
+      const response = await fetch("/api/users?role=surveyor");
       if (response.ok) {
         const data = await response.json();
         console.log('Survey officers response:', data);

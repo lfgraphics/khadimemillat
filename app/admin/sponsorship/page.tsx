@@ -101,10 +101,10 @@ async function getInquiryOfficers() {
     const { clerkClient } = await import('@clerk/nextjs/server');
     const client = await clerkClient();
     
-    // Get all users from Clerk and filter by inquiry_officer role
+    // Get all users from Clerk and filter by surveyor role
     const allUsers = await client.users.getUserList({ limit: 500 });
     const inquiryOfficers = allUsers.data
-      .filter(user => (user.publicMetadata as any)?.role === 'inquiry_officer')
+      .filter(user => (user.publicMetadata as any)?.role === 'surveyor')
       .map(user => ({
         _id: user.id, // Use Clerk ID as _id
         name: user.firstName && user.lastName 

@@ -266,7 +266,7 @@ export function MobileNav() {
                     </RoleGuard>
 
                     {/* Surveyor Section */}
-                    <RoleGuard allowedRoles={["inquiry_officer", "admin"]}>
+                    <RoleGuard allowedRoles={["surveyor", "admin"]}>
                         <div className="mb-6">
                             <h3 className="mb-2 px-2 text-sm font-semibold text-muted-foreground">Surveyor</h3>
                             <div className="space-y-1">

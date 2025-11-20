@@ -1,7 +1,7 @@
 export { }
-// Extended roles to include moderator and inquiry_officer (required for new workflows)
-export type Roles = 'admin' | 'user' | 'scrapper' | 'moderator' | 'inquiry_officer'
-export const RolesEnum: Roles[] = ['admin', 'user', 'scrapper', 'moderator', 'inquiry_officer']
+// Extended roles to include moderator and surveyor (required for new workflows)
+export type Roles = 'admin' | 'user' | 'scrapper' | 'moderator' | 'surveyor' | 'accountant'
+export const RolesEnum: Roles[] = ['admin', 'user', 'scrapper', 'moderator', 'surveyor']
 
 declare global {
     interface CustomJwtSessionClaims {

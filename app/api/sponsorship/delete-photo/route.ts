@@ -12,7 +12,7 @@ cloudinary.config({
 export async function DELETE(request: NextRequest) {
   try {
     // Check permissions
-    const permissionResult = await checkUserPermissionsAPI(['admin', 'moderator', 'inquiry_officer', 'surveyor']);
+    const permissionResult = await checkUserPermissionsAPI(['admin', 'moderator', 'surveyor', 'surveyor']);
     
     if ('error' in permissionResult) {
       return NextResponse.json(

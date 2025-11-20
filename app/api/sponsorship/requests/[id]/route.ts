@@ -19,7 +19,7 @@ export async function GET(
     
     const user = await User.findOne({ clerkUserId: userId });
     
-    if (!user || !['admin', 'moderator', 'inquiry_officer'].includes(user.role)) {
+    if (!user || !['admin', 'moderator', 'surveyor'].includes(user.role)) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 

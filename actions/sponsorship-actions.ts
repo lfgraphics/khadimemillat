@@ -68,7 +68,7 @@ export async function submitSponsorshipRequest(formData: any) {
 export async function submitSurveyResponse(requestId: string, surveyData: any) {
   try {
     // Check permissions and get user
-    const { user } = await checkUserPermissions(['admin', 'moderator', 'inquiry_officer', 'surveyor']);
+    const { user } = await checkUserPermissions(['admin', 'moderator', 'surveyor', 'surveyor']);
 
     const request = await SponsorshipRequest.findById(requestId);
     if (!request) {
@@ -412,7 +412,7 @@ export async function assignOfficer(requestId: string, officerId: string) {
       clerkUser = await client.users.getUser(officerId);
       const userRole = (clerkUser.publicMetadata as any)?.role;
       
-      if (userRole !== 'inquiry_officer') {
+      if (userRole !== 'surveyor') {
         throw new Error("Invalid inquiry officer");
       }
     } catch (clerkError) {
@@ -428,7 +428,7 @@ export async function assignOfficer(requestId: string, officerId: string) {
           ? `${clerkUser.firstName} ${clerkUser.lastName}` 
           : (clerkUser.username || 'Officer'),
         email: clerkUser.emailAddresses?.[0]?.emailAddress,
-        role: 'inquiry_officer'
+        role: 'surveyor'
       });
     }
 

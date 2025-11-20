@@ -21,7 +21,8 @@ import {
     ScanLine as Scan,
     ShoppingBag,
     Info,
-    Image as ImageIcon
+    Image as ImageIcon,
+    DollarSign
 } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
@@ -150,6 +151,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     <Link href="/admin/activities">
                                         <ImageIcon className="h-4 w-4" />
                                         <span>Manage Activities</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                    </SidebarGroup>
+                </RoleGuard>
+
+                {/* Expense Management Section */}
+                <RoleGuard allowedRoles={["admin", "moderator", "accountant"]}>
+                    <SidebarGroup>
+                        <SidebarGroupLabel>Finance</SidebarGroupLabel>
+                        <SidebarMenu>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild tooltip="Expense Management">
+                                    <Link href="/admin/expenses">
+                                        <DollarSign className="h-4 w-4" />
+                                        <span>Expense Management</span>
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>

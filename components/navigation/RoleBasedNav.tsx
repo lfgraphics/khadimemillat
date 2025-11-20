@@ -40,6 +40,7 @@ export function RoleBasedNav({ userRole }: RoleBasedNavProps) {
         { href: "/admin", label: "Admin Dashboard", icon: Settings },
         { href: "/admin/sponsorship", label: "Sponsorship Management", icon: Heart },
         { href: "/admin/users", label: "User Management", icon: Users },
+        { href: "/admin/expenses", label: "Expense Management", icon: FileText },
         { href: "/admin/reports", label: "Reports", icon: FileText }
       ]
     },
@@ -49,22 +50,24 @@ export function RoleBasedNav({ userRole }: RoleBasedNavProps) {
       links: [
         { href: "/admin/sponsorship", label: "Sponsorship Management", icon: Heart },
         { href: "/moderator", label: "Moderator Dashboard", icon: Shield },
+        { href: "/admin/expenses", label: "Expense Management", icon: FileText },
         { href: "/admin/reports", label: "Reports", icon: FileText }
       ]
     },
-    inquiry_officer: {
+    surveyor: {
       label: "Surveyor",
       color: "bg-green-500",
       links: [
         { href: "/surveyor", label: "Surveyor Dashboard", icon: ClipboardList },
-        { href: "/surveyor/surveys", label: "My Surveys", icon: FileText }
+        { href: "/surveyor/surveys", label: "My Surveys", icon: FileText },
+        { href: "/admin/expenses", label: "Expense Reports", icon: Eye }
       ]
     },
     user: {
       label: "User",
       color: "bg-gray-500",
       links: [
-        { href: "/dashboard", label: "Dashboard", icon: Users },
+        // { href: "/dashboard", label: "Dashboard", icon: Users },
         { href: "/sponsorship/request", label: "Request Sponsorship", icon: Heart }
       ]
     }
@@ -123,7 +126,7 @@ export function RoleBasedNav({ userRole }: RoleBasedNavProps) {
           </>
         )}
         
-        {userRole === 'inquiry_officer' && (
+        {userRole === 'surveyor' && (
           <DropdownMenuItem asChild>
             <Link href="/surveyor?filter=assigned" className="flex items-center gap-2">
               <ClipboardList className="w-4 h-4" />

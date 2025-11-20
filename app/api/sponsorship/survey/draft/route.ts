@@ -8,7 +8,7 @@ import { checkUserPermissionsAPI } from "@/lib/auth-utils";
 export async function POST(request: NextRequest) {
   try {
     // Check permissions and get user
-    const permissionResult = await checkUserPermissionsAPI(['admin', 'moderator', 'inquiry_officer', 'surveyor']);
+    const permissionResult = await checkUserPermissionsAPI(['admin', 'moderator', 'surveyor', 'surveyor']);
     
     if ('error' in permissionResult) {
       return NextResponse.json(
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Check permissions and get user
-    const permissionResult = await checkUserPermissionsAPI(['admin', 'moderator', 'inquiry_officer', 'surveyor']);
+    const permissionResult = await checkUserPermissionsAPI(['admin', 'moderator', 'surveyor', 'surveyor']);
     
     if ('error' in permissionResult) {
       return NextResponse.json(

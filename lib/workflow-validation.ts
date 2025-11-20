@@ -51,7 +51,7 @@ export const WORKFLOW_STEPS: Record<string, WorkflowStep> = {
     id: 'field_survey',
     name: 'Field Survey',
     description: 'Inquiry officer conducts detailed home survey',
-    requiredRole: ['inquiry_officer'],
+    requiredRole: ['surveyor'],
     requiredData: [
       'personalDetails', 'familyMembers', 'housingDetails', 
       'incomeExpenses', 'officerReport', 'photos'
@@ -104,7 +104,7 @@ export const ROLE_PERMISSIONS = {
     canAssignOfficers: false,
     canApprove: false
   },
-  inquiry_officer: {
+  surveyor: {
     canSubmitRequest: false,
     canViewOwnStatus: true,
     canSponsor: false,

@@ -37,7 +37,7 @@ export default async function SurveyPage({ params }: PageProps) {
         ? `${clerkUser.firstName} ${clerkUser.lastName}` 
         : (clerkUser.username || 'User'),
       email: clerkUser.emailAddresses?.[0]?.emailAddress,
-      role: 'inquiry_officer' // Default role for surveyors
+      role: 'surveyor' // Default role for surveyors
     });
   }
 
@@ -57,7 +57,7 @@ export default async function SurveyPage({ params }: PageProps) {
   const isAssignedOfficer = 
     request.assignedOfficer?.toString() === user._id?.toString() || // MongoDB ObjectId comparison
     request.assignedOfficer?.toString() === userId; // Clerk user ID comparison
-  const hasAdminAccess = ['admin', 'moderator', 'inquiry_officer'].includes(userRole || '');
+  const hasAdminAccess = ['admin', 'moderator', 'surveyor'].includes(userRole || '');
   
   if (!isAssignedOfficer && !hasAdminAccess) {
     redirect("/unauthorized");

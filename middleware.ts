@@ -36,7 +36,7 @@ const protectedRoutes = [
     },
     {
         matcher: createRouteMatcher(['admin/money-donations']),
-        allowedRoles: ['admin', 'accountant'],
+        allowedRoles: ['admin', 'moderator', 'accountant'],
         routeName: 'Verify Requests'
     },
     // Main Admin Dashboard accessible to admin and moderator
@@ -52,8 +52,13 @@ const protectedRoutes = [
         routeName: 'Admin Level'
     },
     {
+        matcher: createRouteMatcher(['/admin/navigation(.*)']),
+        allowedRoles: ['admin', 'moderator'],
+        routeName: 'Admin Level'
+    },
+    {
         matcher: createRouteMatcher(['/api/protected/users(.*)']),
-        allowedRoles: ['admin', 'moderator', 'user', 'scrapper'],
+        allowedRoles: ['admin', 'moderator', 'user', 'scrapper', 'accountant', 'surveyor'],
         routeName: 'User Management'
     },
     {
@@ -77,9 +82,14 @@ const protectedRoutes = [
         routeName: 'Dashboard'
     },
     {
-        matcher: createRouteMatcher(['/surveyor(.*)', '/api/sponsorship(.*)','/api/sponsorship/survey/draft']),
-        allowedRoles: ['admin', 'moderator', 'inquiry_officer'],
+        matcher: createRouteMatcher(['/surveyor(.*)', '/api/sponsorship(.*)', '/api/sponsorship/survey/draft']),
+        allowedRoles: ['admin', 'moderator', 'surveyor'],
         routeName: 'Dashboard'
+    },
+    {
+        matcher: createRouteMatcher(['/admin/expenses(.*)', '/api/expenses(.*)']),
+        allowedRoles: ['admin', 'moderator', 'accountant'],
+        routeName: 'Expense Management'
     }
 ]
 

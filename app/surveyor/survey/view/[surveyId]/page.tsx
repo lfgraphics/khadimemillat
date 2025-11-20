@@ -41,7 +41,7 @@ export default async function SurveyViewPage({ params }: SurveyViewPageProps) {
   
   const user = await User.findOne({ clerkUserId: userId });
   
-  if (!user || !['admin', 'moderator', 'inquiry_officer', 'surveyor'].includes(user.role)) {
+  if (!user || !['admin', 'moderator', 'surveyor'].includes(user.role)) {
     redirect("/unauthorized");
   }
 

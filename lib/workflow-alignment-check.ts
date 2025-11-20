@@ -117,7 +117,7 @@ export function checkRoleBasedAccessAlignment(): AlignmentIssue[] {
   const issues: AlignmentIssue[] = [];
 
   // Check 1: User roles should match documentation
-  const documentedRoles = ['admin', 'moderator', 'inquiry_officer', 'user'];
+  const documentedRoles = ['admin', 'moderator', 'surveyor', 'user'];
   // ✅ IMPLEMENTED - All roles exist in types/globals.ts
 
   // Check 2: Role permissions should be properly enforced

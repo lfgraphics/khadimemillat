@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
 
-export async function checkUserPermissions(allowedRoles: string[] = ['admin', 'moderator', 'inquiry_officer', 'surveyor']) {
+export async function checkUserPermissions(allowedRoles: string[] = ['admin', 'moderator', 'surveyor', 'accountant']) {
   const { userId } = await auth();
   
   if (!userId) {
@@ -39,7 +39,7 @@ export async function checkUserPermissions(allowedRoles: string[] = ['admin', 'm
   return { user, userRole, clerkUser };
 }
 
-export async function checkUserPermissionsAPI(allowedRoles: string[] = ['admin', 'moderator', 'inquiry_officer', 'surveyor']) {
+export async function checkUserPermissionsAPI(allowedRoles: string[] = ['admin', 'moderator', 'surveyor', 'surveyor']) {
   const { userId } = await auth();
   
   if (!userId) {

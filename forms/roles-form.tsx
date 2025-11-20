@@ -19,7 +19,7 @@ export function RoleForm({
     actionType = "set",
 }: {
     userId: string
-    role?: "admin" | "moderator" | "scrapper" | "inquiry_officer"
+    role?: "admin" | "moderator" | "scrapper" | "surveyor" | "accountant"
     actionType?: "set" | "remove"
 }) {
     const [loading, setLoading] = useState(false)
@@ -92,7 +92,7 @@ export function RoleForm({
                                 ? "secondary"
                                 : role === "scrapper"
                                     ? "outline"
-                                    : role === "inquiry_officer"
+                                    : role === "surveyor"
                                         ? "secondary"
                                         : "default"
                     }

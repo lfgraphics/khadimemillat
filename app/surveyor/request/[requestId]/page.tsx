@@ -53,7 +53,7 @@ export default async function RequestDetailsPage({ params }: PageProps) {
   const isAssignedOfficer = 
     (user && request.assignedOfficer?.toString() === user._id?.toString()) || // MongoDB ObjectId comparison (if user exists)
     request.assignedOfficer?.toString() === userId; // Clerk user ID comparison
-  const hasAdminAccess = ['admin', 'moderator', 'inquiry_officer'].includes(userRole || '');
+  const hasAdminAccess = ['admin', 'moderator', 'surveyor'].includes(userRole || '');
   
   if (!isAssignedOfficer && !hasAdminAccess) {
     redirect("/unauthorized");

@@ -135,6 +135,13 @@ const adminNavigationItems: NavigationItem[] = [
     category: 'Financial Management'
   },
   {
+    title: 'Expense Management',
+    description: 'Track organizational expenses with receipts and audit trails',
+    href: '/admin/expenses',
+    icon: CreditCard,
+    category: 'Financial Management'
+  },
+  {
     title: 'Purchase Lookup',
     description: 'Search and verify purchase records',
     href: '/admin/purchases/lookup',

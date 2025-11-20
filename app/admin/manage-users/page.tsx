@@ -114,7 +114,7 @@ export default async function AdminDashboard(params: {
                                         </div>
                                         <div>
                                             <h3 className="font-medium text-blue-900">Survey Officer</h3>
-                                            <p className="text-xs text-blue-700">inquiry_officer role</p>
+                                            <p className="text-xs text-blue-700">surveyor role</p>
                                         </div>
                                     </div>
                                     <p className="text-sm text-blue-800">
