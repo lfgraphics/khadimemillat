@@ -108,6 +108,9 @@ export function ExpenseForm({
     if (loadingToastId) {
       dismissExpenseLoadingToast(loadingToastId, false)
       setLoadingToastId(null)
+    } else {
+      // Emergency cleanup in case there are orphaned toasts
+      dismissAllExpenseLoadingToasts()
     }
     onCancel()
   }
