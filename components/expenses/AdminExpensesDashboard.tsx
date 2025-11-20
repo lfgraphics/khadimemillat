@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -38,6 +38,16 @@ interface AdminExpensesDashboardProps {
   className?: string
 }
 
+interface DashboardAnalytics {
+  totalExpenses: number
+  totalAmount: number
+  averageExpense: number
+  topCategories: Array<{ category: string; amount: number; percentage: number }>
+  topUsers: Array<{ userId: string; userName: string; userEmail?: string; amount: number; count: number }>
+  dailyTrend: Array<{ date: string; amount: number; count: number }>
+  monthlyComparison: { currentMonth: number; previousMonth: number; percentageChange: number }
+}
+
 function AdminExpensesDashboardContent({ className }: AdminExpensesDashboardProps) {
   const [activeTab, setActiveTab] = useState('overview')
   const [selectedExpense, setSelectedExpense] = useState<IExpenseEntry | null>(null)
@@ -45,6 +55,85 @@ function AdminExpensesDashboardContent({ className }: AdminExpensesDashboardProp
   const [editingExpense, setEditingExpense] = useState<IExpenseEntry | null>(null)
   const [retryManager] = useState(() => new ExpenseRetryManager())
   const notifications = useExpenseNotifications()
+  
+  // Dashboard analytics state
+  const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null)
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(true)
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null)
+  const [categoriesCount, setCategoriesCount] = useState(0)
+  const [recentActivities, setRecentActivities] = useState<Array<{
+    id: string
+    type: 'expense_created' | 'expense_updated' | 'expense_deleted' | 'category_created' | 'category_updated'
+    description: string
+    amount?: number
+    timestamp: Date
+  }>>([])
+
+  // Load dashboard analytics
+  const loadAnalytics = useCallback(async () => {
+    setIsLoadingAnalytics(true)
+    setAnalyticsError(null)
+
+    try {
+      const [analyticsResponse, categoriesResponse] = await Promise.all([
+        fetch('/api/expenses/analytics?days=30'),
+        fetch('/api/expenses/categories?includeInactive=false')
+      ])
+
+      if (!analyticsResponse.ok) {
+        throw new Error('Failed to load analytics')
+      }
+
+      if (!categoriesResponse.ok) {
+        throw new Error('Failed to load categories')
+      }
+
+      const analyticsData = await analyticsResponse.json()
+      const categoriesData = await categoriesResponse.json()
+
+      setAnalytics(analyticsData.analytics)
+      setCategoriesCount(categoriesData.categories?.length || 0)
+
+      // Generate recent activities from analytics data
+      const activities: Array<{
+        id: string
+        type: 'expense_created' | 'expense_updated' | 'expense_deleted' | 'category_created' | 'category_updated'
+        description: string
+        amount?: number
+        timestamp: Date
+      }> = []
+      
+      // Add recent expenses as activities (mock for now - in real app you'd get this from audit trail)
+      if (analyticsData.analytics.dailyTrend) {
+        const recentDays = analyticsData.analytics.dailyTrend.slice(-3)
+        recentDays.forEach((day: any, index: number) => {
+          if (day.count > 0) {
+            activities.push({
+              id: `expense-${day.date}-${index}`,
+              type: 'expense_created' as const,
+              description: `${day.count} expense${day.count > 1 ? 's' : ''} created`,
+              amount: day.amount,
+              timestamp: new Date(day.date)
+            })
+          }
+        })
+      }
+
+      setRecentActivities(activities.slice(0, 5))
+    } catch (error: any) {
+      console.error('Error loading analytics:', error)
+      setAnalyticsError(error.message || 'Failed to load analytics')
+    } finally {
+      setIsLoadingAnalytics(false)
+    }
+  }, [])
+
+  // Load analytics on mount and when tab changes to overview
+  useEffect(() => {
+    if (activeTab === 'overview') {
+      loadAnalytics()
+    }
+  }, [activeTab, loadAnalytics])
 
   // Handle expense actions
   const handleViewExpense = (expense: IExpenseEntry) => {
@@ -107,12 +196,33 @@ function AdminExpensesDashboardContent({ className }: AdminExpensesDashboardProp
         const url = editingExpense ? `/api/expenses/${editingExpense._id}` : '/api/expenses'
         const method = editingExpense ? 'PUT' : 'POST'
         
+        // Transform receipt data - extract URLs from ReceiptFile objects
+        const receiptUrls = data.receipts ? data.receipts
+          .filter((receipt: any) => receipt && receipt.url) // Filter out invalid receipts
+          .map((receipt: any) => receipt.url)
+          .filter((url: string) => {
+            try {
+              new URL(url) // Validate URL format
+              return true
+            } catch {
+              console.warn('Invalid receipt URL:', url)
+              return false
+            }
+          }) : []
+        
+        const transformedData = {
+          ...data,
+          receipts: receiptUrls
+        }
+        
+        console.log('Transformed expense data:', transformedData)
+        
         const response = await fetch(url, {
           method,
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(data),
+          body: JSON.stringify(transformedData),
         })
 
         if (!response.ok) {
@@ -136,10 +246,7 @@ function AdminExpensesDashboardContent({ className }: AdminExpensesDashboardProp
       setActiveTab('expenses')
     } catch (error) {
       console.error('Error saving expense:', error)
-      showExpenseErrorToast(error as Error, {
-        onRetry: () => handleExpenseFormSubmit(data),
-        showDetails: true
-      })
+      // Re-throw the error so ExpenseForm can handle it properly
       throw error
     }
   }
@@ -194,56 +301,96 @@ function AdminExpensesDashboardContent({ className }: AdminExpensesDashboardProp
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {isLoadingAnalytics ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[...Array(4)].map((_, i) => (
+                  <Card key={i}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
+                      <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-8 w-24 bg-gray-200 rounded animate-pulse mb-2"></div>
+                      <div className="h-3 w-32 bg-gray-200 rounded animate-pulse"></div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : analyticsError ? (
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">₹2,45,678</div>
-                  <p className="text-xs text-muted-foreground">
-                    +12% from last month
-                  </p>
+                <CardContent className="pt-6">
+                  <div className="text-center text-red-600">
+                    <p>Error loading analytics: {analyticsError}</p>
+                    <Button onClick={loadAnalytics} className="mt-2">Retry</Button>
+                  </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">This Month</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">₹45,231</div>
-                  <p className="text-xs text-muted-foreground">
-                    +8% from last month
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">12</div>
-                  <p className="text-xs text-muted-foreground">
-                    Admin and moderator users
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Categories</CardTitle>
-                  <FileText className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">8</div>
-                  <p className="text-xs text-muted-foreground">
-                    Active expense categories
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Expenses (30 days)</CardTitle>
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      ₹{analytics?.totalAmount?.toLocaleString() || '0'}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {analytics?.totalExpenses || 0} expense{(analytics?.totalExpenses || 0) !== 1 ? 's' : ''}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">This Month</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      ₹{analytics?.monthlyComparison?.currentMonth?.toLocaleString() || '0'}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {analytics?.monthlyComparison?.percentageChange !== undefined ? (
+                        analytics.monthlyComparison.percentageChange >= 0 ? (
+                          `+${analytics.monthlyComparison.percentageChange.toFixed(1)}% from last month`
+                        ) : (
+                          `${analytics.monthlyComparison.percentageChange.toFixed(1)}% from last month`
+                        )
+                      ) : (
+                        'No previous month data'
+                      )}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {analytics?.topUsers?.length || 0}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Users with expenses this month
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Categories</CardTitle>
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{categoriesCount}</div>
+                    <p className="text-xs text-muted-foreground">
+                      Active expense categories
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
             {/* Quick Actions */}
             <Card>
@@ -280,44 +427,119 @@ function AdminExpensesDashboardContent({ className }: AdminExpensesDashboardProp
               </CardContent>
             </Card>
 
+            {/* Top Categories */}
+            {!isLoadingAnalytics && analytics?.topCategories && analytics.topCategories.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Top Expense Categories (Last 30 Days)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {analytics.topCategories.slice(0, 5).map((category, index) => (
+                      <div key={category.category} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">{category.category}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {category.percentage.toFixed(1)}% of total expenses
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium">₹{category.amount.toLocaleString()}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Recent Activity */}
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Recent Activity</CardTitle>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={loadAnalytics}
+                  disabled={isLoadingAnalytics}
+                  className="flex items-center gap-2"
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  Refresh
+                </Button>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <div>
-                        <p className="text-sm font-medium">New expense created</p>
-                        <p className="text-xs text-muted-foreground">Office supplies - ₹2,500</p>
+                {isLoadingAnalytics ? (
+                  <div className="space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-2 h-2 bg-gray-200 rounded-full animate-pulse"></div>
+                          <div>
+                            <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mb-1"></div>
+                            <div className="h-3 w-24 bg-gray-200 rounded animate-pulse"></div>
+                          </div>
+                        </div>
+                        <div className="h-5 w-16 bg-gray-200 rounded animate-pulse"></div>
                       </div>
-                    </div>
-                    <Badge variant="secondary">2 hours ago</Badge>
+                    ))}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <div>
-                        <p className="text-sm font-medium">Category updated</p>
-                        <p className="text-xs text-muted-foreground">Travel expenses category modified</p>
-                      </div>
-                    </div>
-                    <Badge variant="secondary">5 hours ago</Badge>
+                ) : recentActivities.length > 0 ? (
+                  <div className="space-y-4">
+                    {recentActivities.map((activity) => {
+                      const getActivityColor = (type: string) => {
+                        switch (type) {
+                          case 'expense_created': return 'bg-green-500'
+                          case 'expense_updated': return 'bg-blue-500'
+                          case 'expense_deleted': return 'bg-red-500'
+                          case 'category_created': return 'bg-purple-500'
+                          case 'category_updated': return 'bg-orange-500'
+                          default: return 'bg-gray-500'
+                        }
+                      }
+
+                      const getTimeAgo = (date: Date) => {
+                        const now = new Date()
+                        const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
+                        
+                        if (diffInHours < 1) return 'Less than an hour ago'
+                        if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`
+                        
+                        const diffInDays = Math.floor(diffInHours / 24)
+                        if (diffInDays < 7) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`
+                        
+                        return date.toLocaleDateString()
+                      }
+
+                      return (
+                        <div key={activity.id} className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-2 h-2 rounded-full ${getActivityColor(activity.type)}`}></div>
+                            <div>
+                              <p className="text-sm font-medium">{activity.description}</p>
+                              {activity.amount && (
+                                <p className="text-xs text-muted-foreground">
+                                  Total: ₹{activity.amount.toLocaleString()}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <Badge variant="secondary">{getTimeAgo(activity.timestamp)}</Badge>
+                        </div>
+                      )
+                    })}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                      <div>
-                        <p className="text-sm font-medium">Report generated</p>
-                        <p className="text-xs text-muted-foreground">Monthly expense report for November</p>
-                      </div>
-                    </div>
-                    <Badge variant="secondary">1 day ago</Badge>
+                ) : (
+                  <div className="text-center text-muted-foreground py-8">
+                    <p>No recent activity found</p>
+                    <p className="text-xs mt-1">Create some expenses to see activity here</p>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

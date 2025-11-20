@@ -121,6 +121,16 @@ export function CategoryManager({ className }: CategoryManagerProps) {
     setIsSubmitting(true)
 
     try {
+      // Validate parent category if provided
+      if (data.parentCategory && data.parentCategory.trim() !== '') {
+        const parentExists = categories.find(cat => cat._id?.toString() === data.parentCategory)
+        if (!parentExists) {
+          throw new Error('Selected parent category is no longer available')
+        }
+        if (!parentExists.isActive) {
+          throw new Error('Cannot set inactive category as parent')
+        }
+      }
       const url = editingCategory 
         ? `/api/expenses/categories/${editingCategory._id}`
         : '/api/expenses/categories'
@@ -133,14 +143,23 @@ export function CategoryManager({ className }: CategoryManagerProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...data,
-          parentCategory: data.parentCategory || undefined,
+          name: data.name,
+          description: data.description || undefined,
+          parentCategory: data.parentCategory && data.parentCategory !== 'none' && data.parentCategory.trim() !== '' ? data.parentCategory : undefined,
         }),
       })
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to save category')
+        console.error('Category save error:', errorData)
+        
+        // Handle validation errors specifically
+        if (response.status === 400 && errorData.details) {
+          const validationErrors = errorData.details.map((detail: any) => detail.message).join(', ')
+          throw new Error(`Validation error: ${validationErrors}`)
+        }
+        
+        throw new Error(errorData.error || `Failed to save category (${response.status})`)
       }
 
       toast.success(editingCategory ? 'Category updated successfully' : 'Category created successfully')
@@ -315,16 +334,17 @@ export function CategoryManager({ className }: CategoryManagerProps) {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">No Parent (Top Level)</SelectItem>
+                            <SelectItem value="none">No Parent (Top Level)</SelectItem>
                             {categories
                               .filter(cat => 
                                 cat.isActive && 
-                                cat._id?.toString() !== editingCategory?._id?.toString()
+                                cat._id?.toString() !== editingCategory?._id?.toString() &&
+                                cat._id && cat._id.toString().trim() !== ''
                               )
                               .map((category) => (
                                 <SelectItem 
                                   key={category._id?.toString()} 
-                                  value={category._id?.toString() || ''}
+                                  value={category._id!.toString()}
                                 >
                                   {category.name}
                                 </SelectItem>

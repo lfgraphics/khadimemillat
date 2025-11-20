@@ -42,7 +42,7 @@ interface ExpenseReport {
     };
     breakdown: {
         byCategory: Array<{ category: string; amount: number; count: number }>;
-        byUser: Array<{ user: string; amount: number; count: number }>;
+        byUser: Array<{ user: string; userId: string; userName: string; userEmail?: string; amount: number; count: number }>;
         byDate: Array<{ date: string; amount: number; count: number }>;
     };
 }
@@ -333,7 +333,14 @@ export default function ExpenseReports({ categories = [], users = [] }: ExpenseR
                                 {report.breakdown.byUser.map((item, index) => (
                                     <div key={index} className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <Badge variant="secondary">{item.user}</Badge>
+                                            <div className="flex flex-col">
+                                                <Badge variant="secondary">{item.userName}</Badge>
+                                                {item.userEmail && (
+                                                    <span className="text-xs text-muted-foreground mt-1">
+                                                        {item.userEmail}
+                                                    </span>
+                                                )}
+                                            </div>
                                             <span className="text-sm text-muted-foreground">
                                                 {item.count} expense{item.count !== 1 ? 's' : ''}
                                             </span>

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -26,12 +26,29 @@ interface ModeratorExpensesViewProps {
   className?: string
 }
 
+interface ExpenseStats {
+  totalAmount: number
+  monthlyAmount: number
+  expenseCount: number
+  pendingReceipts: number
+  recentExpenses: Array<{
+    _id: string
+    amount: number
+    description: string
+    category: { name: string }
+    expenseDate: string
+    receipts?: string[]
+  }>
+}
+
 export function ModeratorExpensesView({ className }: ModeratorExpensesViewProps) {
   const { user } = useUser()
   const [activeTab, setActiveTab] = useState('overview')
   const [selectedExpense, setSelectedExpense] = useState<IExpenseEntry | null>(null)
   const [showExpenseForm, setShowExpenseForm] = useState(false)
   const [editingExpense, setEditingExpense] = useState<IExpenseEntry | null>(null)
+  const [stats, setStats] = useState<ExpenseStats | null>(null)
+  const [isLoadingStats, setIsLoadingStats] = useState(true)
 
   // Handle expense actions
   const handleViewExpense = (expense: IExpenseEntry) => {
@@ -69,7 +86,8 @@ export function ModeratorExpensesView({ className }: ModeratorExpensesViewProps)
       }
 
       toast.success('Expense deleted successfully')
-      // Refresh the expense list by switching tabs
+      // Refresh stats and expense list
+      loadStats()
       setActiveTab('expenses')
     } catch (error) {
       console.error('Error deleting expense:', error)
@@ -107,7 +125,9 @@ export function ModeratorExpensesView({ className }: ModeratorExpensesViewProps)
       setShowExpenseForm(false)
       setEditingExpense(null)
       toast.success(editingExpense ? 'Expense updated successfully' : 'Expense created successfully')
-      // Refresh the expense list
+      
+      // Refresh stats and expense list
+      loadStats()
       setActiveTab('expenses')
     } catch (error) {
       console.error('Error saving expense:', error)
@@ -115,6 +135,62 @@ export function ModeratorExpensesView({ className }: ModeratorExpensesViewProps)
       throw error
     }
   }
+
+  // Load real expense statistics
+  const loadStats = async () => {
+    if (!user?.id) return
+    
+    try {
+      setIsLoadingStats(true)
+      
+      // Get user activity stats
+      const statsResponse = await fetch(`/api/expenses/user-activity?userId=${user.id}&days=365`)
+      if (!statsResponse.ok) {
+        throw new Error('Failed to load stats')
+      }
+      const statsData = await statsResponse.json()
+      
+      // Get recent expenses separately
+      const expensesResponse = await fetch(`/api/expenses?limit=5&clerkUserId=${user.id}`)
+      let recentExpenses = []
+      if (expensesResponse.ok) {
+        const expensesData = await expensesResponse.json()
+        recentExpenses = expensesData.expenses || []
+      }
+      
+      // Calculate monthly amount from current month
+      const currentMonth = new Date().getMonth()
+      const currentYear = new Date().getFullYear()
+      
+      // Get monthly stats from the monthly trend
+      const currentMonthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`
+      const monthlyData = statsData.stats?.monthlyTrend?.find((trend: any) => trend.month === currentMonthKey)
+      const monthlyAmount = monthlyData?.amount || 0
+      
+      // Calculate pending receipts from recent expenses
+      const pendingReceipts = recentExpenses.filter((expense: any) => !expense.receipts || expense.receipts.length === 0).length
+      
+      setStats({
+        totalAmount: statsData.stats?.totalAmount || 0,
+        monthlyAmount,
+        expenseCount: statsData.stats?.totalExpenses || 0,
+        pendingReceipts,
+        recentExpenses: recentExpenses.slice(0, 5)
+      })
+    } catch (error) {
+      console.error('Error loading stats:', error)
+      toast.error('Failed to load expense statistics')
+    } finally {
+      setIsLoadingStats(false)
+    }
+  }
+
+  // Load stats on component mount and when user changes
+  useEffect(() => {
+    if (user?.id) {
+      loadStats()
+    }
+  }, [user?.id])
 
   return (
     <div className={className}>
@@ -165,9 +241,15 @@ export function ModeratorExpensesView({ className }: ModeratorExpensesViewProps)
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₹45,678</div>
+                  <div className="text-2xl font-bold">
+                    {isLoadingStats ? (
+                      <div className="h-8 w-24 bg-muted animate-pulse rounded" />
+                    ) : (
+                      `₹${stats?.totalAmount?.toLocaleString('en-IN') || '0'}`
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    All time expenses
+                    {stats?.expenseCount || 0} total expenses
                   </p>
                 </CardContent>
               </Card>
@@ -177,7 +259,13 @@ export function ModeratorExpensesView({ className }: ModeratorExpensesViewProps)
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₹8,231</div>
+                  <div className="text-2xl font-bold">
+                    {isLoadingStats ? (
+                      <div className="h-8 w-24 bg-muted animate-pulse rounded" />
+                    ) : (
+                      `₹${stats?.monthlyAmount?.toLocaleString('en-IN') || '0'}`
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     Current month expenses
                   </p>
@@ -189,7 +277,13 @@ export function ModeratorExpensesView({ className }: ModeratorExpensesViewProps)
                   <Receipt className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">3</div>
+                  <div className="text-2xl font-bold">
+                    {isLoadingStats ? (
+                      <div className="h-8 w-12 bg-muted animate-pulse rounded" />
+                    ) : (
+                      stats?.pendingReceipts || 0
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     Expenses without receipts
                   </p>
@@ -238,47 +332,70 @@ export function ModeratorExpensesView({ className }: ModeratorExpensesViewProps)
                 <CardTitle>Recent Expenses</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <div>
-                        <p className="text-sm font-medium">Office supplies</p>
-                        <p className="text-xs text-muted-foreground">Stationery and printing materials</p>
+                {isLoadingStats ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-2 h-2 bg-muted rounded-full animate-pulse"></div>
+                          <div className="space-y-1">
+                            <div className="h-4 w-32 bg-muted animate-pulse rounded"></div>
+                            <div className="h-3 w-48 bg-muted animate-pulse rounded"></div>
+                          </div>
+                        </div>
+                        <div className="text-right space-y-1">
+                          <div className="h-4 w-16 bg-muted animate-pulse rounded"></div>
+                          <div className="h-5 w-20 bg-muted animate-pulse rounded"></div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">₹2,500</p>
-                      <Badge variant="secondary">Today</Badge>
-                    </div>
+                    ))}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <div>
-                        <p className="text-sm font-medium">Travel expenses</p>
-                        <p className="text-xs text-muted-foreground">Bus fare for field visit</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">₹450</p>
-                      <Badge variant="secondary">Yesterday</Badge>
-                    </div>
+                ) : stats?.recentExpenses && stats.recentExpenses.length > 0 ? (
+                  <div className="space-y-4">
+                    {stats.recentExpenses.map((expense, index) => {
+                      const expenseDate = new Date(expense.expenseDate)
+                      const today = new Date()
+                      const diffTime = Math.abs(today.getTime() - expenseDate.getTime())
+                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+                      
+                      let timeLabel = 'Today'
+                      if (diffDays === 1) timeLabel = 'Yesterday'
+                      else if (diffDays > 1) timeLabel = `${diffDays} days ago`
+                      
+                      const colors = ['bg-green-500', 'bg-blue-500', 'bg-orange-500', 'bg-purple-500', 'bg-pink-500']
+                      
+                      return (
+                        <div key={expense._id} className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-2 h-2 ${colors[index % colors.length]} rounded-full`}></div>
+                            <div>
+                              <p className="text-sm font-medium">{expense.category?.name || 'Uncategorized'}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {expense.description || 'No description'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-medium">₹{expense.amount.toLocaleString('en-IN')}</p>
+                            <Badge variant="secondary">{timeLabel}</Badge>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                      <div>
-                        <p className="text-sm font-medium">Utilities</p>
-                        <p className="text-xs text-muted-foreground">Internet bill payment</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">₹1,200</p>
-                      <Badge variant="secondary">2 days ago</Badge>
-                    </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No expenses yet</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Create your first expense to see it here
+                    </p>
+                    <Button onClick={handleCreateExpense}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create First Expense
+                    </Button>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

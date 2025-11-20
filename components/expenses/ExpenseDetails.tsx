@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -53,6 +53,53 @@ export function ExpenseDetails({
   showActions = true,
   showEditRestrictions = true
 }: ExpenseDetailsProps) {
+
+  // Defensive check for expense data
+  if (!expense) {
+    return (
+      <div className={cn('p-6 text-center', className)}>
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Expense data is not available. Please try refreshing the page.
+          </AlertDescription>
+        </Alert>
+      </div>
+    )
+  }
+
+  // Extract category from populated expense object or use provided category prop
+  const expenseCategory = category || (
+    expense.category && typeof expense.category === 'object' && 'name' in expense.category 
+      ? expense.category as any 
+      : null
+  )
+
+  // State for user data
+  const [userData, setUserData] = useState<{ name: string; email?: string } | null>(null)
+  const [isLoadingUser, setIsLoadingUser] = useState(false)
+
+  // Fetch user data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!expense.clerkUserId) return
+      
+      setIsLoadingUser(true)
+      try {
+        const response = await fetch(`/api/users/${expense.clerkUserId}`)
+        if (response.ok) {
+          const data = await response.json()
+          setUserData(data.user)
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error)
+      } finally {
+        setIsLoadingUser(false)
+      }
+    }
+
+    fetchUserData()
+  }, [expense.clerkUserId])
 
   // Format currency
   const formatCurrency = (amount: number, currency: string = 'INR') => {
@@ -169,9 +216,17 @@ export function ExpenseDetails({
                   <Tag className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-sm text-muted-foreground">Category</p>
-                    <Badge variant="secondary" className="mt-1">
-                      {category?.name || 'Unknown Category'}
+                    <Badge 
+                      variant={expenseCategory?.name ? "secondary" : "destructive"} 
+                      className="mt-1"
+                    >
+                      {expenseCategory?.name || 'Unknown Category'}
                     </Badge>
+                    {!expenseCategory?.name && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Category may have been deleted or is invalid
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -179,7 +234,20 @@ export function ExpenseDetails({
                   <User className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-sm text-muted-foreground">Created By</p>
-                    <p className="font-medium">{expense.clerkUserId}</p>
+                    {isLoadingUser ? (
+                      <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                    ) : userData ? (
+                      <div>
+                        <p className="font-medium">{userData.name}</p>
+                        {userData.email && (
+                          <p className="text-xs text-muted-foreground">{userData.email}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="font-medium text-muted-foreground">
+                        {expense.clerkUserId} (User not found)
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -207,7 +275,7 @@ export function ExpenseDetails({
           </Card>
 
           {/* Receipts */}
-          {expense.receipts && expense.receipts.length > 0 && (
+          {expense.receipts && Array.isArray(expense.receipts) && expense.receipts.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -323,7 +391,7 @@ export function ExpenseDetails({
           </Card>
 
           {/* Category Details */}
-          {category && (
+          {expenseCategory && (
             <Card>
               <CardHeader>
                 <CardTitle>Category Details</CardTitle>
@@ -331,19 +399,19 @@ export function ExpenseDetails({
               <CardContent className="space-y-3">
                 <div>
                   <p className="text-sm text-muted-foreground">Name</p>
-                  <p className="font-medium">{category.name}</p>
+                  <p className="font-medium">{expenseCategory.name}</p>
                 </div>
 
-                {category.description && (
+                {expenseCategory.description && (
                   <div>
                     <p className="text-sm text-muted-foreground">Description</p>
-                    <p className="text-sm">{category.description}</p>
+                    <p className="text-sm">{expenseCategory.description}</p>
                   </div>
                 )}
 
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  {category.isActive ? (
+                  {expenseCategory.isActive ? (
                     <Badge variant="default">Active</Badge>
                   ) : (
                     <Badge variant="secondary">Inactive</Badge>
@@ -364,7 +432,7 @@ export function ExpenseDetails({
           )}
 
           {/* Audit Trail */}
-          {expense.auditTrail && expense.auditTrail.length > 0 && (
+          {expense.auditTrail && Array.isArray(expense.auditTrail) && expense.auditTrail.length > 0 && (
             <AuditTrail
               auditTrail={expense.auditTrail}
               defaultExpanded={false}

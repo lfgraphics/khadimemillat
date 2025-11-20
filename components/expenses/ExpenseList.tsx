@@ -201,9 +201,30 @@ export function ExpenseList({
   }
 
   // Get category name
-  const getCategoryName = (categoryId: string) => {
+  const getCategoryName = (expense: IExpenseEntry) => {
+    // Handle populated category object
+    if (expense.category && typeof expense.category === 'object' && 'name' in expense.category) {
+      return (expense.category as any).name || 'Unknown Category'
+    }
+    
+    // Handle category ID - fallback to local categories array
+    const categoryId = expense.category?.toString()
+    if (!categoryId) return 'No Category'
     const category = categories.find(cat => cat._id?.toString() === categoryId)
-    return category?.name || 'Unknown'
+    return category?.name || 'Unknown Category'
+  }
+
+  const getCategoryBadgeVariant = (expense: IExpenseEntry) => {
+    // Handle populated category object
+    if (expense.category && typeof expense.category === 'object' && 'name' in expense.category) {
+      return (expense.category as any).name ? 'secondary' : 'destructive'
+    }
+    
+    // Handle category ID - fallback to local categories array
+    const categoryId = expense.category?.toString()
+    if (!categoryId) return 'outline'
+    const category = categories.find(cat => cat._id?.toString() === categoryId)
+    return category?.name ? 'secondary' : 'destructive'
   }
 
   // Handle page change
@@ -311,11 +332,13 @@ export function ExpenseList({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category._id?.toString()} value={category._id?.toString() || ''}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
+                    {categories
+                      .filter(category => category._id && category._id.toString().trim() !== '')
+                      .map((category) => (
+                        <SelectItem key={category._id?.toString()} value={category._id!.toString()}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -464,8 +487,8 @@ export function ExpenseList({
                       {formatCurrency(expense.amount, expense.currency)}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary">
-                        {getCategoryName(expense.category.toString())}
+                      <Badge variant={getCategoryBadgeVariant(expense)}>
+                        {getCategoryName(expense)}
                       </Badge>
                     </TableCell>
                     <TableCell className="max-w-[200px] truncate">

@@ -1,6 +1,7 @@
 import connectDB from "../db";
 import ExpenseEntry, { IExpenseEntry, IAuditEntry } from "@/models/ExpenseEntry";
 import ExpenseCategory from "@/models/ExpenseCategory";
+import User from "@/models/User";
 import { Types } from "mongoose";
 import {
     ExpenseEntryCreateInput,
@@ -18,7 +19,7 @@ export interface ExpenseReport {
     };
     breakdown: {
         byCategory: Array<{ category: string; amount: number; count: number }>;
-        byUser: Array<{ user: string; amount: number; count: number }>;
+        byUser: Array<{ user: string; userId: string; userName: string; userEmail?: string; amount: number; count: number }>;
         byDate: Array<{ date: string; amount: number; count: number }>;
     };
     expenses: IExpenseEntry[];
@@ -266,7 +267,11 @@ export class ExpenseService {
 
         const [expenses, total] = await Promise.all([
             ExpenseEntry.find(query)
-                .populate('category')
+                .populate({
+                    path: 'category',
+                    select: 'name description isActive',
+                    options: { strictPopulate: false }
+                })
                 .sort({ expenseDate: -1, createdAt: -1 })
                 .skip(skip)
                 .limit(filters.limit)
@@ -293,7 +298,12 @@ export class ExpenseService {
         }
 
         const expense = await ExpenseEntry.findById(id)
-            .populate('category')
+            .populate({
+                path: 'category',
+                select: 'name description isActive',
+                // Don't fail if category is missing
+                options: { strictPopulate: false }
+            })
             .lean();
 
         return expense as IExpenseEntry | null;
@@ -404,6 +414,11 @@ export class ExpenseService {
             });
         });
 
+        // Fetch user data to enrich the user breakdown
+        const userIds = Array.from(userMap.keys());
+        const users = await User.find({ clerkUserId: { $in: userIds } }).lean();
+        const userDataMap = new Map(users.map(user => [user.clerkUserId, user]));
+
         // Group by date
         const dateMap = new Map<string, { amount: number; count: number }>();
         expenses.forEach(expense => {
@@ -428,11 +443,17 @@ export class ExpenseService {
                     amount: data.amount,
                     count: data.count
                 })),
-                byUser: Array.from(userMap.entries()).map(([user, data]) => ({
-                    user,
-                    amount: data.amount,
-                    count: data.count
-                })),
+                byUser: Array.from(userMap.entries()).map(([userId, data]) => {
+                    const userData = userDataMap.get(userId);
+                    return {
+                        user: userData?.name || userId, // Fallback to userId if name not found
+                        userId: userId,
+                        userName: userData?.name || 'Unknown User',
+                        userEmail: userData?.email,
+                        amount: data.amount,
+                        count: data.count
+                    };
+                }),
                 byDate: Array.from(dateMap.entries()).map(([date, data]) => ({
                     date,
                     amount: data.amount,
@@ -591,7 +612,7 @@ export class ExpenseService {
         totalAmount: number;
         averageExpense: number;
         topCategories: Array<{ category: string; amount: number; percentage: number }>;
-        topUsers: Array<{ userId: string; amount: number; count: number }>;
+        topUsers: Array<{ userId: string; userName: string; userEmail?: string; amount: number; count: number }>;
         dailyTrend: Array<{ date: string; amount: number; count: number }>;
         monthlyComparison: { currentMonth: number; previousMonth: number; percentageChange: number };
     }> {
@@ -639,8 +660,21 @@ export class ExpenseService {
             });
         });
 
+        // Fetch user data for enrichment
+        const userIds = Array.from(userMap.keys());
+        const users = await User.find({ clerkUserId: { $in: userIds } }).lean();
+        const userDataMap = new Map(users.map(user => [user.clerkUserId, user]));
+
         const topUsers = Array.from(userMap.entries())
-            .map(([userId, data]) => ({ userId, ...data }))
+            .map(([userId, data]) => {
+                const userData = userDataMap.get(userId);
+                return {
+                    userId,
+                    userName: userData?.name || 'Unknown User',
+                    userEmail: userData?.email,
+                    ...data
+                };
+            })
             .sort((a, b) => b.amount - a.amount)
             .slice(0, 5);
 

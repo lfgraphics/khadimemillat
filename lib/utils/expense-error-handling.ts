@@ -389,15 +389,28 @@ export function dismissExpenseLoadingToast(
   successMessage?: string,
   error?: ExpenseError | Error
 ) {
+  console.log('Dismissing loading toast:', toastId, success ? 'success' : 'error')
+  
+  // Force dismiss the specific toast
   toast.dismiss(toastId)
   
-  if (success) {
-    toast.success(successMessage || 'Operation completed successfully', {
-      duration: 4000
-    })
-  } else if (error) {
-    showExpenseErrorToast(error)
-  }
+  // Small delay to ensure dismissal completes
+  setTimeout(() => {
+    if (success) {
+      toast.success(successMessage || 'Operation completed successfully', {
+        duration: 4000
+      })
+    } else if (error) {
+      showExpenseErrorToast(error)
+    }
+  }, 100)
+}
+
+// Dismiss all loading toasts (emergency cleanup)
+export function dismissAllExpenseLoadingToasts() {
+  console.log('Dismissing all loading toasts')
+  // Dismiss all toasts
+  toast.dismiss()
 }
 
 // Utility function to create expense error from API response

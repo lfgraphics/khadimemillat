@@ -5,7 +5,7 @@ import { EnhancedFileSelector } from '@/components/file-selector'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Trash2, Download, Eye, Upload } from 'lucide-react'
+import { Trash2, Download, Eye, Upload, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { UploadResult, FileUploadError } from '@/components/file-selector/types'
@@ -49,6 +49,8 @@ export function ReceiptUpload({
 }: ReceiptUploadProps) {
   const [receipts, setReceipts] = useState<ReceiptFile[]>(existingReceipts)
   const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadingFileName, setUploadingFileName] = useState<string>('')
   const [retryManager] = useState(() => new ExpenseRetryManager())
 
   // Update parent component when receipts change
@@ -79,9 +81,12 @@ export function ReceiptUpload({
   // Handle successful file upload using receipt-specific upload
   const handleUploadComplete = useCallback(async (file: File) => {
     setIsUploading(true)
+    setUploadProgress(0)
+    setUploadingFileName(file.name)
     
     try {
-      await retryManager.executeWithRetry(async () => {
+
+      const uploadResult = await retryManager.executeWithRetry(async () => {
         // Validate receipt file first
         const validation = validateReceiptFile(file)
         if (!validation.isValid) {
@@ -90,33 +95,13 @@ export function ReceiptUpload({
         }
 
         // Upload using receipt-specific endpoint
-        const uploadResult: ReceiptUploadResult = await uploadReceiptToCloudinary(file, {
+        return await uploadReceiptToCloudinary(file, {
           expenseId,
           onProgress: (progress) => {
-            // Progress is handled by the toast notifications in the file selector
-            console.log(`Upload progress: ${progress}%`)
+            setUploadProgress(progress)
           }
         })
-
-        return uploadResult
       })
-
-        const uploadResult = await retryManager.executeWithRetry(async () => {
-          // Validate receipt file first
-          const validation = validateReceiptFile(file)
-          if (!validation.isValid) {
-            const error = createReceiptValidationError(validation.errors)
-            throw error
-          }
-
-          // Upload using receipt-specific endpoint
-          return await uploadReceiptToCloudinary(file, {
-            expenseId,
-            onProgress: (progress) => {
-              console.log(`Upload progress: ${progress}%`)
-            }
-          })
-        })
 
         const newReceipt: ReceiptFile = {
           url: uploadResult.secureUrl,
@@ -131,6 +116,7 @@ export function ReceiptUpload({
 
         // If we have an expense ID, associate with the expense
         if (expenseId) {
+          setUploadProgress(95) // Show near completion for association step
           try {
             await retryManager.executeWithRetry(async () => {
               const response = await fetch(`/api/expenses/${expenseId}/receipts`, {
@@ -148,7 +134,10 @@ export function ReceiptUpload({
                 throw error
               }
             })
+            setUploadProgress(100) // Complete
 
+            // Small delay to show 100% completion
+            await new Promise(resolve => setTimeout(resolve, 500))
             showExpenseSuccessToast('upload', 'Receipt uploaded and associated with expense')
           } catch (error) {
             console.error('Error associating receipt with expense:', error)
@@ -161,6 +150,9 @@ export function ReceiptUpload({
             updateReceipts(receipts)
           }
         } else {
+          setUploadProgress(100)
+          // Small delay to show 100% completion
+          await new Promise(resolve => setTimeout(resolve, 500))
           showExpenseSuccessToast('upload', 'Receipt uploaded successfully')
         }
     } catch (error) {
@@ -168,6 +160,8 @@ export function ReceiptUpload({
       handleUploadError(error as FileUploadError, file.name)
     } finally {
       setIsUploading(false)
+      setUploadProgress(0)
+      setUploadingFileName('')
     }
   }, [receipts, updateReceipts, expenseId, handleUploadError])
 
@@ -220,8 +214,12 @@ export function ReceiptUpload({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Upload className="h-5 w-5" />
-              Upload Receipt
+              {isUploading ? (
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              ) : (
+                <Upload className="h-5 w-5" />
+              )}
+              {isUploading ? 'Uploading Receipt...' : 'Upload Receipt'}
               {receipts.length > 0 && (
                 <Badge variant="secondary">
                   {receipts.length}/{maxReceipts}
@@ -230,19 +228,37 @@ export function ReceiptUpload({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <EnhancedFileSelector
-              onFileSelect={handleFileSelect}
-              onUploadComplete={() => {
-                // Upload is handled in handleFileSelect, so this is just a placeholder
-              }}
-              onError={handleUploadError}
-              maxFileSize={10 * 1024 * 1024} // 10MB
-              acceptedTypes={['image/jpeg', 'image/png', 'image/webp', 'application/pdf']}
-              placeholder={`Drop receipt files here or click to select (${remainingSlots} remaining)`}
-              disabled={disabled || isUploading}
-              uploadToCloudinary={false} // We handle upload manually
-              className="w-full"
-            />
+            {isUploading ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Uploading {uploadingFileName}...</p>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                      <div 
+                        className="bg-primary h-2 rounded-full transition-all duration-300 ease-out"
+                        style={{ width: `${uploadProgress}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{uploadProgress}% complete</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <EnhancedFileSelector
+                onFileSelect={handleFileSelect}
+                onUploadComplete={() => {
+                  // Upload is handled in handleFileSelect, so this is just a placeholder
+                }}
+                onError={handleUploadError}
+                maxFileSize={10 * 1024 * 1024} // 10MB
+                acceptedTypes={['image/jpeg', 'image/png', 'image/webp', 'application/pdf']}
+                placeholder={`Drop receipt files here or click to select (${remainingSlots} remaining)`}
+                disabled={disabled || isUploading}
+                uploadToCloudinary={false} // We handle upload manually
+                className="w-full"
+              />
+            )}
           </CardContent>
         </Card>
       )}

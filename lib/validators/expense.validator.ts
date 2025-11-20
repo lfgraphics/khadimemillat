@@ -59,14 +59,20 @@ export const expenseEntryDeleteSchema = z.object({
 export const expenseCategoryCreateSchema = z.object({
     name: z.string().min(1, "Category name is required").max(100, "Category name cannot exceed 100 characters"),
     description: z.string().max(500, "Description cannot exceed 500 characters").optional(),
-    parentCategory: z.string().length(24, "Invalid parent category ID").optional()
-})
+    parentCategory: z.string().length(24, "Invalid parent category ID").optional().or(z.literal(""))
+}).transform(data => ({
+    ...data,
+    parentCategory: data.parentCategory === "" ? undefined : data.parentCategory
+}))
 
 export const expenseCategoryUpdateSchema = z.object({
     name: z.string().min(1, "Category name is required").max(100, "Category name cannot exceed 100 characters").optional(),
     description: z.string().max(500, "Description cannot exceed 500 characters").optional(),
-    parentCategory: z.string().length(24, "Invalid parent category ID").optional()
-})
+    parentCategory: z.string().length(24, "Invalid parent category ID").optional().or(z.literal(""))
+}).transform(data => ({
+    ...data,
+    parentCategory: data.parentCategory === "" ? undefined : data.parentCategory
+}))
 
 export const expenseCategoryFiltersSchema = z.object({
     includeInactive: z.boolean().default(false),

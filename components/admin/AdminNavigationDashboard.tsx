@@ -142,8 +142,8 @@ const adminNavigationItems: NavigationItem[] = [
     category: 'Financial Management'
   },
   {
-    title: 'Purchase Lookup',
-    description: 'Search and verify purchase records',
+    title: 'Donation Lookup',
+    description: 'Search and verify online donation records',
     href: '/admin/purchases/lookup',
     icon: Search,
     category: 'Financial Management'
