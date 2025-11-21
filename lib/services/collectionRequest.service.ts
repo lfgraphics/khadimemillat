@@ -27,7 +27,7 @@ interface CreatedRequest {
   status: 'verified'
   items?: string
   notes?: string
-  scrapperNotificationsSent: number
+  fieldExecutiveNotificationsSent: number
   createdBy: string
   createdAt: Date
 }
@@ -38,7 +38,7 @@ async function getClerkClient() {
 
 /**
  * Creates a verified collection request on behalf of a user (admin/moderator use)
- * Automatically assigns all scrappers and sends notifications
+ * Automatically assigns all field executives and sends notifications
  */
 export async function createVerifiedRequestForUser(data: CreateRequestForUserData): Promise<CreatedRequest> {
   try {
@@ -64,30 +64,30 @@ export async function createVerifiedRequestForUser(data: CreateRequestForUserDat
       phone: data.phone,
       notes: data.items ? `Items: ${data.items}${data.notes ? `\n\nNotes: ${data.notes}` : ''}` : data.notes,
       status: 'verified', // Admin-created requests are automatically verified
-      assignedScrappers: [], // Will be populated with all scrappers
+      assignedFieldExecutives: [], // Will be populated with all field executives
       // Add audit trail in notes if not already present
       ...(data.notes?.includes('Created by admin') ? {} : {
         notes: `${data.items ? `Items: ${data.items}` : ''}${data.notes ? `${data.items ? '\n\n' : ''}Notes: ${data.notes}` : ''}${data.items || data.notes ? '\n\n' : ''}Created by admin: ${data.createdBy}`
       })
     }
 
-    // Get all scrappers for assignment
-    let allScrappers: any[] = []
+    // Get all field executives for assignment
+    let allFieldExecutives: any[] = []
     try {
-      allScrappers = await getAllScrappers()
-      requestData.assignedScrappers = allScrappers.map((s: any) => s.id)
-    } catch (scrapperError) {
-      console.error('[createVerifiedRequestForUser] Failed to fetch scrappers:', scrapperError)
-      // Continue without scrapper assignment - can be done later
+      allFieldExecutives = await getAllFieldExecutives()
+      requestData.assignedFieldExecutives = allFieldExecutives.map((s: any) => s.id)
+    } catch (fieldExecutiveError) {
+      console.error('[createVerifiedRequestForUser] Failed to fetch field executives:', fieldExecutiveError)
+      // Continue without field executive assignment - can be done later
     }
 
     // Create the collection request
     const doc = await CollectionRequest.create(requestData)
     const createdRequest = doc.toObject()
 
-    // Send notifications to scrappers
+    // Send notifications to field executives
     let notificationsSent = 0
-    if (allScrappers.length > 0) {
+    if (allFieldExecutives.length > 0) {
       try {
         const formattedPickupTime = new Intl.DateTimeFormat('en-US', {
           weekday: 'short',
@@ -99,18 +99,18 @@ export async function createVerifiedRequestForUser(data: CreateRequestForUserDat
           hour12: true
         }).format(data.pickupTime)
 
-        await notificationService.notifyUsers(allScrappers.map((s: any) => s.id), {
+        await notificationService.notifyUsers(allFieldExecutives.map((s: any) => s.id), {
           title: 'New Verified Collection Request',
           body: `${userName} - ${formattedPickupTime} at ${data.address}. Phone: ${data.phone}${data.items ? `. Items: ${data.items}` : ''}`,
-          url: '/scrapper/assigned',
+          url: '/field-executive/assigned',
           type: 'collection_assigned'
         })
         
-        notificationsSent = allScrappers.length
+        notificationsSent = allFieldExecutives.length
         // Log success for monitoring
-        console.log(`[createVerifiedRequestForUser] Sent notifications to ${notificationsSent} scrappers for request ${createdRequest._id}`)
+        console.log(`[createVerifiedRequestForUser] Sent notifications to ${notificationsSent} field executives for request ${createdRequest._id}`)
       } catch (notificationError) {
-        console.error('[createVerifiedRequestForUser] Failed to send scrapper notifications:', notificationError)
+        console.error('[createVerifiedRequestForUser] Failed to send field executive notifications:', notificationError)
         // Don't fail the request creation if notifications fail
       }
     }
@@ -126,7 +126,7 @@ export async function createVerifiedRequestForUser(data: CreateRequestForUserDat
       status: 'verified',
       items: data.items,
       notes: data.notes,
-      scrapperNotificationsSent: notificationsSent,
+      fieldExecutiveNotificationsSent: notificationsSent,
       createdBy: data.createdBy,
       createdAt: createdRequest.createdAt
     }
@@ -177,10 +177,10 @@ export async function createVerifiedRequestForUser(data: CreateRequestForUserDat
   }
 }
 
-export async function getAllScrappers() {
+export async function getAllFieldExecutives() {
   const client: any = await getClerkClient()
   const users = await client.users.getUserList({ limit: 500 })
-  return users.data.filter((u: any) => u.publicMetadata?.role === 'scrapper')
+  return users.data.filter((u: any) => u.publicMetadata?.role === 'field_executive')
 }
 
 export async function getUsersByRole(role: string) {
@@ -222,7 +222,7 @@ export async function listCollectionRequests({ status, assignedTo, page = 1, lim
   await connectDB()
   const query: any = {}
   if (status) query.status = status
-  if (assignedTo) query.assignedScrappers = assignedTo
+  if (assignedTo) query.assignedFieldExecutives = assignedTo
   const skip = (page - 1) * limit
   const [items, total] = await Promise.all([
     CollectionRequest.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
@@ -243,19 +243,19 @@ export async function updateCollectionRequest(id: string, data: Partial<ICollect
   return CollectionRequest.findByIdAndUpdate(id, data, { new: true }).lean()
 }
 
-export async function assignScrappers(id: string, scrapperIds?: string[]) {
+export async function assignFieldExecutives(id: string, fieldExecutiveIds?: string[]) {
   await connectDB()
   if (!Types.ObjectId.isValid(id)) throw new Error('Invalid id')
 
-  let targetIds = scrapperIds
+  let targetIds = fieldExecutiveIds
   if (!targetIds || targetIds.length === 0) {
-    const allScrappers = await getAllScrappers()
-    targetIds = allScrappers.map((s: any) => s.id)
+    const allFieldExecutives = await getAllFieldExecutives()
+    targetIds = allFieldExecutives.map((s: any) => s.id)
   }
 
   const doc = await CollectionRequest.findByIdAndUpdate(
     id,
-    { assignedScrappers: targetIds, status: 'verified' },
+    { assignedFieldExecutives: targetIds, status: 'verified' },
     { new: true }
   ).lean()
 
@@ -263,7 +263,7 @@ export async function assignScrappers(id: string, scrapperIds?: string[]) {
     await notificationService.notifyUsers(targetIds, {
       title: 'Collection Assigned',
       body: 'You have a new collection assignment.',
-      url: '/scrapper/assigned',
+      url: '/field-executive/assigned',
       type: 'collection_assigned'
     })
   }
@@ -309,8 +309,8 @@ export const collectionRequestService = {
   listCollectionRequests,
   getCollectionRequestById,
   updateCollectionRequest,
-  assignScrappers,
+  assignFieldExecutives,
   markAsCollected,
-  getAllScrappers,
+  getAllFieldExecutives,
   getUsersByRole
 }

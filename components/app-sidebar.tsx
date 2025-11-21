@@ -175,14 +175,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     </SidebarGroup>
                 </RoleGuard>
 
-                {/* Scrapper Section */}
-                <RoleGuard allowedRoles={["scrapper", "admin"]}>
+                {/* Field Executive Section */}
+                <RoleGuard allowedRoles={["field_executive", "admin"]}>
                     <SidebarGroup>
-                        <SidebarGroupLabel>Scrapper</SidebarGroupLabel>
+                        <SidebarGroupLabel>Field Executive</SidebarGroupLabel>
                         <SidebarMenu>
                             <SidebarMenuItem>
                                 <SidebarMenuButton asChild tooltip="Assigned">
-                                    <Link href="/scrapper/assigned">
+                                    <Link href="/field-executive/assigned">
                                         <Truck className="h-4 w-4" />
                                         <span>Assigned</span>
                                     </Link>
@@ -285,7 +285,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
-                        <RoleGuard allowedRoles={["admin", "moderator", "scrapper"]}>
+                        <RoleGuard allowedRoles={["admin", "moderator", "field_executive"]}>
                             <SidebarMenuItem>
                                 <SidebarMenuButton asChild tooltip="Barcode Scanner">
                                     <Link href="/scanner">

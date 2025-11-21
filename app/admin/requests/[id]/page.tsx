@@ -27,7 +27,7 @@ interface CollectionRequest {
   phone: string
   notes?: string
   status: 'pending' | 'verified' | 'collected' | 'completed'
-  assignedScrappers: string[]
+  assignedFieldExecutives: string[]
   assignedDetails?: Array<{
     id: string
     fullName?: string
@@ -330,11 +330,11 @@ export default function RequestDetailPage() {
 
           {request.assignedDetails && request.assignedDetails.length > 0 && (
             <div>
-              <label className="text-sm font-medium">Assigned Scrappers</label>
+              <label className="text-sm font-medium">Assigned Field Executives</label>
               <div className="flex gap-2 mt-1">
-                {request.assignedDetails.map((scrapper, index) => (
+                {request.assignedDetails.map((fieldExecutive, index) => (
                   <Badge key={index} variant="secondary">
-                    {scrapper.fullName || scrapper.username}
+                    {fieldExecutive.fullName || fieldExecutive.username}
                   </Badge>
                 ))}
               </div>

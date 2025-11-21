@@ -112,7 +112,7 @@ export async function PUT(
     }
 
     // Validate target roles
-    const validRoles = ['admin', 'moderator', 'scrapper', 'user', 'everyone']
+    const validRoles = ['admin', 'moderator', 'field_executive', 'accountant' , 'user', 'everyone']
     const invalidRoles = targetRoles.filter((r: string) => !validRoles.includes(r))
     if (invalidRoles.length > 0) {
       return NextResponse.json(

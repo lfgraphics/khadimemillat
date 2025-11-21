@@ -94,7 +94,7 @@ const AVAILABLE_ROLES = [
   { value: 'everyone', label: 'Everyone', description: 'All users regardless of role' },
   { value: 'admin', label: 'Administrators', description: 'System administrators' },
   { value: 'moderator', label: 'Moderators', description: 'Content moderators' },
-  { value: 'scrapper', label: 'Scrappers', description: 'Field collection workers' },
+  { value: 'field_executive', label: 'Field Executives', description: 'Field collection workers' },
   { value: 'user', label: 'Users', description: 'Regular platform users' }
 ]
 

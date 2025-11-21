@@ -61,7 +61,7 @@ export interface NotificationOptions {
   title: string
   message: string
   channels: ('web_push' | 'email' | 'whatsapp' | 'sms')[]
-  targetRoles: ('admin' | 'moderator' | 'scrapper' | 'user' | 'everyone')[]
+  targetRoles: ('admin' | 'moderator' | 'field_executive' | 'user' | 'everyone')[]
   sentBy: string
   metadata?: any
   templateId?: string
@@ -1110,7 +1110,7 @@ export class NotificationService {
       title: payload.title,
       message: payload.body,
       channels: ['web_push', 'email'],
-      targetRoles: roles as ('admin' | 'moderator' | 'scrapper' | 'user' | 'everyone')[],
+      targetRoles: roles as ('admin' | 'moderator' | 'field_executive' | 'user' | 'everyone')[],
       sentBy: 'system',
       metadata: {
         type: payload.type || 'notification',

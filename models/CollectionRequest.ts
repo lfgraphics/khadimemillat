@@ -8,7 +8,7 @@ export interface ICollectionRequest extends Document {
   address: string
   phone: string
   notes?: string
-  assignedScrappers: string[] // Clerk user IDs
+  assignedFieldExecutives: string[] // Clerk user IDs
   status: 'pending' | 'verified' | 'collected' | 'completed'
   donationEntryId?: mongoose.Types.ObjectId
   location?: {
@@ -26,7 +26,7 @@ const collectionRequestSchema = new Schema<ICollectionRequest>({
   address: { type: String, required: true },
   phone: { type: String, required: true },
   notes: { type: String },
-  assignedScrappers: [{ type: String }],
+  assignedFieldExecutives: [{ type: String }],
   status: { type: String, enum: ['pending', 'verified', 'collected', 'completed'], default: 'pending' },
   donationEntryId: { type: Schema.Types.ObjectId, ref: 'DonationEntry' },
   location: {

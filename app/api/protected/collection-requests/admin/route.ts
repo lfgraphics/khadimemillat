@@ -109,23 +109,23 @@ export async function POST(req: Request) {
       phone,
       notes,
       status: 'verified', // Admin-created requests are automatically verified
-      assignedScrappers: [], // Will be populated when scrappers are assigned
+      assignedFieldExecutives: [], // Will be populated when field executives are assigned
       createdBy: clerkUserId // Audit trail
     } as any)
 
-    // Automatically assign to all scrappers and notify them
-    let scrapperNotificationsSent = 0
+    // Automatically assign to all field executives and notify them
+    let fieldExecutiveNotificationsSent = 0
     try {
-      const updatedRequest = await collectionRequestService.assignScrappers(
+      const updatedRequest = await collectionRequestService.assignFieldExecutives(
         collectionRequest._id.toString()
       )
       
-      if (updatedRequest && (updatedRequest as any).assignedScrappers) {
-        scrapperNotificationsSent = (updatedRequest as any).assignedScrappers.length || 0
+      if (updatedRequest && (updatedRequest as any).assignedFieldExecutives) {
+        fieldExecutiveNotificationsSent = (updatedRequest as any).assignedFieldExecutives.length || 0
       }
     } catch (error) {
-      console.error('Failed to assign scrappers:', error)
-      // Don't fail the request creation if scrapper assignment fails
+      console.error('Failed to assign field executives:', error)
+      // Don't fail the request creation if field executive assignment fails
     }
 
     // Get donor details for response
@@ -144,7 +144,7 @@ export async function POST(req: Request) {
         requestedPickupTime: new Date(requestedPickupTime),
         notes,
         status: 'verified',
-        scrapperNotificationsSent,
+        fieldExecutiveNotificationsSent,
         createdBy: clerkUserId,
         createdAt: collectionRequest.createdAt
       }

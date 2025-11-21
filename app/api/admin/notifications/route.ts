@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate target roles
-    const validRoles = ['admin', 'moderator', 'scrapper', 'user', 'everyone']
+    const validRoles = ['admin', 'moderator', 'field_executive', 'accountant', 'user', 'everyone']
     const invalidRoles = targetRoles.filter((r: string) => !validRoles.includes(r))
     if (invalidRoles.length > 0) {
       return NextResponse.json(

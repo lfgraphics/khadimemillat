@@ -73,7 +73,7 @@ export default function WorkflowPage() {
         { id: "scrap-to-welfare", title: "5. Scrap-to-Welfare Sustainability Model", sections: ["Collection Workflow", "Sorting & Processing", "Revenue Generation"] },
         { id: "clothing-redistribution", title: "6. Clothing Redistribution & Fabric Recycling", sections: ["Sorting Process", "Distribution", "Fabric to Cotton Conversion"] },
         { id: "sadqa-subscription", title: "7. Sadqa Subscription Program", sections: ["Subscription Types", "Continuous Support", "Flexibility"] },
-        { id: "golak-system", title: "8. Neki Bank (Golak) Contribution System", sections: ["Registration", "Collection Workflow", "GPS Mapping"] },
+        { id: "golak-system", title: "8. Neki Bank (Gullak) Contribution System", sections: ["Registration", "Collection Workflow", "GPS Mapping"] },
         { id: "bulk-food-redistribution", title: "9. Bulk Food Recovery & Redistribution", sections: ["Collection Process", "Distribution Network", "Quality Assurance"] },
         { id: "employment-support", title: "10. Employment & Dignity Support", sections: ["Work Opportunities", "Stipend Support", "Skill Development"] },
         { id: "roles-responsibilities", title: "11. Roles & Responsibilities", sections: ["Staff Structure", "Role Definitions", "Ethical Standards"] },
@@ -321,7 +321,7 @@ export default function WorkflowPage() {
                                         <div className="space-y-4">
                                             {[
                                                 { step: "Donor / Contributor", desc: "Community members, businesses, individuals" },
-                                                { step: "Contribution", desc: "Monetary, Scrap, Subscription, Golak" },
+                                                { step: "Contribution", desc: "Monetary, Scrap, Subscription, Gullak" },
                                                 { step: "Recording & Allocation", desc: "Finance + Program Teams document and allocate" },
                                                 { step: "Verified Beneficiary System", desc: "Survey + Verification Team ensures authenticity" },
                                                 { step: "Support Delivery", desc: "Sponsorship / Welfare / Stipends / Aid Programs" },
@@ -1129,7 +1129,7 @@ export default function WorkflowPage() {
                 </div>
             </section>
 
-            {/* Section 8: Golak Contribution System */}
+            {/* Section 8: Gullak Contribution System */}
             <section id="golak-system" className="py-16 md:py-24 bg-muted/30">
                 <div className="container mx-auto px-4 max-w-6xl">
                     <AnimatedSection variant="fade" className="text-center mb-16" triggerOnce>
@@ -1137,27 +1137,27 @@ export default function WorkflowPage() {
                             <MapPin className="w-4 h-4 mr-2" />
                             Section 8
                         </Badge>
-                        <h2 className="text-4xl md:text-5xl mb-6">Neki Bank (Golak) Contribution System</h2>
+                        <h2 className="text-4xl md:text-5xl mb-6">Neki Bank (Gullak) Contribution System</h2>
                         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
                             Community Contribution Network - Small contributions, big impact through structured collection
                         </p>
                     </AnimatedSection>
 
                     <div className="space-y-12">
-                        {/* Golak Registration */}
+                        {/* Gullak Registration */}
                         <AnimatedSection variant="slideUp" triggerOnce>
                             <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 border-yellow-200/50">
                                 <CardContent className="p-8">
                                     <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3">
                                         <Database className="w-6 h-6 text-yellow-600" />
-                                        8.1 Golak Registration & Unique ID System
+                                        8.1 Gullak Registration & Unique ID System
                                     </h3>
                                     <p className="text-muted-foreground mb-6">
-                                        Each Golak (Neki Bank) is officially registered before being placed, ensuring complete transparency and tracking:
+                                        Each Gullak (Neki Bank) is officially registered before being placed, ensuring complete transparency and tracking:
                                     </p>
                                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                                         {[
-                                            { item: "Unique Golak ID", desc: "Individual identification number", icon: QrCode },
+                                            { item: "Unique Gullak ID", desc: "Individual identification number", icon: QrCode },
                                             { item: "Assigned Caretaker", desc: "Responsible community member", icon: UserCheck },
                                             { item: "GPS Location", desc: "Latitude + Longitude mapping", icon: MapPin },
                                             { item: "System Entry", desc: "Digital management system", icon: Database }
@@ -1185,11 +1185,11 @@ export default function WorkflowPage() {
                                     </h3>
                                     <div className="space-y-4">
                                         {[
-                                            { step: "Golak is reported ready for collection", icon: Phone },
+                                            { step: "Gullak is reported ready for collection", icon: Phone },
                                             { step: "Collection Team visits the location", icon: Truck },
-                                            { step: "Caretaker and Collection Team open the Golak together", icon: Users },
+                                            { step: "Caretaker and Collection Team open the Gullak together", icon: Users },
                                             { step: "Amount is counted and recorded in presence of both", icon: CheckSquare },
-                                            { step: "Collection is logged with Golak ID + Date + Amount", icon: FileText },
+                                            { step: "Collection is logged with Gullak ID + Date + Amount", icon: FileText },
                                             { step: "Funds are deposited to KMWF welfare account", icon: Banknote },
                                             { step: "Entry is verified by Finance Officer", icon: CheckSquare }
                                         ].map((item, idx) => (
@@ -1433,7 +1433,7 @@ export default function WorkflowPage() {
                                         { role: "Survey Team → Verification Officer", desc: "Field verification and assessment" },
                                         { role: "Beneficiary Approval Desk", desc: "Final approval decisions" },
                                         { role: "Finance & Accounts Department", desc: "Financial management and transparency" },
-                                        { role: "Collection & Workshop / Golak Team", desc: "Material collection and pressing" },
+                                        { role: "Collection & Workshop / Gullak Team", desc: "Material collection and pressing" },
                                         { role: "System Administrator & Data Entry", desc: "Digital system management" }
                                     ].map((level, idx) => (
                                         <div key={idx} className="flex items-center gap-4 p-4 rounded-lg bg-red-50 dark:bg-red-950/20">
@@ -1623,7 +1623,7 @@ export default function WorkflowPage() {
                                     <div className="grid lg:grid-cols-2 gap-8">
                                         <div className="space-y-4">
                                             {[
-                                                "Funds Received (Sponsorship + Scrap + Golak + Subscriptions)",
+                                                "Funds Received (Sponsorship + Scrap + Gullak + Subscriptions)",
                                                 "Finance Ledger Entry (Digital Record)",
                                                 "Verification Against Beneficiary Support Schedules",
                                                 "Funds Disbursed to Welfare Programs"
@@ -1822,7 +1822,7 @@ export default function WorkflowPage() {
                                             { term: "Stipend Support", def: "Monthly financial assistance provided to those unable to earn." },
                                             { term: "Scrap Donation", def: "Contribution of material items that can be repaired, reused, or recycled for welfare funding." },
                                             { term: "Upcycling", def: "Converting used or damaged items into usable goods (e.g., mattresses)." },
-                                            { term: "Golak", def: "A registered community donation box with an assigned caretaker and tracking ID." },
+                                            { term: "Gullak", def: "A registered community donation box with an assigned caretaker and tracking ID." },
                                             { term: "Sadqa Subscription", def: "A recurring daily, weekly, monthly, or yearly charitable contribution plan." },
                                             { term: "Welfare Support Pool", def: "The combined fund used to sustain monthly support programs and relief activities." },
                                             { term: "Case Registry", def: "The system record of all requests for assistance." },
@@ -1886,8 +1886,8 @@ export default function WorkflowPage() {
                                         a: "Every item follows this process: Sorting → Repair/Reuse → Resale/Recycling → Revenue → Welfare Support. No donated item is wasted. Every step is documented."
                                     },
                                     {
-                                        q: "What does the Golak system do?",
-                                        a: "Golak boxes allow small, daily community contributions. Each has a unique ID, registered caretaker, GPS location mapping, and logged collection cycles. All funds go to welfare support."
+                                        q: "What does the Gullak system do?",
+                                        a: "Gullak boxes allow small, daily community contributions. Each has a unique ID, registered caretaker, GPS location mapping, and logged collection cycles. All funds go to welfare support."
                                     },
                                     {
                                         q: "Are donations tax-deductible?",
@@ -1895,7 +1895,7 @@ export default function WorkflowPage() {
                                     },
                                     {
                                         q: "How can I volunteer or get involved?",
-                                        a: "You can contribute by sponsoring a beneficiary, setting up Sadqa subscription, donating scrap/clothing, helping in relief drives, or hosting a Golak. Volunteers are welcomed and guided."
+                                        a: "You can contribute by sponsoring a beneficiary, setting up Sadqa subscription, donating scrap/clothing, helping in relief drives, or hosting a Gullak. Volunteers are welcomed and guided."
                                     },
                                     {
                                         q: "How do you ensure transparency?",
@@ -1973,7 +1973,7 @@ export default function WorkflowPage() {
                                                         "Daily Sadqa subscriptions",
                                                         "Scrap and clothing donations",
                                                         "Volunteering time and skills",
-                                                        "Hosting or caretaking a Golak"
+                                                        "Hosting or caretaking a Gullak"
                                                     ].map((way, idx) => (
                                                         <div key={idx} className="flex items-center gap-3">
                                                             <Heart className="w-5 h-5 text-rose-500 flex-shrink-0" />

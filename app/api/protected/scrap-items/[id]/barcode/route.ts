@@ -12,7 +12,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const { sessionClaims } = getAuth(req) as any
     const role = sessionClaims?.metadata?.role
     if (!sessionClaims?.sub) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    if (!['admin', 'moderator', 'scrapper'].includes(role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (!['admin', 'moderator', 'field_executive'].includes(role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     if (!Types.ObjectId.isValid(id)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 })
 
     await connectDB()

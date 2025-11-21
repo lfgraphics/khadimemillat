@@ -26,7 +26,7 @@ export async function POST(
             return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 })
         }
 
-    const { id } = await context.params
+        const { id } = await context.params
 
         // Validate ObjectId format
         if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -108,7 +108,7 @@ export async function POST(
         const roleMultipliers = {
             'everyone': 1000,
             'user': 800,
-            'scrapper': 50,
+            'field_executive': 50,
             'moderator': 10,
             'admin': 5
         }
@@ -124,12 +124,12 @@ export async function POST(
 
         // Apply activity status filter
         if (campaign.targeting.activityStatus) {
-            const activityMultipliers: Record<'active'|'inactive'|'new', number> = {
+            const activityMultipliers: Record<'active' | 'inactive' | 'new', number> = {
                 'active': 0.7,
                 'inactive': 0.2,
                 'new': 0.1
             }
-            estimatedAudience = Math.floor(estimatedAudience * activityMultipliers[campaign.targeting.activityStatus as 'active'|'inactive'|'new'])
+            estimatedAudience = Math.floor(estimatedAudience * activityMultipliers[campaign.targeting.activityStatus as 'active' | 'inactive' | 'new'])
         }
 
         // Update campaign status and progress

@@ -9,7 +9,7 @@ const channelContentSchema = z.object({
 
 // Targeting criteria schema
 const targetingSchema = z.object({
-  roles: z.array(z.enum(['admin', 'moderator', 'scrapper', 'user', 'everyone'])).min(1, "At least one role is required"),
+  roles: z.array(z.enum(['admin', 'moderator', 'field_executive', 'user', 'everyone'])).min(1, "At least one role is required"),
   locations: z.array(z.string()).optional(),
   activityStatus: z.enum(['active', 'inactive', 'new']).optional(),
   customSegments: z.array(z.string()).optional(),
@@ -89,7 +89,7 @@ export const campaignFiltersSchema = z.object({
   status: z.enum(['draft', 'scheduled', 'running', 'paused', 'completed', 'failed']).optional(),
   createdBy: z.string().optional(),
   channels: z.array(z.enum(['web_push', 'email', 'whatsapp', 'sms'])).optional(),
-  roles: z.array(z.enum(['admin', 'moderator', 'scrapper', 'user', 'everyone'])).optional(),
+  roles: z.array(z.enum(['admin', 'moderator', 'field_executive', 'user', 'everyone'])).optional(),
   dateFrom: z.string().datetime().optional(),
   dateTo: z.string().datetime().optional(),
   page: z.coerce.number().min(1).default(1),

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { assignScrappers, getCollectionRequestById, markAsCollected, updateCollectionRequest } from '@/lib/services/collectionRequest.service'
+import { assignFieldExecutives, getCollectionRequestById, markAsCollected, updateCollectionRequest } from '@/lib/services/collectionRequest.service'
 import { notificationService } from '@/lib/services/notification.service'
 import { getClerkUserWithSupplementaryData } from '@/lib/services/user.service'
-import { assignScrappersSchema, updateCollectionRequestSchema } from '@/lib/validators/collectionRequest.validator'
+import { assignFieldExecutivesSchema, updateCollectionRequestSchema } from '@/lib/validators/collectionRequest.validator'
 import connectDB from '@/lib/db'
 import User from '@/models/User'
 
@@ -36,8 +36,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     } catch (e) {
       // Failed to lookup donor in MongoDB, continue without
     }
-    if (Array.isArray(doc.assignedScrappers) && doc.assignedScrappers.length > 0) {
-      assignedDetails = await Promise.all(doc.assignedScrappers.map((sid: string) => getClerkUserWithSupplementaryData(sid).catch(() => null)))
+    if (Array.isArray(doc.assignedFieldExecutives) && doc.assignedFieldExecutives.length > 0) {
+      assignedDetails = await Promise.all(doc.assignedFieldExecutives.map((sid: string) => getClerkUserWithSupplementaryData(sid).catch(() => null)))
     }
     if (doc.status === 'collected' || doc.status === 'completed') {
       try {
@@ -73,19 +73,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const role = (sessionClaims as any)?.metadata?.role || 'user'
     const body = await req.json()
 
-    // VERIFY (auto-assign all scrappers)
+    // VERIFY (auto-assign all field executives)
     if (body.action === 'verify') {
       if (!['admin', 'moderator'].includes(role)) return new NextResponse('Forbidden', { status: 403 })
-      const updated = await assignScrappers(id) // no list => auto assign
+      const updated = await assignFieldExecutives(id) // no list => auto assign
       return NextResponse.json({ success: true, request: updated })
     }
 
-    // Scrapper marking collected (Clerk user ID)
+    // Field executive marking collected (Clerk user ID)
     if (body.action === 'collect') {
       const reqDoc: any = await getCollectionRequestById(id)
       if (!reqDoc) return new NextResponse('Not found', { status: 404 })
       const isAdmin = ['admin'].includes(role)
-      const assigned: string[] = (reqDoc.assignedScrappers || [])
+      const assigned: string[] = (reqDoc.assignedFieldExecutives || [])
       if (!isAdmin && !assigned.includes(userId)) {
         return new NextResponse('Forbidden', { status: 403 })
       }
@@ -93,12 +93,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ success: true, request: updated })
     }
 
-    // Assign scrappers (admin/moderator)
+    // Assign field executives (admin/moderator)
     if (body.action === 'assign') {
       if (!['admin', 'moderator'].includes(role)) return new NextResponse('Forbidden', { status: 403 })
-      const parsed = assignScrappersSchema.safeParse({ scrapperIds: body.scrapperIds })
+      const parsed = assignFieldExecutivesSchema.safeParse({ fieldExecutiveIds: body.fieldExecutiveIds })
       if (!parsed.success) return NextResponse.json({ error: parsed.error.format() }, { status: 400 })
-      const updated = await assignScrappers(id, parsed.data.scrapperIds)
+      const updated = await assignFieldExecutives(id, parsed.data.fieldExecutiveIds)
       return NextResponse.json({ success: true, request: updated })
     }
 

@@ -71,9 +71,9 @@ const supportOptions = [
   },
   {
     icon: HomeIcon,
-    title: "Neki Bank (Golak) Contribution",
-    description: `Your coins become currency for the Hereafter \n Our community Golak network — also called the Neki Bank — turns daily generosity into ongoing support. Placed in homes, shops, and offices, each Golak collects small donations that together fund education, food, and healthcare for families in need. Simple, transparent, and spiritually rewarding.`,
-    cta: "Find a Golak Near You",
+    title: "Neki Bank (Gullak) Contribution",
+    description: `Your coins become currency for the Hereafter \n Our community Gullak network — also called the Neki Bank — turns daily generosity into ongoing support. Placed in homes, shops, and offices, each Gullak collects small donations that together fund education, food, and healthcare for families in need. Simple, transparent, and spiritually rewarding.`,
+    cta: "Find a Gullak Near You",
     link: "/programs",
     color: "from-cyan-500 to-blue-500"
   },

@@ -34,6 +34,6 @@ export const updateCollectionRequestSchema = z.object({
   status: z.enum(['pending','verified','collected','completed']).optional()
 })
 
-export const assignScrappersSchema = z.object({
-  scrapperIds: z.array(z.string().min(1)).min(1)
+export const assignFieldExecutivesSchema = z.object({
+  fieldExecutiveIds: z.array(z.string().min(1)).min(1)
 })

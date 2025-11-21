@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Broad listing requires admin/moderator
-    if (!['admin', 'moderator', 'scrapper'].includes(callerRole)) {
+    if (!['admin', 'moderator', 'field_executive'].includes(callerRole)) {
       console.warn('[USERS_LIST_GATED] caller lacks role for broad listing; require search or self=1')
       return NextResponse.json({ 
         users: [],

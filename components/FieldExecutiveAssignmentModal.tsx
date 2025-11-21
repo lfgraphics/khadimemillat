@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, UserCircle } from 'lucide-react'
 
-interface Scrapper { id: string; firstName?: string; lastName?: string; email?: string; publicMetadata?: any }
+interface FieldExecutive { id: string; firstName?: string; lastName?: string; email?: string; publicMetadata?: any }
 
 interface Props {
   open: boolean
@@ -15,8 +15,8 @@ interface Props {
   onAssigned?(): void
 }
 
-export function ScrapperAssignmentModal({ open, onOpenChange, requestId, onAssigned }: Props) {
-  const [scrappers, setScrappers] = useState<Scrapper[]>([])
+export function FieldExecutiveAssignmentModal({ open, onOpenChange, requestId, onAssigned }: Props) {
+  const [fieldExecutives, setFieldExecutives] = useState<FieldExecutive[]>([])
   const [loading, setLoading] = useState(false)
   const [assigningIds, setAssigningIds] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -26,35 +26,35 @@ export function ScrapperAssignmentModal({ open, onOpenChange, requestId, onAssig
     const load = async () => {
       setLoading(true); setError(null)
       try {
-  const res = await fetch('/api/protected/users?role=scrapper', { cache: 'no-store' })
+  const res = await fetch('/api/protected/users?role=field_executive', { cache: 'no-store' })
   if (!res.ok) {
     if (res.status === 403) {
       // Broad listing gated; caller likely not privileged. Show friendly message and keep list empty.
-      setScrappers([])
+      setFieldExecutives([])
       setError('Not authorized to list users. Try searching in contexts that support it or contact an admin.')
     } else {
-      throw new Error(`Failed to load scrappers (${res.status})`)
+      throw new Error(`Failed to load field executives (${res.status})`)
     }
   } else {
     const json = await safeJson<any>(res)
     const list = json.users || json.items || []
-    setScrappers(list)
+    setFieldExecutives(list)
   }
       } catch (e:any) {
-        setError(e.message || 'Failed to load scrappers')
+        setError(e.message || 'Failed to load field executives')
       } finally { setLoading(false) }
     }
     load()
   }, [open])
 
-  const toggleAssign = async (scrapperId: string) => {
+  const toggleAssign = async (fieldExecutiveId: string) => {
     if (!requestId) return
-    setAssigningIds(prev => [...prev, scrapperId])
+    setAssigningIds(prev => [...prev, fieldExecutiveId])
     try {
       const res = await fetch(`/api/protected/collection-requests/${requestId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'assign', scrapperIds: [scrapperId] })
+        body: JSON.stringify({ action: 'assign', fieldExecutiveIds: [fieldExecutiveId] })
       })
       if (!res.ok) throw new Error('Failed to assign')
       onAssigned?.()
@@ -62,7 +62,7 @@ export function ScrapperAssignmentModal({ open, onOpenChange, requestId, onAssig
     } catch (e) {
       console.error(e)
     } finally {
-      setAssigningIds(prev => prev.filter(id => id !== scrapperId))
+      setAssigningIds(prev => prev.filter(id => id !== fieldExecutiveId))
     }
   }
 
@@ -70,13 +70,13 @@ export function ScrapperAssignmentModal({ open, onOpenChange, requestId, onAssig
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Assign Scrapper</DialogTitle>
+          <DialogTitle>Assign Field Executive</DialogTitle>
         </DialogHeader>
         {loading && <div className='py-6 flex justify-center'><Loader2 className='h-5 w-5 animate-spin' /></div>}
         {error && <p className='text-xs text-red-500'>{error}</p>}
         {!loading && !error && (
           <div className='h-64 overflow-y-auto pr-2 space-y-2'>
-            {scrappers.map(s => {
+            {fieldExecutives.map(s => {
               const full = [s.firstName, s.lastName].filter(Boolean).join(' ') || (s as any).name || s.email || s.id
               const assigning = assigningIds.includes(s.id)
               return (
@@ -94,7 +94,7 @@ export function ScrapperAssignmentModal({ open, onOpenChange, requestId, onAssig
                 </div>
               )
             })}
-            {scrappers.length === 0 && <p className='text-[11px] text-muted-foreground'>No scrappers available.</p>}
+            {fieldExecutives.length === 0 && <p className='text-[11px] text-muted-foreground'>No field executives available.</p>}
           </div>
         )}
         <DialogFooter>
@@ -105,4 +105,4 @@ export function ScrapperAssignmentModal({ open, onOpenChange, requestId, onAssig
   )
 }
 
-export default ScrapperAssignmentModal
+export default FieldExecutiveAssignmentModal

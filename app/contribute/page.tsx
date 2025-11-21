@@ -18,7 +18,7 @@ import {
 
 export const metadata: Metadata = {
     title: 'How You Can Contribute - Khadim-e-Millat',
-    description: "Choose how you'd like to support Khadim-e-Millat — from sponsorships and scrap donations to Golak contributions and more."
+    description: "Choose how you'd like to support Khadim-e-Millat — from sponsorships and scrap donations to Gullak contributions and more."
 };
 
 export default function ContributePage() {
@@ -56,17 +56,17 @@ export default function ContributePage() {
         },
         {
             icon: Home,
-            title: "Nekin Bank (Golak) Contribution",
-            description: "Our smart Golak system with registered caretakers, GPS mapping, and transparent contribution tracking.",
+            title: "Neki Bank (Gullak) Contribution",
+            description: "Our smart Gullak system with registered caretakers, GPS mapping, and transparent contribution tracking.",
             features: [
-                "Each Golak has a registered caretaker",
+                "Each Gullak has a registered caretaker",
                 "Mapped via GPS",
                 "Contributions tracked transparently",
-                "Donors can find nearest Golak online"
+                "Donors can find nearest Gullak online"
             ],
             cta: [
-                { label: "Locate a Golak on Map", url: "/programs/golak-map", variant: "default" as const },
-                { label: "Apply to Host a Golak", url: "/programs/host-golak", variant: "outline" as const }
+                { label: "Locate a Gullak on Map", url: "/programs/golak-map", variant: "default" as const },
+                { label: "Apply to Host a Gullak", url: "/programs/host-golak", variant: "outline" as const }
             ],
             color: "from-cyan-500 to-blue-500"
         },

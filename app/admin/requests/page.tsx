@@ -26,7 +26,7 @@ interface CollectionRequest {
   phone: string
   notes?: string
   status: 'pending' | 'verified' | 'collected' | 'completed'
-  assignedScrappers: string[]
+  assignedFieldExecutives: string[]
   assignedDetails?: Array<{
     fullName?: string
     username?: string
@@ -235,9 +235,9 @@ export default function RequestsPage() {
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-sm">Assigned to:</span>
                   <div className="flex gap-2">
-                    {request.assignedDetails.map((scrapper, index) => (
+                    {request.assignedDetails.map((fieldExecutive, index) => (
                       <Badge key={index} variant="secondary">
-                        {scrapper.fullName || scrapper.username}
+                        {fieldExecutive.fullName || fieldExecutive.username}
                       </Badge>
                     ))}
                   </div>

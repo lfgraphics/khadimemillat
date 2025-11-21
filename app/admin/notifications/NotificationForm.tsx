@@ -73,7 +73,8 @@ export default function NotificationForm({ onNotificationSent }: NotificationFor
         { id: 'everyone', label: 'Everyone', description: 'All users' },
         { id: 'admin', label: 'Admins', description: 'Administrator users' },
         { id: 'moderator', label: 'Moderators', description: 'Moderator users' },
-        { id: 'scrapper', label: 'Scrappers', description: 'Field workers' },
+        { id: 'field_executive', label: 'Field Executive', description: 'Field workers' },
+        { id: 'accountant', label: 'accountant', description: 'Accounts manager' },
         { id: 'user', label: 'Users', description: 'Regular users' }
     ]
 

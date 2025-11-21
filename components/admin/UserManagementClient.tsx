@@ -63,7 +63,7 @@ export const UserManagementClient: React.FC<UserManagementClientProps> = ({ chil
   const handleRequestCreated = (request: any) => {
     try {
       toast.success("Donation request created!", {
-        description: `Request for ${request.userName} created. ${request.scrapperNotificationsSent} scrapper(s) notified.`,
+        description: `Request for ${request.userName} created. ${request.fieldExecutiveNotificationsSent} field executive(s) notified.`,
       });
       // Return to user success modal instead of closing completely
       setModalState('user-success');

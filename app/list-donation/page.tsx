@@ -144,7 +144,7 @@ const DonationListManager: React.FC = () => {
   const [multiStepDialogOpen, setMultiStepDialogOpen] = useState(false);
   const { user } = useUser();
   const currentRole = (user?.publicMetadata as any)?.role;
-  const isScrapper = currentRole === 'scrapper';
+  const isFieldExecutive = currentRole === 'field_executive';
 
   const [items, setItems] = useState<LocalItem[]>([]);
 
@@ -347,9 +347,9 @@ const DonationListManager: React.FC = () => {
           </Card>
         )}
 
-        {isScrapper && !donor && !collectionRequestId && !autoFillLoading && (
+        {isFieldExecutive && !donor && !collectionRequestId && !autoFillLoading && (
           <Card className="p-4 sm:p-6 border bg-muted/30 text-sm space-y-3">
-            <p className="font-medium">Scrapper Mode</p>
+            <p className="font-medium">Field Executive Mode</p>
             <p>You can select an existing donor below. Creating new donors is disabled. If you opened this from a verified collection request link, the donor will auto-fill.</p>
           </Card>
         )}
@@ -446,7 +446,7 @@ const DonationListManager: React.FC = () => {
                 </div>
               </div>
 
-              {!isScrapper && (
+              {!isFieldExecutive && (
                 <div className="flex flex-col sm:items-end gap-3 flex-shrink-0 w-full sm:w-auto">
                   <Badge
                     variant="default"
@@ -493,7 +493,7 @@ const DonationListManager: React.FC = () => {
               </div>
             </div>
 
-            {autoFillLoading && !isScrapper && (
+            {autoFillLoading && !isFieldExecutive && (
               <div className="mt-4 pt-4 border-t border-border/30">
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>

@@ -7,7 +7,7 @@ export interface TemplateCreateData {
   title: string
   message: string
   channels: ('web_push' | 'email' | 'whatsapp' | 'sms')[]
-  targetRoles: ('admin' | 'moderator' | 'scrapper' | 'user' | 'everyone')[]
+  targetRoles: ('admin' | 'moderator' | 'field_executive' | 'user' | 'everyone')[]
   category?: 'campaign' | 'system' | 'custom'
   createdBy: string
 }
@@ -59,7 +59,7 @@ export class TemplateService {
       throw new Error('At least one target role must be selected')
     }
     
-    const validRoles = ['admin', 'moderator', 'scrapper', 'user', 'everyone']
+    const validRoles = ['admin', 'moderator', 'field_executive', 'user', 'everyone']
     const invalidRoles = data.targetRoles.filter(r => !validRoles.includes(r))
     if (invalidRoles.length > 0) {
       throw new Error(`Invalid roles: ${invalidRoles.join(', ')}`)
@@ -253,8 +253,8 @@ export class TemplateService {
       message: template.message,
       channels: template.channels,
       targetRoles: template.targetRoles.filter(role => 
-        ['admin', 'moderator', 'scrapper', 'user', 'everyone'].includes(role)
-      ) as ('admin' | 'moderator' | 'scrapper' | 'user' | 'everyone')[],
+        ['admin', 'moderator', 'field_executive', 'user', 'everyone'].includes(role)
+      ) as ('admin' | 'moderator' | 'field_executive' | 'user' | 'everyone')[],
       sentBy,
       templateId: template._id?.toString(),
       metadata

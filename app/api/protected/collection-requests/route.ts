@@ -17,10 +17,10 @@ export async function GET(req: Request) {
 
     const data = await listCollectionRequests({ status, assignedTo, page })
 
-    // Enrich donor & assigned scrappers with Clerk user data
+    // Enrich donor & assigned field executives with Clerk user data
     const enrichedItems = await Promise.all(data.items.map(async (item: any) => {
       const donorDetails = await getClerkUserWithSupplementaryData(item.donor)
-      const assignedDetails = await Promise.all((item.assignedScrappers || []).map((id: string) => getClerkUserWithSupplementaryData(id)))
+      const assignedDetails = await Promise.all((item.assignedFieldExecutives || []).map((id: string) => getClerkUserWithSupplementaryData(id)))
       let collectedByDetails = null
       if (item.status === 'collected' || item.status === 'completed') {
         // Need to look into DonationEntry to see who collected (collectedBy) if exists

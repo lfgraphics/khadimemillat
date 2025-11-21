@@ -39,7 +39,7 @@ export interface CreatedRequest {
   status: 'verified';
   items?: string;
   notes?: string;
-  scrapperNotificationsSent: number;
+  fieldExecutiveNotificationsSent: number;
 }
 
 interface CollectionRequestFormForUserProps {
@@ -244,7 +244,7 @@ const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> 
           status: 'verified',
           items: formData.items?.trim() || undefined,
           notes: formData.notes?.trim() || undefined,
-          scrapperNotificationsSent: result.data.scrapperNotificationsSent || 0
+          fieldExecutiveNotificationsSent: result.data.fieldExecutiveNotificationsSent || 0
         };
 
         onRequestCreated(createdRequest);
@@ -420,7 +420,7 @@ const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> 
               </div>
             )}
             <p className="text-xs text-muted-foreground">
-              Optional: Provide details about the items to help scrappers prepare
+              Optional: Provide details about the items to help field executives prepare
             </p>
           </div>
 
@@ -507,9 +507,9 @@ const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> 
             <p className="font-medium mb-1">What happens next:</p>
             <ul className="space-y-1 list-disc list-inside">
               <li>The request will be created with 'verified' status</li>
-              <li>All scrappers will be automatically notified</li>
+              <li>All field executives will be automatically notified</li>
               <li>The user will receive a confirmation notification</li>
-              <li>Scrappers can view and accept the assignment</li>
+              <li>Field executives can view and accept the assignment</li>
             </ul>
           </div>
         </form>

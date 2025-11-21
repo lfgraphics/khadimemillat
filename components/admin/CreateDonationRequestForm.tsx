@@ -208,7 +208,7 @@ export const CreateDonationRequestForm: React.FC<CreateDonationRequestFormProps>
             Donation Request Created!
           </CardTitle>
           <CardDescription>
-            The donation request has been created and scrappers have been notified.
+            The donation request has been created and field executives have been notified.
           </CardDescription>
         </CardHeader>
         
@@ -290,10 +290,10 @@ export const CreateDonationRequestForm: React.FC<CreateDonationRequestFormProps>
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-medium text-green-900 dark:text-green-100">
-                  Scrappers Notified
+                  Field Executives Notified
                 </p>
                 <p className="text-xs text-green-700 dark:text-green-300">
-                  {createdRequest.scrapperNotificationsSent} scrapper(s) have been notified about this verified donation request.
+                  {createdRequest.fieldExecutiveNotificationsSent} field executive(s) have been notified about this verified donation request.
                 </p>
               </div>
             </div>
@@ -316,7 +316,7 @@ export const CreateDonationRequestForm: React.FC<CreateDonationRequestFormProps>
         </CardTitle>
         <CardDescription>
           Create a pre-verified donation request for {user.name}. 
-          Scrappers will be automatically notified.
+          Field executives will be automatically notified.
         </CardDescription>
       </CardHeader>
       
@@ -402,7 +402,7 @@ export const CreateDonationRequestForm: React.FC<CreateDonationRequestFormProps>
               disabled={loading}
             />
             <p className="text-xs text-muted-foreground">
-              Optional: Special instructions for scrappers
+              Optional: Special instructions for field executives
             </p>
           </div>
 
@@ -418,7 +418,7 @@ export const CreateDonationRequestForm: React.FC<CreateDonationRequestFormProps>
           <Alert>
             <Clock className="h-4 w-4" />
             <AlertDescription>
-              This request will be created with "Verified" status and all scrappers 
+              This request will be created with "Verified" status and all field executives 
               will be immediately notified with the pickup details.
             </AlertDescription>
           </Alert>

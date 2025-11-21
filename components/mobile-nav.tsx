@@ -240,13 +240,13 @@ export function MobileNav() {
                         </div>
                     </RoleGuard>
 
-                    {/* Scrapper Section */}
-                    <RoleGuard allowedRoles={["scrapper", "admin"]}>
+                    {/* Field Executive Section */}
+                    <RoleGuard allowedRoles={["field_executive", "admin"]}>
                         <div className="mb-6">
-                            <h3 className="mb-2 px-2 text-sm font-semibold text-muted-foreground">Scrapper</h3>
+                            <h3 className="mb-2 px-2 text-sm font-semibold text-muted-foreground">Field Executive</h3>
                             <div className="space-y-1">
                                 <Link
-                                    href="/scrapper/assigned"
+                                    href="/field-executive/assigned"
                                     className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
@@ -447,7 +447,7 @@ export function MobileNav() {
                                 <MessageSquare className="h-4 w-4" />
                                 My Conversations
                             </Link>
-                            <RoleGuard allowedRoles={["admin", "moderator", "scrapper"]}>
+                            <RoleGuard allowedRoles={["admin", "moderator", "field_executive"]}>
                                 <Link
                                     href="/scanner"
                                     className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"

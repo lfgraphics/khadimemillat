@@ -86,7 +86,7 @@ Role: ${user.role.charAt(0).toUpperCase() + user.role.slice(1)}`;
         return 'destructive';
       case 'moderator':
         return 'default';
-      case 'scrapper':
+      case 'field_executive':
         return 'secondary';
       default:
         return 'outline';

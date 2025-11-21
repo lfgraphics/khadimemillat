@@ -8,7 +8,7 @@ export interface CreateUserInput {
   name: string
   phone: string
   email?: string
-  role?: 'user' | 'admin' | 'moderator' | 'scrapper'
+  role?: 'user' | 'admin' | 'moderator' | 'field_executive'
   address?: string
   notifyChannels?: { email?: boolean; whatsapp?: boolean; sms?: boolean }
   allowSynthEmail?: boolean // when true, synthesize email if missing

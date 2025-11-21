@@ -34,7 +34,7 @@ type CollectionRequest = {
   requestedPickupTime?: string;
   actualPickupTime?: string;
   status: string;
-  assignedScrappers?: string[];
+  assignedFieldExecutives?: string[];
   createdAt: string;
   updatedAt: string;
   moderatorNotes?: string;

@@ -35,7 +35,7 @@ const audienceSegmentSchema = new Schema<IAudienceSegment>({
     roles: [{ 
       type: String, 
       required: true,
-      enum: ['admin', 'moderator', 'scrapper', 'user', 'everyone']
+      enum: ['admin', 'moderator', 'field_executive', 'user', 'everyone']
     }],
     locations: [{ type: String, trim: true }],
     activityStatus: { 
@@ -90,7 +90,7 @@ audienceSegmentSchema.pre('save', function(next) {
   }
   
   // Validate role values
-  const validRoles = ['admin', 'moderator', 'scrapper', 'user', 'everyone']
+  const validRoles = ['admin', 'moderator', 'field_executive', 'user', 'everyone']
   const invalidRoles = this.criteria.roles.filter(role => !validRoles.includes(role))
   if (invalidRoles.length > 0) {
     return next(new Error(`Invalid roles: ${invalidRoles.join(', ')}`))
@@ -111,7 +111,7 @@ audienceSegmentSchema.methods.validateCriteria = function(): { isValid: boolean;
   const errors: string[] = []
   
   // Check if roles are valid
-  const validRoles = ['admin', 'moderator', 'scrapper', 'user', 'everyone']
+  const validRoles = ['admin', 'moderator', 'field_executive', 'user', 'everyone']
   const invalidRoles = this.criteria.roles.filter((role: string) => !validRoles.includes(role))
   if (invalidRoles.length > 0) {
     errors.push(`Invalid roles: ${invalidRoles.join(', ')}`)

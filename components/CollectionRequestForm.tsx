@@ -215,7 +215,7 @@ export const CollectionRequestForm: React.FC<CollectionRequestFormProps> = ({
       
       {/* Current Location */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium">Current Location (helps scrapper navigate)</label>
+        <label className="block text-sm font-medium">Current Location (helps field executive navigate)</label>
         <div className="flex gap-2">
           <Button
             type="button"

@@ -58,7 +58,7 @@ const protectedRoutes = [
     },
     {
         matcher: createRouteMatcher(['/api/protected/users(.*)']),
-        allowedRoles: ['admin', 'moderator', 'user', 'scrapper', 'accountant', 'surveyor'],
+        allowedRoles: ['admin', 'moderator', 'user', 'field_executive', 'accountant', 'surveyor'],
         routeName: 'User Management'
     },
     {
@@ -67,18 +67,18 @@ const protectedRoutes = [
         routeName: 'Moderator'
     },
     {
-        matcher: createRouteMatcher(['/scrapper(.*)']),
-        allowedRoles: ['admin', 'scrapper', 'moderator'],
+        matcher: createRouteMatcher(['/field-executive(.*)']),
+        allowedRoles: ['admin', 'field_executive', 'moderator'],
         routeName: 'Scrap Management'
     },
     {
         matcher: createRouteMatcher(['/list-donation(.*)']),
-        allowedRoles: ['admin', 'scrapper', 'moderator'],
+        allowedRoles: ['admin', 'field_executive', 'moderator'],
         routeName: 'List Donation'
     },
     {
         matcher: createRouteMatcher(['/dashboard(.*)']),
-        allowedRoles: ['admin', 'moderator', 'user', 'scrapper'],
+        allowedRoles: ['admin', 'moderator', 'user', 'field_executive'],
         routeName: 'Dashboard'
     },
     {

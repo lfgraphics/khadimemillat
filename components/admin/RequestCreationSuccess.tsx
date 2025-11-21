@@ -18,7 +18,7 @@ export interface CreatedRequest {
   status: 'verified';
   items?: string;
   notes?: string;
-  scrapperNotificationsSent: number;
+  fieldExecutiveNotificationsSent: number;
 }
 
 interface RequestCreationSuccessProps {
@@ -91,7 +91,7 @@ export const RequestCreationSuccess: React.FC<RequestCreationSuccessProps> = ({
           Collection Request Created Successfully!
         </CardTitle>
         <CardDescription>
-          The collection request has been created and scrappers have been notified.
+          The collection request has been created and field executives have been notified.
         </CardDescription>
       </CardHeader>
 
@@ -186,14 +186,14 @@ export const RequestCreationSuccess: React.FC<RequestCreationSuccessProps> = ({
               </Badge>
             </div>
 
-            {/* Scrappers Notified */}
+            {/* Field Executives Notified */}
             <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
               <div className="flex items-center gap-3">
                 <Users className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">Scrappers Notified</span>
+                <span className="font-medium">Field Executives Notified</span>
               </div>
               <Badge variant="secondary">
-                {request.scrapperNotificationsSent} scrappers
+                {request.fieldExecutiveNotificationsSent} field executives
               </Badge>
             </div>
           </div>
@@ -206,9 +206,9 @@ export const RequestCreationSuccess: React.FC<RequestCreationSuccessProps> = ({
           <h3 className="text-lg font-semibold">Next Steps</h3>
           <p className="text-sm text-muted-foreground">
             The collection request has been successfully created and verified. 
-            {request.scrapperNotificationsSent > 0 
-              ? ` ${request.scrapperNotificationsSent} scrappers have been notified and can now view this request.`
-              : " No scrappers were available to notify at this time."
+            {request.fieldExecutiveNotificationsSent > 0 
+              ? ` ${request.fieldExecutiveNotificationsSent} field executives have been notified and can now view this request.`
+              : " No field executives were available to notify at this time."
             }
           </p>
 
@@ -257,14 +257,14 @@ export const RequestCreationSuccess: React.FC<RequestCreationSuccessProps> = ({
                   Request Verified & Active
                 </p>
                 <p className="text-xs text-green-700 dark:text-green-300">
-                  This request has been automatically verified and is now visible to scrappers. 
+                  This request has been automatically verified and is now visible to field executives. 
                   They can assign themselves to collect the items at the scheduled time.
                 </p>
               </div>
             </div>
           </div>
 
-          {request.scrapperNotificationsSent > 0 ? (
+          {request.fieldExecutiveNotificationsSent > 0 ? (
             <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
               <div className="flex items-start gap-3">
                 <div className="rounded-full bg-blue-100 dark:bg-blue-900 p-1">
@@ -272,10 +272,10 @@ export const RequestCreationSuccess: React.FC<RequestCreationSuccessProps> = ({
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                    Scrappers Notified
+                    Field Executives Notified
                   </p>
                   <p className="text-xs text-blue-700 dark:text-blue-300">
-                    {request.scrapperNotificationsSent} scrappers have been notified about this new collection request 
+                    {request.fieldExecutiveNotificationsSent} field executives have been notified about this new collection request 
                     and can now view it in their assigned requests dashboard.
                   </p>
                 </div>
@@ -289,11 +289,11 @@ export const RequestCreationSuccess: React.FC<RequestCreationSuccessProps> = ({
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
-                    No Scrappers Available
+                    No Field Executives Available
                   </p>
                   <p className="text-xs text-amber-700 dark:text-amber-300">
-                    No scrappers were available to notify at this time. The request is still active 
-                    and scrappers will see it when they check their dashboard.
+                    No field executives were available to notify at this time. The request is still active 
+                    and field executives will see it when they check their dashboard.
                   </p>
                 </div>
               </div>

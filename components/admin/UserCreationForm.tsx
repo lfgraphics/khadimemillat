@@ -18,7 +18,7 @@ export interface UserCreationFormData {
   email: string;
   phone: string;
   address?: string;
-  role?: 'user' | 'admin' | 'moderator' | 'scrapper';
+  role?: 'user' | 'admin' | 'moderator' | 'field_executive';
 }
 
 export interface CreatedUserDisplay {
@@ -281,7 +281,7 @@ export const UserCreationForm: React.FC<UserCreationFormProps> = ({
             </Label>
             <Select
               value={form.role}
-              onValueChange={(value: 'user' | 'admin' | 'moderator' | 'scrapper') => 
+              onValueChange={(value: 'user' | 'admin' | 'moderator' | 'field_executive') => 
                 updateField("role", value)
               }
               disabled={loading}
@@ -291,7 +291,7 @@ export const UserCreationForm: React.FC<UserCreationFormProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="user">User</SelectItem>
-                <SelectItem value="scrapper">Scrapper</SelectItem>
+                <SelectItem value="field_executive">Field Executive</SelectItem>
                 <SelectItem value="moderator">Moderator</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
               </SelectContent>

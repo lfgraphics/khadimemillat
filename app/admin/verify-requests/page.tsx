@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { PhoneInput } from '@/components/ui/phone-input'
-import ScrapperAssignmentModal from '@/components/ScrapperAssignmentModal'
+import FieldExecutiveAssignmentModal from '@/components/FieldExecutiveAssignmentModal'
 import { Loader2, Phone, MapPin, Calendar, User, Navigation } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -78,7 +78,7 @@ export default function VerifyRequestsPage() {
   const autoAssign = async (id: string) => {
     setAutoAssigningId(id)
     try {
-      const res = await fetch(`/api/protected/collection-requests/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'assign', scrapperIds: [] }) })
+      const res = await fetch(`/api/protected/collection-requests/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'assign', fieldExecutiveIds: [] }) })
       if (!res.ok) throw new Error('Auto-assign failed')
       // remove from list after assignment attempt (or refresh list)
       setItems(prev => prev.filter(p => p._id !== id))
@@ -218,7 +218,7 @@ export default function VerifyRequestsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <ScrapperAssignmentModal
+      <FieldExecutiveAssignmentModal
         open={!!assignDialogId}
         onOpenChange={(o)=> { if(!o) setAssignDialogId(null) }}
         requestId={assignDialogId}

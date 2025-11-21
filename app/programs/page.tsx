@@ -181,16 +181,16 @@ export default function ProgramsPage() {
             title: "Neki Bank — Your Account of Eternal Rewards",
             subtitle: "The Everyday Charity System",
             color: "from-amber-500 to-yellow-500",
-            description: "Every coin has a purpose, every rupee has potential. At Khadim-e-Millat Welfare Foundation, the Golak System—lovingly known as the Neki Bank—turns daily generosity into lasting impact. It's not a bank of this world, but one of the Hereafter, where every deposit of kindness becomes eternal profit.",
+            description: "Every coin has a purpose, every rupee has potential. At Khadim-e-Millat Welfare Foundation, the Gullak System—lovingly known as the Neki Bank—turns daily generosity into lasting impact. It's not a bank of this world, but one of the Hereafter, where every deposit of kindness becomes eternal profit.",
             details: [
-                "Each Neki Bank (Golak) is a small metal or digital box with a big mission. It sits quietly in homes, shops, offices, and schools, waiting for moments of goodness.",
+                "Each Neki Bank (Gullak) is a small metal or digital box with a big mission. It sits quietly in homes, shops, offices, and schools, waiting for moments of goodness.",
                 "A child saving a rupee after buying candy, a family setting aside a portion before a meal, a traveller giving thanks before a safe journey — every small act becomes part of continuous charity.",
-                "Once full, each Golak is collected, opened in the presence of its caretaker, counted, logged, and resealed for the next round with complete transparency.",
+                "Once full, each Gullak is collected, opened in the presence of its caretaker, counted, logged, and resealed for the next round with complete transparency.",
                 "Faith teaches that charity does not reduce wealth—it multiplies it. Through the Neki Bank, we turn that belief into a living practice."
             ],
             quote: "Where your coins become currency for the Hereafter.",
-            note: "Your Golak doesn't just collect coins—it collects blessings.",
-            cta: "Register a Golak",
+            note: "Your Gullak doesn't just collect coins—it collects blessings.",
+            cta: "Register a Gullak",
             ctaLink: "#golak-registration"
         },
         {
@@ -429,8 +429,8 @@ export default function ProgramsPage() {
                                     {
                                         icon: Coins,
                                         title: "Join the Neki Bank Network",
-                                        description: "Host a Golak in your home, office, or shop. Your personal bank of blessings—where every small coin becomes lasting charity.",
-                                        cta: "Register a Golak",
+                                        description: "Host a Gullak in your home, office, or shop. Your personal bank of blessings—where every small coin becomes lasting charity.",
+                                        cta: "Register a Gullak",
                                         color: "from-amber-500 to-yellow-500",
                                         note: "You may not remember each coin you gave, but heaven does."
                                     },

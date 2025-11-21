@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 // Audience criteria schema
 const audienceCriteriaSchema = z.object({
-  roles: z.array(z.enum(['admin', 'moderator', 'scrapper', 'user', 'everyone'])).min(1, "At least one role is required"),
+  roles: z.array(z.enum(['admin', 'moderator', 'field_executive', 'user', 'everyone'])).min(1, "At least one role is required"),
   locations: z.array(z.string().min(1, "Location cannot be empty")).optional(),
   activityStatus: z.enum(['active', 'inactive', 'new']).optional(),
   customFilters: z.record(z.string(), z.any()).optional(),
@@ -29,7 +29,7 @@ export const updateSegmentSchema = createSegmentSchema.partial()
 export const segmentFiltersSchema = z.object({
   createdBy: z.string().optional(),
   isShared: z.boolean().optional(),
-  roles: z.array(z.enum(['admin', 'moderator', 'scrapper', 'user', 'everyone'])).optional(),
+  roles: z.array(z.enum(['admin', 'moderator', 'field_executive', 'user', 'everyone'])).optional(),
   locations: z.array(z.string()).optional(),
   search: z.string().optional(),
   page: z.coerce.number().min(1).default(1),
@@ -40,7 +40,7 @@ export const segmentFiltersSchema = z.object({
 
 // User filtering schema for advanced targeting
 export const userFilterSchema = z.object({
-  roles: z.array(z.enum(['admin', 'moderator', 'scrapper', 'user', 'everyone'])).optional(),
+  roles: z.array(z.enum(['admin', 'moderator', 'field_executive', 'user', 'everyone'])).optional(),
   locations: z.array(z.string()).optional(),
   activityStatus: z.enum(['active', 'inactive', 'new']).optional(),
   dateFrom: z.string().datetime().optional(),

@@ -86,12 +86,12 @@ export async function POST(req: NextRequest) {
       status: 'verified' // Pre-verified as per requirements
     })
 
-    // Get all scrappers for notification
-    const scrappers = await collectionRequestService.getAllScrappers()
-    const scrapperIds = scrappers.map((scrapper: any) => scrapper.id)
+    // Get all field executives for notification
+    const fieldExecutives = await collectionRequestService.getAllFieldExecutives()
+    const fieldExecutiveIds = fieldExecutives.map((fieldExecutive: any) => fieldExecutive.id)
 
-    // Send notifications to all scrappers with detailed information
-    if (scrapperIds.length > 0) {
+    // Send notifications to all field executives with detailed information
+    if (fieldExecutiveIds.length > 0) {
       const pickupDate = new Date(pickupTime).toLocaleString('en-US', {
         weekday: 'short',
         year: 'numeric',
@@ -101,10 +101,10 @@ export async function POST(req: NextRequest) {
         minute: '2-digit'
       })
 
-      await notificationService.notifyUsers(scrapperIds, {
+      await notificationService.notifyUsers(fieldExecutiveIds, {
         title: 'New Verified Collection Request',
         body: `${userName} - ${pickupDate}\nAddress: ${userAddress}\nPhone: ${userPhone}${items ? `\nItems: ${items}` : ''}`,
-        url: '/scrapper/assigned',
+        url: '/field-executive/assigned',
         type: 'collection_assigned'
       })
     }
@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
         status: 'verified',
         items: items || 'Not specified',
         notes: notes || '',
-        scrapperNotificationsSent: scrapperIds.length
+        fieldExecutiveNotificationsSent: fieldExecutiveIds.length
       }
     })
 

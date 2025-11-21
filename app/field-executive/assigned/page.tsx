@@ -22,7 +22,7 @@ interface RequestItem {
   }
 }
 
-export default function ScrapperAssignedPage() {
+export default function FieldExecutiveAssignedPage() {
   const [items, setItems] = useState<RequestItem[]>([])
   const [loading, setLoading] = useState(false)
   const [collectingId, setCollectingId] = useState<string | null>(null)

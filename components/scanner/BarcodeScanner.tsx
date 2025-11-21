@@ -155,7 +155,7 @@ export default function BarcodeScanner({ onDecoded }: Props) {
             </div>
           )}
           <div className="flex gap-2 pt-2">
-            <Button variant="secondary" onClick={() => router.push(`/app/scrapper/items/${lookup.item?._id}`)}>View full details</Button>
+            <Button variant="secondary" onClick={() => router.push(`/app/field-executive/items/${lookup.item?._id}`)}>View full details</Button>
             <Button onClick={() => { setLookup(null); setLookupError(null) }}>Scan another</Button>
           </div>
         </div>

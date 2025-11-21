@@ -58,7 +58,7 @@ interface Donor {
 
 const CONDITIONS = ["new", "good", "repairable", "scrap", "not applicable"] as const
 type Condition = typeof CONDITIONS[number]
-type UserRole = 'scrapper' | 'moderator' | 'admin' | 'user'
+type UserRole = 'field_executive' | 'moderator' | 'admin' | 'user'
 
 interface MultiStepItemDialogProps {
     open: boolean
@@ -116,13 +116,13 @@ const STEP_CONFIGS: StepConfig[] = [
         id: 'item-selection',
         title: 'Select Item & Condition',
         description: 'Choose the item type and specify its condition',
-        requiredRoles: ['scrapper', 'moderator', 'admin']
+        requiredRoles: ['field_executive', 'moderator', 'admin']
     },
     {
         id: 'photo-upload',
         title: 'Upload Photos',
         description: 'Add photos to document the item condition',
-        requiredRoles: ['scrapper', 'moderator', 'admin']
+        requiredRoles: ['field_executive', 'moderator', 'admin']
     },
     {
         id: 'marketplace-listing',
@@ -134,7 +134,7 @@ const STEP_CONFIGS: StepConfig[] = [
         id: 'preview',
         title: 'Review & Confirm',
         description: 'Review all details before adding the item',
-        requiredRoles: ['scrapper', 'moderator', 'admin']
+        requiredRoles: ['field_executive', 'moderator', 'admin']
     }
 ]
 
@@ -688,7 +688,7 @@ const PhotoUploadStep: React.FC<PhotoUploadStepProps> = ({
     validation
 }) => {
     // Determine which photo types are visible based on role
-    const isScrapper = userRole === 'scrapper'
+    const isFieldExecutive = userRole === 'field_executive'
     const isModeratorOrAdmin = userRole === 'moderator' || userRole === 'admin'
 
     // Handle before photo upload
@@ -707,11 +707,11 @@ const PhotoUploadStep: React.FC<PhotoUploadStepProps> = ({
     const handlePhotoRemove = useCallback((photoUrl: string, photoType: 'before' | 'after') => {
         // Check if removing this photo would violate minimum requirements
         const wouldViolateMinimum =
-            (photoType === 'before' && isScrapper && formData.before.length === 1) ||
+            (photoType === 'before' && isFieldExecutive && formData.before.length === 1) ||
             (photoType === 'after' && isModeratorOrAdmin && formData.after.length === 1)
 
         if (wouldViolateMinimum) {
-            const roleText = isScrapper ? 'scrappers' : 'moderators and admins'
+            const roleText = isFieldExecutive ? 'field executives' : 'moderators and admins'
             const photoTypeText = photoType === 'before' ? 'before' : 'after'
             toast.error(`Cannot remove the last ${photoTypeText} photo. At least 1 ${photoTypeText} photo is required for ${roleText}.`)
             return
@@ -725,7 +725,7 @@ const PhotoUploadStep: React.FC<PhotoUploadStepProps> = ({
             const newAfterPhotos = formData.after.filter(url => url !== photoUrl)
             onUpdate({ after: newAfterPhotos })
         }
-    }, [formData, onUpdate, isScrapper, isModeratorOrAdmin])
+    }, [formData, onUpdate, isFieldExecutive, isModeratorOrAdmin])
 
     // Enhanced file selector error handling with role-specific messages
     const handleFileError = useCallback((error: any) => {
@@ -754,7 +754,7 @@ const PhotoUploadStep: React.FC<PhotoUploadStepProps> = ({
 
         // Show error as toast
         toast.error(errorMessage)
-    }, [isScrapper, isModeratorOrAdmin])
+    }, [isFieldExecutive, isModeratorOrAdmin])
 
     return (
         <div className="space-y-6">
@@ -769,7 +769,7 @@ const PhotoUploadStep: React.FC<PhotoUploadStepProps> = ({
                             Photo Requirements for {userRole.charAt(0).toUpperCase() + userRole.slice(1)}s
                         </h4>
                         <p className="text-sm text-blue-800">
-                            {isScrapper && 'Upload "before" photos to document the initial condition of collected items. At least 1 photo is required.'}
+                            {isFieldExecutive && 'Upload "before" photos to document the initial condition of collected items. At least 1 photo is required.'}
                             {isModeratorOrAdmin && 'Upload "before" and "after" photos to document both initial and processed conditions. At least 1 after photo is required.'}
                         </p>
                     </div>
@@ -777,7 +777,7 @@ const PhotoUploadStep: React.FC<PhotoUploadStepProps> = ({
             </div>
 
             {/* Before Photos Section - For All Roles */}
-            {(isScrapper || isModeratorOrAdmin) && (
+            {(isFieldExecutive || isModeratorOrAdmin) && (
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <Label className="text-sm font-medium">
@@ -823,8 +823,8 @@ const PhotoUploadStep: React.FC<PhotoUploadStepProps> = ({
                                         <button
                                             onClick={() => handlePhotoRemove(photoUrl, 'before')}
                                             className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hoact:opacity-100 transition-opacity hoact:bg-destructive/80"
-                                            title={formData.before.length === 1 && isScrapper ? 'Cannot remove last before photo (required)' : 'Remove photo'}
-                                            disabled={formData.before.length === 1 && isScrapper}
+                                            title={formData.before.length === 1 && isFieldExecutive ? 'Cannot remove last before photo (required)' : 'Remove photo'}
+                                            disabled={formData.before.length === 1 && isFieldExecutive}
                                         >
                                             <X className="w-3 h-3" />
                                         </button>
@@ -926,8 +926,8 @@ const PhotoUploadStep: React.FC<PhotoUploadStepProps> = ({
                     <li>• Capture multiple angles to show item condition</li>
                     <li>• Maximum file size: 10MB per photo</li>
                     <li>• Supported formats: JPEG, PNG, WebP</li>
-                    <li>• Maximum {isScrapper ? '10 before' : '10 before and 10 after'} photos allowed</li>
-                    {isScrapper && (
+                    <li>• Maximum {isFieldExecutive ? '10 before' : '10 before and 10 after'} photos allowed</li>
+                    {isFieldExecutive && (
                         <>
                             <li>• Focus on documenting the initial condition as received</li>
                             <li>• Include any damage, wear, or notable features</li>
@@ -1297,17 +1297,17 @@ export const MultiStepItemDialog: React.FC<MultiStepItemDialogProps> = ({
 
             case 'photo-upload':
                 const photoErrors: string[] = []
-                const isScrapper = currentRole === 'scrapper'
+                const isFieldExecutive = currentRole === 'field_executive'
                 const isModeratorOrAdmin = currentRole === 'moderator' || currentRole === 'admin'
 
                 // Role-based photo validation
-                if (isScrapper) {
+                if (isFieldExecutive) {
                     if (formData.photos.before.length === 0) {
-                        photoErrors.push('At least 1 before photo is required for scrappers')
+                        photoErrors.push('At least 1 before photo is required for field executives')
                     }
-                    // Scrappers shouldn't have after photos
+                    // Field executives shouldn't have after photos
                     if (formData.photos.after.length > 0) {
-                        photoErrors.push('Scrappers cannot upload after photos')
+                        photoErrors.push('Field executives cannot upload after photos')
                     }
                 }
 
@@ -1400,10 +1400,10 @@ export const MultiStepItemDialog: React.FC<MultiStepItemDialogProps> = ({
                 }
 
                 // Role-based photo validation
-                const isScrapperRole = currentRole === 'scrapper'
+                const isFieldExecutiveRole = currentRole === 'field_executive'
                 const isModeratorOrAdminRole = currentRole === 'moderator' || currentRole === 'admin'
 
-                if (isScrapperRole && formData.photos.before.length === 0) {
+                if (isFieldExecutiveRole && formData.photos.before.length === 0) {
                     previewErrors.push('At least 1 before photo is required')
                 }
 

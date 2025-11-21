@@ -164,7 +164,7 @@ export async function getConversationMessages({ conversationId, userId }: { conv
   return messages
 }
 
-export async function sendMessage(params: { conversationId: string; senderId: string; senderName: string; senderRole: 'user' | 'moderator' | 'admin' | 'scrapper'; content: string; type?: 'text' | 'system' | 'payment_request' | 'payment_completed'; metadata?: any }) {
+export async function sendMessage(params: { conversationId: string; senderId: string; senderName: string; senderRole: 'user' | 'moderator' | 'admin' | 'field_executive'; content: string; type?: 'text' | 'system' | 'payment_request' | 'payment_completed'; metadata?: any }) {
   await connectDB()
   const { conversationId, senderId, senderName, senderRole, content, type = 'text', metadata } = params
   if (!Types.ObjectId.isValid(conversationId)) throw new Error('Invalid conversationId')

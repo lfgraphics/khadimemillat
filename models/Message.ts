@@ -4,7 +4,7 @@ export interface IMessage extends Document {
   conversationId: mongoose.Types.ObjectId
   senderId: string
   senderName: string
-  senderRole?: 'user' | 'moderator' | 'admin' | 'system' | 'scrapper'
+  senderRole?: 'user' | 'moderator' | 'admin' | 'system' | 'field_executive'
   content: string
   type: 'text' | 'system' | 'payment_request' | 'payment_completed'
   metadata?: { amount?: number; razorpayOrderId?: string; razorpayPaymentId?: string; note?: string }
@@ -16,7 +16,7 @@ const messageSchema = new Schema<IMessage>({
   conversationId: { type: Schema.Types.ObjectId, ref: 'Conversation', required: true },
   senderId: { type: String, required: true },
   senderName: { type: String, required: true },
-  senderRole: { type: String, enum: ['user', 'moderator', 'admin', 'system', 'scrapper'] },
+  senderRole: { type: String, enum: ['user', 'moderator', 'admin', 'system', 'field_executive'] },
   content: { type: String, required: true },
   type: { type: String, enum: ['text', 'system', 'payment_request', 'payment_completed'], default: 'text' },
   metadata: {
