@@ -8,8 +8,21 @@ export async function GET(req: Request) {
     const limit = Number(url.searchParams.get("limit") || "20");
     const search = url.searchParams.get("q") || undefined;
     const condition = url.searchParams.get("condition") || undefined;
+    const priceMin = url.searchParams.get("priceMin") ? Number(url.searchParams.get("priceMin")) : undefined;
+    const priceMax = url.searchParams.get("priceMax") ? Number(url.searchParams.get("priceMax")) : undefined;
+    const sortBy = url.searchParams.get("sortBy") as any || undefined;
+    const availability = url.searchParams.get("availability") || undefined;
 
-    const result = await listPublicItems({ page, limit, search, condition });
+    const result = await listPublicItems({ 
+        page, 
+        limit, 
+        search, 
+        condition, 
+        priceMin, 
+        priceMax, 
+        sortBy, 
+        availability 
+    });
     return NextResponse.json(result);
 }
 

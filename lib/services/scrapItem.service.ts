@@ -4,7 +4,16 @@ import ScrapItem from "../../models/ScrapItem";
 import "../../models/DonationEntry";
 import { Types } from "mongoose";
 
-export type PaginateOpts = { page?: number, limit?: number, search?: string, condition?: string };
+export type PaginateOpts = { 
+    page?: number, 
+    limit?: number, 
+    search?: string, 
+    condition?: string,
+    priceMin?: number,
+    priceMax?: number,
+    sortBy?: 'newest' | 'oldest' | 'price-low' | 'price-high' | 'name-asc' | 'name-desc',
+    availability?: 'all' | 'available' | 'sold'
+};
 
 export async function listPublicItems(opts: PaginateOpts = {}) {
     await connectDB();
@@ -15,25 +24,87 @@ export async function listPublicItems(opts: PaginateOpts = {}) {
     const query: any = { 
         'marketplaceListing.listed': true
     };
+
+    // Search filter
     if (opts.search) {
-        query.name = { $regex: opts.search, $options: "i" };
+        query.$or = [
+            { name: { $regex: opts.search, $options: "i" } },
+            { description: { $regex: opts.search, $options: "i" } }
+        ];
     }
-    if (opts.condition) {
+
+    // Condition filter
+    if (opts.condition && opts.condition !== 'all') {
         query.condition = opts.condition;
+    }
+
+    // Price range filter
+    if (opts.priceMin !== undefined || opts.priceMax !== undefined) {
+        query['marketplaceListing.salePrice'] = {};
+        if (opts.priceMin !== undefined) {
+            query['marketplaceListing.salePrice'].$gte = opts.priceMin;
+        }
+        if (opts.priceMax !== undefined) {
+            query['marketplaceListing.salePrice'].$lte = opts.priceMax;
+        }
+    }
+
+    // Availability filter
+    if (opts.availability === 'available') {
+        query['marketplaceListing.sold'] = false;
+        query.availableQuantity = { $gt: 0 };
+    } else if (opts.availability === 'sold') {
+        query['marketplaceListing.sold'] = true;
+    }
+
+    // Sort options
+    let sortQuery: any = { createdAt: -1 }; // default
+    switch (opts.sortBy) {
+        case 'oldest':
+            sortQuery = { createdAt: 1 };
+            break;
+        case 'price-low':
+            sortQuery = { 'marketplaceListing.salePrice': 1 };
+            break;
+        case 'price-high':
+            sortQuery = { 'marketplaceListing.salePrice': -1 };
+            break;
+        case 'name-asc':
+            sortQuery = { name: 1 };
+            break;
+        case 'name-desc':
+            sortQuery = { name: -1 };
+            break;
+        case 'newest':
+        default:
+            sortQuery = { createdAt: -1 };
+            break;
     }
 
     const [items, total] = await Promise.all([
         ScrapItem.find(query)
             .select("name _id photos marketplaceListing condition quantity availableQuantity createdAt description")
             .populate('scrapEntry', 'donor status createdAt')
-            .sort({ createdAt: -1 })
+            .sort(sortQuery)
             .skip(skip)
             .limit(limit)
             .lean(),
         ScrapItem.countDocuments(query)
     ]);
 
-    return { items, total, page, limit };
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    return { 
+        items, 
+        total, 
+        page, 
+        limit, 
+        totalPages,
+        hasNextPage,
+        hasPrevPage
+    };
 }
 
 export async function getItemById(id: string) {
