@@ -18,7 +18,7 @@ import { fetchWithRetry, DEFAULT_API_RETRY_OPTIONS } from "@/lib/utils/retry";
 export interface CreatedUserDisplay {
   id: string;
   name: string;
-  email: string;
+  email?: string;
   username: string;
   password: string;
   phone: string;

@@ -12,7 +12,7 @@ import { toast } from "sonner";
 export interface CreatedUserDisplay {
   id: string;
   name: string;
-  email: string;
+  email?: string;
   username: string;
   password: string;
   phone: string;

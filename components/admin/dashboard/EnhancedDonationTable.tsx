@@ -66,7 +66,7 @@ function useSwipeGesture(onSwipeLeft?: () => void, onSwipeRight?: () => void) {
     if (!touchStart || !isDragging) return
 
     setIsDragging(false)
-    
+
     if (dragOffset < -minSwipeDistance) {
       onSwipeLeft?.()
       setDragOffset(-120)
@@ -121,13 +121,13 @@ function SwipeableCard({ row, onViewDetails, onQuickAction, loading, selectedId 
   }
 
   return (
-    <div 
+    <div
       className="relative overflow-hidden rounded-lg border bg-card hover-lift transition-all duration-300 group focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
       role="article"
       aria-label={`Donation from ${row.donor?.name || 'Unknown donor'}`}
     >
       {/* Action buttons revealed on swipe */}
-      <div 
+      <div
         className="absolute right-0 top-0 h-full flex items-center bg-muted/50 backdrop-blur-sm transition-all duration-300"
         role="group"
         aria-label="Quick actions"
@@ -165,21 +165,19 @@ function SwipeableCard({ row, onViewDetails, onQuickAction, loading, selectedId 
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex-1 min-w-0">
-              <h3 
+              <h3
                 className="font-medium text-foreground truncate text-base"
                 id={`donation-${row.id}-title`}
               >
                 {row.donor?.name || row.donor?.id || 'Unknown'}
               </h3>
               {row.donor?.email && (
-                {row.donor.email && (
-                  <p 
-                    className="text-sm text-muted-foreground truncate mt-1"
-                    id={`donation-${row.id}-email`}
-                  >
-                    {row.donor.email}
-                  </p>
-                )}
+                <p
+                  className="text-sm text-muted-foreground truncate mt-1"
+                  id={`donation-${row.id}-email`}
+                >
+                  {row.donor.email}
+                </p>
               )}
             </div>
             <div className="flex items-center gap-2 ml-3">
@@ -203,41 +201,41 @@ function SwipeableCard({ row, onViewDetails, onQuickAction, loading, selectedId 
               </Button>
             </div>
           </div>
-          
+
           <div className="flex items-center justify-between text-sm mb-2">
             <div className="flex items-center gap-2" role="group" aria-label="Donation status and item count">
-              <Badge 
-                variant="outline" 
+              <Badge
+                variant="outline"
                 className="text-xs capitalize"
                 aria-label={generateAriaLabel(row.status || 'Unknown', 'donation status', 'badge')}
               >
                 {row.status || 'Unknown'}
               </Badge>
-              <span 
+              <span
                 className="text-muted-foreground"
                 aria-label={`${row.itemsCount || 0} items in this donation`}
               >
                 {row.itemsCount || 0} items
               </span>
             </div>
-            
+
             {row.createdAt && (
               <span className="text-xs text-muted-foreground">
                 {new Date(row.createdAt).toLocaleDateString()}
               </span>
             )}
           </div>
-          
+
           {(row.validItemsCount !== undefined || row.invalidItemsCount !== undefined) && (
-            <div 
-              className="flex items-center gap-3 text-xs" 
-              role="group" 
+            <div
+              className="flex items-center gap-3 text-xs"
+              role="group"
               aria-label="Item validation status"
             >
               {row.validItemsCount !== undefined && (
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-green-500" aria-hidden="true"></div>
-                  <span 
+                  <span
                     className="text-green-600 font-medium"
                     aria-label={`${row.validItemsCount} valid items`}
                   >
@@ -248,7 +246,7 @@ function SwipeableCard({ row, onViewDetails, onQuickAction, loading, selectedId 
               {row.invalidItemsCount !== undefined && row.invalidItemsCount > 0 && (
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-red-500" aria-hidden="true"></div>
-                  <span 
+                  <span
                     className="text-red-600 font-medium"
                     aria-label={`${row.invalidItemsCount} invalid items`}
                   >
@@ -287,7 +285,7 @@ export default function EnhancedDonationTable({
     return (
       <div className="space-y-3 stagger-children">
         {rows.map((row, index) => (
-          <div 
+          <div
             key={row.id}
             style={{ '--stagger-delay': index } as React.CSSProperties}
             className="animate-fade-in-up"
@@ -301,7 +299,7 @@ export default function EnhancedDonationTable({
             />
           </div>
         ))}
-        
+
         {rows.length === 0 && (
           <Card className="animate-fade-in-up">
             <CardContent className="p-8 text-center">
@@ -345,8 +343,8 @@ export default function EnhancedDonationTable({
             </TableHeader>
             <TableBody>
               {rows.map((row, index) => (
-                <TableRow 
-                  key={row.id} 
+                <TableRow
+                  key={row.id}
                   className="hoact:bg-muted/50 transition-all duration-200 cursor-pointer group hover-lift animate-fade-in-up focus-within:bg-muted/30"
                   style={{ animationDelay: `${index * 50}ms` }}
                   onClick={() => onViewDetails(row.id)}
@@ -444,7 +442,7 @@ export default function EnhancedDonationTable({
                   </TableCell>
                 </TableRow>
               ))}
-              
+
               {rows.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-12">
