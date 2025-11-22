@@ -21,11 +21,17 @@ export async function POST(req: NextRequest) {
         const { sessionClaims } = getAuth(req) as any
         const body = await req.json()
         const { type, amount, referenceId, email, phone, receiptPreferences } = body || {}
-        if (!type || !amount || !referenceId) {
-            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+        if (!type) {
+            return NextResponse.json({ error: 'Payment type is required' }, { status: 400 })
+        }
+        if (!amount) {
+            return NextResponse.json({ error: 'Amount is required' }, { status: 400 })
+        }
+        if (!referenceId) {
+            return NextResponse.json({ error: 'Reference ID is required' }, { status: 400 })
         }
         if (typeof amount !== 'number' || amount <= 0) {
-            return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
+            return NextResponse.json({ error: 'Amount must be a positive number' }, { status: 400 })
         }
 
         await connectDB()
@@ -197,6 +203,27 @@ export async function POST(req: NextRequest) {
         })
     } catch (e: any) {
         console.error('[RAZORPAY_CREATE_ORDER]', e)
-        return NextResponse.json({ error: e.message || 'Failed to create order' }, { status: 500 })
+        
+        // Provide more specific error messages
+        let errorMessage = 'Failed to create payment order'
+        
+        if (e.message) {
+            if (e.message.includes('amount')) {
+                errorMessage = 'Invalid amount provided for payment'
+            } else if (e.message.includes('currency')) {
+                errorMessage = 'Invalid currency specified'
+            } else if (e.message.includes('receipt')) {
+                errorMessage = 'Invalid receipt format'
+            } else if (e.message.includes('key')) {
+                errorMessage = 'Payment gateway configuration error'
+            } else {
+                errorMessage = `Payment error: ${e.message}`
+            }
+        }
+        
+        return NextResponse.json({ 
+            error: errorMessage,
+            details: process.env.NODE_ENV === 'development' ? e.message : undefined
+        }, { status: 500 })
     }
 }

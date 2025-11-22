@@ -110,7 +110,6 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
     script.async = true
     script.onload = () => setRazorpayReady(true)
     script.onerror = () => {
-      console.error('Failed to load Razorpay')
       setRazorpayReady(false)
     }
     document?.body.appendChild(script)
@@ -251,21 +250,20 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
               body: JSON.stringify(updateData)
             })
           } catch (profileError) {
-            console.warn('[PROFILE_UPDATE_FAILED]', profileError)
             // Don't fail donation if profile update fails
           }
         }
       }
 
-      const response = await fetch(`/api/public/campaigns/${campaignSlug}/donations`, {
+      const response = await fetch(`/api/public/programs/${campaignSlug}/donations`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           donorName: donorName.trim(),
-          donorEmail: donorEmail.trim(),
-          donorPhone: donorPhone.trim() || undefined,
+          donorEmail: donorEmail.trim() || undefined,
+          donorPhone: donorPhone.trim(),
           amount,
           message: message.trim() || undefined,
           wants80GReceipt,
@@ -284,23 +282,35 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to submit donation')
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        let errorMessage = errorData.error || 'Failed to submit donation'
+        
+        // Provide more specific error messages
+        if (errorMessage.includes('Missing required fields')) {
+          errorMessage = 'Please fill in all required fields: Name, Phone Number, and Amount'
+        } else if (errorMessage.includes('PAN number')) {
+          errorMessage = 'Valid PAN number is required for 80G receipt (format: ABCDE1234F)'
+        } else if (errorMessage.includes('Complete address')) {
+          errorMessage = 'Complete address (Address, City, State, Pincode) is required for 80G receipt'
+        }
+        
+        throw new Error(errorMessage)
       }
 
       const donation = await response.json()
 
       // Create Razorpay order
       if (!razorpayReady) throw new Error('Payment gateway is not ready. Please try again.')
+      
       const orderRes = await fetch('/api/razorpay/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'donation', 
           amount, 
-          referenceId: donation._id, 
-          email: donorEmail.trim(), 
-          phone: donorPhone.trim() || undefined,
+          referenceId: donation.donationId || donation._id, 
+          email: donorEmail.trim() || undefined, 
+          phone: donorPhone.trim(),
           receiptPreferences: {
             email: receiptViaEmail,
             sms: receiptViaSMS,
@@ -308,9 +318,22 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
           }
         })
       })
+      
       if (!orderRes.ok) {
-        const er = await orderRes.json().catch(() => ({}))
-        throw new Error(er.error || 'Failed to create payment order')
+        const errorData = await orderRes.json().catch(() => ({ error: 'Unknown payment error' }))
+        
+        let errorMessage = errorData.error || 'Failed to create payment order'
+        
+        // Provide user-friendly error messages
+        if (errorMessage.includes('required fields')) {
+          errorMessage = 'Missing required information for payment. Please check all fields are filled.'
+        } else if (errorMessage.includes('amount')) {
+          errorMessage = 'Invalid donation amount. Please enter a valid amount.'
+        } else if (errorMessage.includes('Reference ID')) {
+          errorMessage = 'Donation record error. Please try submitting again.'
+        }
+        
+        throw new Error(errorMessage)
       }
       const { orderId, amount: amtPaise, currency, keyId } = await orderRes.json()
 
@@ -329,7 +352,11 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                type: 'donation', orderId: resp.razorpay_order_id, paymentId: resp.razorpay_payment_id, signature: resp.razorpay_signature, referenceId: donation._id
+                type: 'donation', 
+                orderId: resp.razorpay_order_id, 
+                paymentId: resp.razorpay_payment_id, 
+                signature: resp.razorpay_signature, 
+                referenceId: donation.donationId || donation._id
               })
             })
             if (verifyRes.status === 202) {
@@ -337,7 +364,7 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
               // Redirect to thank you page even for pending status
               toast.loading('Redirecting to confirmation page...', { id: 'redirect-loading' })
               setTimeout(() => {
-                window.location.href = `/thank-you?donationId=${donation._id}&paymentId=${resp.razorpay_payment_id}`
+                window.location.href = `/thank-you?donationId=${donation.donationId || donation._id}&paymentId=${resp.razorpay_payment_id}`
               }, 2000)
               return
             }
@@ -350,16 +377,14 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
             toast.success('Donation completed successfully! Thank you for your support.')
             toast.loading('Redirecting to confirmation page...', { id: 'redirect-loading' })
             setTimeout(() => {
-              window.location.href = `/thank-you?donationId=${donation._id}&paymentId=${resp.razorpay_payment_id}`
+              window.location.href = `/thank-you?donationId=${donation.donationId || donation._id}&paymentId=${resp.razorpay_payment_id}`
             }, 1500)
           } catch (err) {
-            console.error('[VERIFY_PAYMENT_ERROR]', err)
             toast.error(err instanceof Error ? err.message : 'Payment verification failed')
           }
         }
       })
       rzp.on('payment.failed', (resp: any) => {
-        console.error('[PAYMENT_FAILED]', resp.error)
         toast.error(resp.error?.description || 'Payment failed. Please try again.')
       })
       rzp.open()
@@ -367,7 +392,6 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
       // In production, webhook also confirms payment
 
     } catch (error) {
-      console.error('Error submitting donation:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to submit donation. Please try again.')
     } finally {
       setIsSubmitting(false)
@@ -459,7 +483,6 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
             value={donorEmail}
             onChange={(e) => handleEmailChange(e.target.value)}
             placeholder={user ? "Your email (optional)" : "Enter your email (optional)"}
-            required
             disabled={!!user && !allowEditProfileFields}
             className="text-sm"
           />

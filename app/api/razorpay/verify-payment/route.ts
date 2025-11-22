@@ -28,7 +28,16 @@ export async function POST(req: NextRequest) {
         const body = await req.json()
         const { type, orderId, paymentId, signature, referenceId } = body || {}
         if (!type || !orderId || !paymentId || !signature || !referenceId) {
-            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+            const missing = []
+            if (!type) missing.push('type')
+            if (!orderId) missing.push('orderId')
+            if (!paymentId) missing.push('paymentId')
+            if (!signature) missing.push('signature')
+            if (!referenceId) missing.push('referenceId')
+            
+            return NextResponse.json({ 
+                error: `Missing required fields: ${missing.join(', ')}`
+            }, { status: 400 })
         }
 
         await connectDB()

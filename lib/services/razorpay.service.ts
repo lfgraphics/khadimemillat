@@ -21,7 +21,7 @@ export async function createDonationOrder(params: {
   amount: number; 
   currency: Currency; 
   donationId: string; 
-  donorEmail: string; 
+  donorEmail?: string; 
   donorPhone?: string;
   receiptPreferences?: {
     email?: boolean;
@@ -37,7 +37,7 @@ export async function createDonationOrder(params: {
     notes: {
       type: 'donation',
       donationId: params.donationId,
-      email: params.donorEmail,
+      email: params.donorEmail || '',
       phone: params.donorPhone || ''
     }
   }

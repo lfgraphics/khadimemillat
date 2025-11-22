@@ -29,7 +29,13 @@ export async function POST(
     } = body
 
     if (!donorName || !amount || amount <= 0) {
-      return NextResponse.json({ error: 'Missing required fields or invalid amount' }, { status: 400 })
+      return NextResponse.json({ error: 'Missing required fields: Name and Amount are required' }, { status: 400 })
+    }
+
+    if (!donorPhone) {
+      return NextResponse.json({
+        error: 'Phone number is required'
+      }, { status: 400 })
     }
 
     // Validate 80G requirements
@@ -95,7 +101,23 @@ export async function POST(
       status: donation.status
     }, { status: 201 })
   } catch (error) {
-    console.error('[PROGRAM_DONATION_API]', error)
-    return NextResponse.json({ error: 'Failed to create donation' }, { status: 500 })
+    console.error('[PROGRAM_DONATION_API] Error creating donation:', error)
+    
+    let errorMessage = 'Failed to create donation'
+    
+    if (error instanceof Error) {
+      if (error.message.includes('validation')) {
+        errorMessage = 'Validation error: Please check all required fields'
+      } else if (error.message.includes('duplicate')) {
+        errorMessage = 'Duplicate donation detected'
+      } else {
+        errorMessage = `Donation creation failed: ${error.message}`
+      }
+    }
+    
+    return NextResponse.json({ 
+      error: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : String(error) : undefined
+    }, { status: 500 })
   }
 }

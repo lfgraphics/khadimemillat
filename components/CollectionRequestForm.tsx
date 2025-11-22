@@ -79,8 +79,6 @@ export const CollectionRequestForm: React.FC<CollectionRequestFormProps> = ({
   useEffect(() => {
     if (!isLoaded || !user) return;
     if (isLoaded && user) {
-      console.log('user in scrap form :',user)
-      // Get phone directly from Clerk first
       const clerkPhone = user.primaryPhoneNumber?.phoneNumber || ''
       if (clerkPhone) {
         setForm(prev => ({ ...prev, phone: clerkPhone }))
