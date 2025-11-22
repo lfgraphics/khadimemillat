@@ -10,8 +10,11 @@ export async function GET(req: Request) {
     const condition = url.searchParams.get("condition") || undefined;
     const priceMin = url.searchParams.get("priceMin") ? Number(url.searchParams.get("priceMin")) : undefined;
     const priceMax = url.searchParams.get("priceMax") ? Number(url.searchParams.get("priceMax")) : undefined;
-    const sortBy = url.searchParams.get("sortBy") as any || undefined;
-    const availability = url.searchParams.get("availability") || undefined;
+    const sortBy = url.searchParams.get("sortBy") as 'newest' | 'oldest' | 'price-low' | 'price-high' | 'name-asc' | 'name-desc' | undefined;
+    const availabilityParam = url.searchParams.get("availability");
+    const availability = (availabilityParam === 'all' || availabilityParam === 'available' || availabilityParam === 'sold') 
+        ? availabilityParam 
+        : undefined;
 
     const result = await listPublicItems({ 
         page, 
