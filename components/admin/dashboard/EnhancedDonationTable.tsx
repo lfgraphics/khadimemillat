@@ -172,12 +172,14 @@ function SwipeableCard({ row, onViewDetails, onQuickAction, loading, selectedId 
                 {row.donor?.name || row.donor?.id || 'Unknown'}
               </h3>
               {row.donor?.email && (
-                <p 
-                  className="text-sm text-muted-foreground truncate mt-1"
-                  id={`donation-${row.id}-email`}
-                >
-                  {row.donor.email}
-                </p>
+                {row.donor.email && (
+                  <p 
+                    className="text-sm text-muted-foreground truncate mt-1"
+                    id={`donation-${row.id}-email`}
+                  >
+                    {row.donor.email}
+                  </p>
+                )}
               )}
             </div>
             <div className="flex items-center gap-2 ml-3">

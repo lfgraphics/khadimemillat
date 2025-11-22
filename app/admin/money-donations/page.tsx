@@ -38,7 +38,7 @@ interface MoneyDonation {
   _id: string
   donorId?: string
   donorName: string
-  donorEmail: string
+  donorEmail?: string
   donorPAN?: string
   amount: number
   message?: string
@@ -475,7 +475,9 @@ export default function MoneyDonationsPage() {
               <CardContent className="space-y-3">
                 <div>
                   <p className="font-medium">{donation.donorName}</p>
-                  <p className="text-sm text-muted-foreground">{donation.donorEmail}</p>
+                  {donation.donorEmail && (
+                    <p className="text-sm text-muted-foreground">{donation.donorEmail}</p>
+                  )}
                 </div>
 
                 <div>
@@ -692,10 +694,12 @@ export default function MoneyDonationsPage() {
                   <label className="text-sm font-medium">Donor Name</label>
                   <p className="text-sm text-muted-foreground">{selectedDonation.donorName}</p>
                 </div>
-                <div>
-                  <label className="text-sm font-medium">Donor Email</label>
-                  <p className="text-sm text-muted-foreground">{selectedDonation.donorEmail}</p>
-                </div>
+                {selectedDonation.donorEmail && (
+                  <div>
+                    <label className="text-sm font-medium">Donor Email</label>
+                    <p className="text-sm text-muted-foreground">{selectedDonation.donorEmail}</p>
+                  </div>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

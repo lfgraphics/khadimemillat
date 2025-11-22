@@ -55,11 +55,28 @@ export async function sendDonationThankYouNotifications(donation: any) {
         let userNotificationPrefs = { email: true, whatsapp: true, sms: false }
 
         try {
-            const user = await User.findOne({ email: donorEmail }).select('phone notificationPreferences clerkUserId').lean()
+            // Try to find user by email first, then by donorId if available
+            let user = null
+            
+            if (donorEmail && donorEmail.trim()) {
+                user = await User.findOne({ email: donorEmail }).select('phone notificationPreferences clerkUserId').lean()
+            }
+            
+            // If no user found by email and we have a donorId, try finding by Clerk ID
+            if (!user && donation.donorId) {
+                user = await User.findOne({ clerkUserId: donation.donorId }).select('phone notificationPreferences clerkUserId').lean()
+            }
+            
             if (user) {
                 userPhone = (user as any).phone || ''
                 userNotificationPrefs = (user as any).notificationPreferences || userNotificationPrefs
             }
+            
+            // If still no phone found, use the phone from donation directly
+            if (!userPhone && donation.donorPhone) {
+                userPhone = donation.donorPhone
+            }
+            
         } catch (e) {
             console.warn('[USER_LOOKUP_FOR_DONATION_FAILED]', e)
         }
@@ -110,7 +127,7 @@ export async function sendDonationThankYouNotifications(donation: any) {
             `Thank you for your donation - Receipt #${donationId.toString().slice(-8)}`
 
         // Send email notification if email provided
-        if (donorEmail && userNotificationPrefs.email) {
+        if (donorEmail && donorEmail.trim() && userNotificationPrefs.email) {
             try {
                 // Create simple, clean email with all required details
                 let emailMessage = `<p><strong>Alhamdulillah! Your generous donation has been received successfully.</strong></p>
@@ -189,6 +206,8 @@ export async function sendDonationThankYouNotifications(donation: any) {
             }
         }
 
+
+        
         // Send WhatsApp notification with receipt image if phone available
         if (userPhone && userNotificationPrefs.whatsapp) {
             try {
@@ -212,11 +231,9 @@ export async function sendDonationThankYouNotifications(donation: any) {
                     )
 
                     if (whatsappResult.success) {
-                        console.log(`[DONATION_WHATSAPP_WITH_IMAGE_SENT] ${phoneToUse} - ${donationId} - MessageId: ${whatsappResult.messageId} - 80G: ${wants80G}`)
-                        
-                        // Note: 80G certificate info is included in the same receipt image, no separate message needed
+                        console.log(`[DONATION_WHATSAPP_SENT] ${phoneToUse.replace(/[^\d]/g, '')} - ${donationId}`)
                     } else {
-                        console.error('[DONATION_WHATSAPP_WITH_IMAGE_FAILED]', whatsappResult.error)
+                        console.error('[DONATION_WHATSAPP_FAILED]', whatsappResult.error)
                         
                         // Enhanced fallback message with 80G information if applicable
                         let fallbackMessage = `*Assalamu Alaikum ${donorName}*\n\nAlhamdulillah! Your generous donation has been received successfully.\n\n💰 *Amount:* ${currency} ${amount.toLocaleString('en-IN')}\n📋 *Receipt ID:* ${donationId.toString().slice(-8)}\n🏛️ *Program:* ${programName || campaignName || 'General Donation'}\n📅 *Date:* ${new Date().toLocaleDateString('en-IN')}`
@@ -278,7 +295,7 @@ export async function sendDonationThankYouNotifications(donation: any) {
             console.error('[DONATION_IN_APP_FAILED]', notificationError)
         }
 
-        console.log(`[DONATION_NOTIFICATIONS_COMPLETED] ${donationId} - Email: ${!!donorEmail}, Phone: ${!!userPhone}, 80G: ${wants80G}`)
+        console.log(`[DONATION_NOTIFICATIONS_COMPLETED] ${donationId} - Email: ${!!(donorEmail && donorEmail.trim())}, Phone: ${!!userPhone}, 80G: ${wants80G}`)
 
         // Mark notifications as sent to prevent duplicates
         try {

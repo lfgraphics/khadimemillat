@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
             programId: (program as any)._id,
             donorId: userId || undefined,
             donorName: donorName.trim(),
-            donorEmail: donorEmail?.trim() || `${donorName.replace(/\s+/g, '-').toLowerCase()}${donorPhone?.replace(/\D/g, '').slice(-4) || Date.now()}@khadimemillat.org`,
+            donorEmail: donorEmail?.trim() ? donorEmail.trim() : undefined,
             donorPhone: normalizedPhone,
             amount: parseFloat(amount.toString()),
             message: message?.trim() || undefined,
@@ -126,6 +126,18 @@ export async function POST(request: NextRequest) {
         const donation = new CampaignDonation(donationData)
         await donation.save()
 
+        // Send thank you notifications (email, WhatsApp, SMS) in background
+        try {
+            const { sendDonationThankYouNotifications } = await import('@/lib/services/donation-notification.service')
+            
+            // Don't await this to avoid blocking the response
+            sendDonationThankYouNotifications(donation).catch(notificationError => {
+                console.error('Donation notification error:', notificationError)
+            })
+        } catch (importError) {
+            console.error('Donation notification import error:', importError)
+        }
+
         return NextResponse.json({
             donationId: (donation as any)._id.toString(),
             programId: (program as any)._id.toString(),
@@ -134,7 +146,7 @@ export async function POST(request: NextRequest) {
         }, { status: 201 })
 
     } catch (error) {
-        console.log('[GENERAL_DONATION_API] Error:', error instanceof Error ? error.message : 'Unknown error')
+        console.error('Donation API error:', error instanceof Error ? error.message : 'Unknown error')
         return NextResponse.json({
             error: 'Failed to create donation record',
             details: error instanceof Error ? error.message : 'Unknown error'
@@ -183,7 +195,7 @@ export async function GET(request: NextRequest) {
         })
 
     } catch (error) {
-        console.error('[GENERAL_DONATION_GET_API]', error)
+        console.error('Donation GET API error:', error)
         return NextResponse.json({
             error: 'Failed to retrieve donations',
             details: error instanceof Error ? error.message : 'Unknown error'

@@ -48,15 +48,6 @@ class WhatsAppService {
 
     this.accessToken = token
     this.phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID || ''
-
-    // Debug logging
-    console.log('🔧 WhatsApp Service initialized:', {
-      provider: this.provider,
-      apiUrl: this.apiUrl,
-      hasToken: !!this.accessToken,
-      tokenPrefix: this.accessToken ? this.accessToken.substring(0, 10) + '...' : 'No token',
-      hasPhoneNumberId: !!this.phoneNumberId
-    })
   }
 
   private isConfigured(): boolean {
@@ -78,18 +69,7 @@ class WhatsAppService {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-
-      // Enhanced error logging
-      console.error('📱 WhatsApp sending failed:', {
-        error: errorMessage,
-        to: options.to.replace(/[^\d]/g, ''),
-        messageType: options.type || 'text',
-        messageLength: options.message?.length || 0,
-        provider: this.provider,
-        hasImage: !!options.imageUrl,
-        hasDocument: !!options.documentUrl,
-        stack: error instanceof Error ? error.stack : undefined
-      })
+      console.error('WhatsApp message failed:', errorMessage)
 
       return {
         success: false,
@@ -99,13 +79,8 @@ class WhatsAppService {
   }
 
   private async sendAiSensyMessage(cleanPhone: string, options: WhatsAppMessage) {
-    // AiSensy API - Official implementation based on documentation
-    // API Endpoint: https://backend.aisensy.com/campaign/t1/api/v2
     const apiUrl = 'https://backend.aisensy.com/campaign/t1/api/v2'
-
-    // Use your approved "Donation Confirmation" campaign for all message types
-    // For simple text messages, we can use a basic text campaign
-    const campaignName = options.type === 'image' ? "Donation Confirmation Message" : "api_text_campaign" // Your approved campaigns
+    const campaignName = options.type === 'image' ? "Donation Confirmation Message" : "api_text_campaign"
 
     // Extract template parameters from the message if it contains donation data
     let templateParams: string[] = []
@@ -181,17 +156,7 @@ class WhatsAppService {
       }
     }
 
-    console.log('🔄 AiSensy API call (Official Format):', {
-      destination: cleanPhone,
-      messageType: options.type || 'text',
-      messageLength: options.message?.length || 0,
-      hasApiKey: !!this.accessToken,
-      campaignName: requestBody.campaignName,
-      hasMedia: !!requestBody.media,
-      mediaUrl: requestBody.media?.url,
-      mediaFilename: requestBody.media?.filename,
-      templateParamsCount: requestBody.templateParams?.length || 0
-    })
+
 
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -201,13 +166,7 @@ class WhatsAppService {
       body: JSON.stringify(requestBody)
     })
 
-    // Log response details for debugging
-    console.log('📡 AiSensy API Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      contentType: response.headers.get('content-type'),
-      url: apiUrl
-    })
+
 
     // Get response text first to handle both JSON and HTML responses
     const responseText = await response.text()
@@ -248,18 +207,7 @@ class WhatsAppService {
     }
 
     if (!response.ok) {
-      console.error('📱 AiSensy API error:', {
-        status: response.status,
-        statusText: response.statusText,
-        error: result,
-        to: cleanPhone.replace(/[^\d]/g, ''),
-        messageLength: options.message?.length || 0,
-        messageType: options.type || 'text',
-        apiUrl: apiUrl,
-        campaignName: requestBody.campaignName,
-        templateParamsCount: requestBody.templateParams?.length || 0,
-        templateParams: requestBody.templateParams
-      })
+      console.error('AiSensy API error:', response.status, result)
 
       // Provide specific error guidance based on AiSensy documentation
       let errorMessage = result.message || result.error || `AiSensy API error: ${response.status} - ${response.statusText}`
@@ -269,7 +217,7 @@ class WhatsAppService {
         if (errorMessage.toLowerCase().includes('template') || errorMessage.toLowerCase().includes('parameter')) {
           errorMessage += ". Template parameter mismatch detected. Expected 10 parameters for donation confirmation template."
         } else {
-          errorMessage += ". Please check: 1) API campaign 'Donation Confirmation' exists and is Live, 2) Template is approved, 3) All required fields are provided."
+          errorMessage += `. Please check: 1) API campaign '${campaignName}' exists and is Live, 2) Template is approved, 3) All required fields are provided.`
         }
       } else if (response.status === 401) {
         errorMessage += ". Please verify your API key in AiSensy dashboard: Manage > API Key"
@@ -277,12 +225,6 @@ class WhatsAppService {
 
       throw new Error(errorMessage)
     }
-
-    console.log('✅ AiSensy API success:', {
-      result: result,
-      status: response.status,
-      campaignName: requestBody.campaignName
-    })
 
     return {
       success: true,
@@ -471,6 +413,8 @@ class WhatsAppService {
       const receiptImageUrl = `${baseUrl}/api/receipts/${donationData.donationId}/image`
       const thankYouPageUrl = `${baseUrl}/thank-you?donationId=${donationData.donationId}`
 
+
+
       // Create template parameters for AiSensy template
       // Template: {{1}} = donorName, {{2}} = currency, {{3}} = amount, {{4}} = currency, {{5}} = amount, 
       // {{6}} = program, {{7}} = date, {{8}} = receiptId, {{9}} = transactionId, {{10}} = thankYouUrl
@@ -506,23 +450,28 @@ class WhatsAppService {
       // For AiSensy, we need to send template parameters, not the full message
       const approvedMessage = sanitizedParams.join('|')
 
-      console.log('🔄 Sending donation confirmation WhatsApp:', {
-        phone,
-        donationId: donationData.donationId,
-        wants80G: donationData.wants80G,
-        templateParamsCount: templateParams.length,
-        razorpayPaymentId: donationData.razorpayPaymentId,
-        programName: donationData.programName,
-        campaignName: donationData.campaignName
-      })
 
-      return await this.sendMessage({
-        to: phone.replace(/[^\d]/g, ''),
-        type: 'image',
-        message: approvedMessage,
-        imageUrl: receiptImageUrl,
-        userName: donationData.donorName // Pass donor name as recipient name
-      })
+
+      // Try to send with image first, fallback to text if image fails
+      try {
+        return await this.sendMessage({
+          to: phone.replace(/[^\d]/g, ''),
+          type: 'image',
+          message: approvedMessage,
+          imageUrl: receiptImageUrl,
+          userName: donationData.donorName
+        })
+      } catch (imageError) {
+        // Fallback to text-only message
+        const textMessage = `*Assalamu Alaikum ${donationData.donorName}*\n\nAlhamdulillah! Your generous donation has been received successfully.\n\n💰 *Amount:* ${donationData.currency} ${donationData.amount.toLocaleString('en-IN')}\n📋 *Receipt ID:* ${donationData.donationId.slice(-8)}\n🏛️ *Program:* ${donationData.programName || donationData.campaignName || 'General Donation'}\n📅 *Date:* ${new Date().toLocaleDateString('en-IN')}\n\n🔗 *View Details:* ${thankYouPageUrl}\n\nJazakallahu Khairan! May Allah accept your donation and bless you abundantly.\n\n_Khadim-e-Millat Welfare Foundation_\n📞 +91 80817 47259`
+
+        return await this.sendMessage({
+          to: phone.replace(/[^\d]/g, ''),
+          type: 'text',
+          message: textMessage,
+          userName: donationData.donorName
+        })
+      }
     } catch (error) {
       console.error('Failed to send donation confirmation via WhatsApp:', error)
       return {
@@ -540,7 +489,7 @@ class WhatsAppService {
     donationId: string,
     donorName: string,
     amount: number,
-    certificateNumber: string
+    _certificateNumber: string
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://khadimemillat.org'

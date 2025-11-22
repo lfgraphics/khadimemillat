@@ -99,9 +99,9 @@ export async function POST(
             receiptPreferences
         } = body
 
-        if (!donorName || !donorEmail || !donorPhone || !amount || amount <= 0) {
+        if (!donorName || !donorPhone || !amount || amount <= 0) {
             return NextResponse.json(
-                { error: "Missing required fields: donorName, donorEmail, donorPhone, and amount are required" },
+                { error: "Missing required fields: donorName, donorPhone, and amount are required" },
                 { status: 400 }
             )
         }

@@ -554,9 +554,9 @@ export class Receipt80GService {
 
     // Only send separate email/SMS if not being handled by main notification service
     if (!skipEmailSending) {
-      const receiptPrefs = donationData.receiptPreferences || { email: true }
+      const receiptPrefs = donationData.receiptPreferences || { email: !!donationData.donorEmail }
 
-      if (receiptPrefs.email) {
+      if (receiptPrefs.email && donationData.donorEmail && donationData.donorEmail.trim()) {
         await this.send80GCertificateByEmail(certificateData)
       }
 

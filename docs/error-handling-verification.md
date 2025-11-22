@@ -14,7 +14,7 @@ This document verifies that all error handling requirements from Requirement 6 h
 
 **Error Messages:**
 - "Selected user is no longer available. Please search for the user again."
-- "Selected user is missing required information (name or email). Please select a different user."
+- "Selected user is missing required information (name). Please select a different user."
 
 ### ✅ 6.2: Pickup Time in Past
 **Requirement:** WHEN the pickup time is in the past THEN the system SHALL display "Pickup time must be in the future" error

@@ -5,7 +5,7 @@ export interface ICampaignDonation extends Document {
     programId: mongoose.Types.ObjectId
     donorId?: string // Clerk user ID (optional for logged out users)
     donorName: string // Display name for the donation
-    donorEmail: string // Required email for all donations
+    donorEmail?: string // Optional email for donations
     donorPhone?: string // Phone number for logged out users
     donorAddress?: string // Address for 80G certificate
     donorCity?: string // City for 80G certificate
@@ -89,7 +89,7 @@ const campaignDonationSchema = new Schema<ICampaignDonation>({
     programId: { type: Schema.Types.ObjectId, ref: "WelfareProgram", required: true },
     donorId: { type: String }, // Optional for logged out users
     donorName: { type: String, required: true },
-    donorEmail: { type: String, required: true }, // Required for all donations
+    donorEmail: { type: String }, // Optional for donations
     donorPhone: { type: String }, // For logged out users
     donorAddress: { type: String }, // Address for 80G certificate
     donorCity: { type: String }, // City for 80G certificate

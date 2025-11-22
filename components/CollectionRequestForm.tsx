@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -8,6 +8,7 @@ import { cn, safeJson } from "@/lib/utils";
 import { EnhancedFileSelector } from "@/components/file-selector";
 import { FileUploadError, UploadResult } from "@/components/file-selector/types";
 import { toast } from "sonner";
+import { useUser } from "@clerk/nextjs";
 
 export interface CollectionRequestFormValues {
   address: string;
@@ -46,6 +47,7 @@ export const CollectionRequestForm: React.FC<CollectionRequestFormProps> = ({
   donorId,
   showFileUpload = true,
 }) => {
+  const { user, isLoaded } = useUser();
   const [form, setForm] = useState<CollectionRequestFormValues>({
     address: defaultValues?.address || "",
     phone: defaultValues?.phone || "",
@@ -73,6 +75,46 @@ export const CollectionRequestForm: React.FC<CollectionRequestFormProps> = ({
   );
   const [fileUploadError, setFileUploadError] = useState<string | null>(null);
 
+  // Load user data from Clerk when component mounts
+  useEffect(() => {
+    if (!isLoaded || !user) return;
+    if (isLoaded && user) {
+      console.log('user in scrap form :',user)
+      // Get phone directly from Clerk first
+      const clerkPhone = user.primaryPhoneNumber?.phoneNumber || ''
+      if (clerkPhone) {
+        setForm(prev => ({ ...prev, phone: clerkPhone }))
+      }
+
+      // Fetch complete user profile from API to get address and other data
+      const loadUserProfile = async () => {
+        try {
+          const res = await fetch('/api/protected/users?self=1', { cache: 'no-store' })
+          const ct = res.headers.get('content-type') || ''
+          if (!res.ok || !ct.includes('application/json')) {
+            return
+          }
+          const json = await res.json()
+          if (json.users && json.users.length) {
+            const u = json.users[0]
+            // Auto-populate address from API if not already set
+            if (u.address && !form.address) {
+              setForm(prev => ({ ...prev, address: u.address }))
+            }
+            // Use phone from API if available
+            if (u.phone) {
+              setForm(prev => ({ ...prev, phone: u.phone }))
+            }
+          }
+        } catch (e) {
+          // Silently handle profile fetch errors
+        }
+      }
+
+      loadUserProfile()
+    }
+  }, [isLoaded, user?.id]) // Use user.id to avoid infinite re-renders
+
   const updateField = <K extends keyof CollectionRequestFormValues>(key: K, value: CollectionRequestFormValues[K]) => {
     setForm(prev => ({ ...prev, [key]: value }));
   };
@@ -88,7 +130,6 @@ export const CollectionRequestForm: React.FC<CollectionRequestFormProps> = ({
   };
 
   const handleUploadError = (error: FileUploadError) => {
-    console.error('Upload error:', error);
     setFileUploadError(error.message);
     toast.error(`Upload failed: ${error.message}`);
   };
@@ -101,7 +142,7 @@ export const CollectionRequestForm: React.FC<CollectionRequestFormProps> = ({
   // Get current location
   const getCurrentLocation = () => {
     setLocationLoading(true);
-    
+
     if (!navigator.geolocation) {
       toast.error('Geolocation is not supported by this browser');
       setLocationLoading(false);
@@ -120,7 +161,7 @@ export const CollectionRequestForm: React.FC<CollectionRequestFormProps> = ({
         setLocationLoading(false);
       },
       (error) => {
-        console.error('Location error:', error);
+
         let message = 'Failed to get location';
         switch (error.code) {
           case error.PERMISSION_DENIED:
@@ -212,7 +253,7 @@ export const CollectionRequestForm: React.FC<CollectionRequestFormProps> = ({
           className="text-sm"
         />
       </div>
-      
+
       {/* Current Location */}
       <div className="space-y-2">
         <label className="block text-sm font-medium">Current Location (helps field executive navigate)</label>

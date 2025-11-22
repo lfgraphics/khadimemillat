@@ -170,7 +170,7 @@ export async function POST(req: NextRequest) {
       notifyChannels: { email: !!email, whatsapp: false, sms: false }
     })
 
-    return NextResponse.json({ success: true, message: 'User created successfully', user: { id: created.clerkUserId, name, email: created.emailUsed, username: created.username } })
+    return NextResponse.json({ success: true, message: 'User created successfully', user: { id: created.clerkUserId, name, email: email || undefined, username: created.username, password: created.password } })
   } catch (error: any) {
     console.error('[USER_CREATION_ERROR]', error)
     return NextResponse.json({ success: false, error: error.message || 'Internal server error' }, { status: 500 })

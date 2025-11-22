@@ -15,7 +15,7 @@ import { cn, safeJson } from "@/lib/utils";
 
 export interface UserCreationFormData {
   name: string;
-  email: string;
+  email?: string;
   phone: string;
   address?: string;
   role?: 'user' | 'admin' | 'moderator' | 'field_executive';
@@ -24,7 +24,7 @@ export interface UserCreationFormData {
 export interface CreatedUserDisplay {
   id: string;
   name: string;
-  email: string;
+  email?: string;
   username: string;
   password: string;
   phone: string;
@@ -100,10 +100,8 @@ export const UserCreationForm: React.FC<UserCreationFormProps> = ({
       errors.name = "Name is required";
     }
 
-    if (!form.email.trim()) {
-      errors.email = "Email is required";
-    } else {
-      // Email format validation
+    // Email is optional, but if provided, must be valid
+    if (form.email && form.email.trim()) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(form.email)) {
         errors.email = "Please enter a valid email address";
@@ -178,7 +176,7 @@ export const UserCreationForm: React.FC<UserCreationFormProps> = ({
           Create New User
         </CardTitle>
         <CardDescription>
-          Add a new user to the system. All fields marked with * are required.
+          Add a new user to the system. Name and phone number are required. Email is optional.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -207,20 +205,23 @@ export const UserCreationForm: React.FC<UserCreationFormProps> = ({
           <div className="space-y-2">
             <Label htmlFor="email" className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
-              Email Address <span className="text-red-500">*</span>
+              Email Address <span className="text-muted-foreground">(optional)</span>
             </Label>
             <Input
               id="email"
               type="email"
-              value={form.email}
+              value={form.email || ""}
               onChange={(e) => updateField("email", e.target.value)}
-              placeholder="Enter email address"
+              placeholder="Enter email address (optional)"
               className={cn(fieldErrors.email && "border-red-500")}
               disabled={loading}
             />
             {fieldErrors.email && (
               <p className="text-sm text-red-600">{fieldErrors.email}</p>
             )}
+            <p className="text-xs text-muted-foreground">
+              Email is optional. If provided, user will receive account details via email.
+            </p>
           </div>
 
           {/* Phone Field */}

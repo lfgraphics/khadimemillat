@@ -44,7 +44,7 @@ export async function createUserRobust(input: CreateUserInput): Promise<CreatedU
   const password = generateStrongPassword(sanitizedName)
   if (!validatePasswordStrength(password)) throw new Error('Generated password not strong enough')
 
-  // email resolution
+  // email resolution - always synthesize for Clerk compatibility
   const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || '').replace(/\/$/, '')
   const siteHost = (() => {
     try {
@@ -56,21 +56,21 @@ export async function createUserRobust(input: CreateUserInput): Promise<CreatedU
   })()
 
   let emailUsed = ''
+  let hasRealEmail = false
+  
   if (input.email && input.email.trim()) {
     emailUsed = input.email.trim()
-  } else if (input.allowSynthEmail) {
-    // Use a more standard email format for synthesized emails
+    hasRealEmail = true
+  } else {
+    // Always synthesize email for Clerk compatibility since Clerk requires email
     emailUsed = `${username}@${siteHost}`
-
     // Validate the synthesized email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(emailUsed)) {
-      // Fallback to a known good domain if the synthesized email is invalid
-      emailUsed = `${username}@example.com`
+      emailUsed = `${username}@guests.khadimemillat.org`
     }
+    hasRealEmail = false
   }
-
-  if (!emailUsed) throw new Error('Email missing and synthesizing disabled')
 
   // Final email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -132,11 +132,11 @@ export async function createUserRobust(input: CreateUserInput): Promise<CreatedU
       }
     }
 
-    // mongo sync (non-blocking)
+    // mongo sync (non-blocking) - only save real email to MongoDB
     syncNewUserToMongoDB({
       clerkUserId: clerkUser.id,
       name,
-      email: emailUsed,
+      email: hasRealEmail ? input.email : undefined,
       phone: normalizedPhone,
       address: input.address,
       role: input.role || 'user'
@@ -148,13 +148,19 @@ export async function createUserRobust(input: CreateUserInput): Promise<CreatedU
     const wantWhatsApp = input.notifyChannels?.whatsapp !== false
     const wantSMS = input.notifyChannels?.sms === true
 
-    if (input.email && wantEmail) {
-      const html = emailService.generateDefaultBrandedEmail({
-        title: 'Your account has been created',
-        greetingName: firstName,
-        message: `Your account has been created.\n\nUsername: <b>${username}</b><br/>Password: <b>${password}</b><br/><br/>Sign in: <a href="${signInUrl}">${signInUrl}</a>`
-      })
-      await emailService.sendEmail({ to: emailUsed, subject: 'Welcome – Your account details', html })
+    // Only send email if user provided a real email address (not synthesized)
+    if (hasRealEmail && wantEmail) {
+      try {
+        const html = emailService.generateDefaultBrandedEmail({
+          title: 'Your account has been created',
+          greetingName: firstName,
+          message: `Your account has been created.\n\nUsername: <b>${username}</b><br/>Password: <b>${password}</b><br/><br/>Sign in: <a href="${signInUrl}">${signInUrl}</a>`
+        })
+        await emailService.sendEmail({ to: input.email!, subject: 'Welcome – Your account details', html })
+      } catch (emailError) {
+        console.warn('[EMAIL_NOTIFICATION_FAILED]', emailError)
+        // Don't fail user creation if email fails
+      }
     }
 
     if (wantWhatsApp) {

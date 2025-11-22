@@ -4,7 +4,7 @@ import User from '@/models/User'
 export interface SyncUserToMongoDB {
   clerkUserId: string
   name: string
-  email: string
+  email?: string
   phone: string
   address?: string
   role: string

@@ -144,8 +144,8 @@ const UserSearchForRequest: React.FC<UserSearchForRequestProps> = ({
 
   const handleUserSelect = (user: SearchResult) => {
     // Validate user has minimum required information
-    if (!user.name || user.name.trim() === '' || !user.email) {
-      setError('Selected user is missing required information (name or email). Please select a different user.');
+    if (!user.name || user.name.trim() === '') {
+      setError('Selected user is missing required information (name). Please select a different user.');
       return;
     }
 
@@ -301,7 +301,7 @@ const UserSearchForRequest: React.FC<UserSearchForRequestProps> = ({
           )}
 
           {searchResults.map((user) => {
-            const hasRequiredInfo = user.name && user.name.trim() !== '' && user.email;
+            const hasRequiredInfo = user.name && user.name.trim() !== '';
             const missingInfo = [];
             if (!user.phone) missingInfo.push('phone');
             if (!user.address) missingInfo.push('address');

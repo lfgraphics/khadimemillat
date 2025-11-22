@@ -68,8 +68,8 @@ export default function ContactForm({ formEndpoint }: Props) {
           <Input id="name" name="name" required placeholder="Enter your name" className="bg-input-background border-border" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="email">Email Address *</Label>
-          <Input id="email" name="email" type="email" required placeholder="your.email@example.com" className="bg-input-background border-border" />
+          <Label htmlFor="email">Email Address <span className="text-muted-foreground">(optional)</span></Label>
+          <Input id="email" name="email" type="email" placeholder="your.email@example.com (optional)" className="bg-input-background border-border" />
         </div>
       </div>
 

@@ -95,7 +95,7 @@ export default function DynamicDonationPage({
         image: '/favicon.ico', // Your organization logo
         prefill: {
           name: donationData.donorName,
-          email: donationData.email,
+          email: donationData.email || undefined,
         },
         theme: {
           color: '#3B82F6' // Your brand color
@@ -187,7 +187,7 @@ export default function DynamicDonationPage({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               donorName: donationData.donorName,
-              donorEmail: donationData.email,
+              donorEmail: donationData.email || undefined,
               amount: parseFloat(donationData.amount),
               paymentReference: donationData.id,
               paymentMethod: 'online'
@@ -246,10 +246,12 @@ export default function DynamicDonationPage({
                     <span className="text-muted-foreground">Donor Name:</span>
                     <span className="font-medium">{donationData.donorName}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Email:</span>
-                    <span className="font-medium">{donationData.email}</span>
-                  </div>
+                  {donationData.email && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Email:</span>
+                      <span className="font-medium">{donationData.email}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Cause:</span>
                     <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">{getCauseDisplayName(donationData.cause)}</span>
@@ -266,9 +268,11 @@ export default function DynamicDonationPage({
               </div>
               <div className="text-center">
                 <p className="text-muted-foreground mb-4">Thank you for your generous donation!</p>
-                <p className="text-xs text-gray-500">
-                  A confirmation email has been sent to {donationData.email}
-                </p>
+                {donationData.email && (
+                  <p className="text-xs text-gray-500">
+                    A confirmation email has been sent to {donationData.email}
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -296,10 +300,12 @@ export default function DynamicDonationPage({
                   <span className="text-muted-foreground">Donor:</span>
                   <span className="font-medium">{donationData.donorName}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Email:</span>
-                  <span className="font-medium">{donationData.email}</span>
-                </div>
+                {donationData.email && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Email:</span>
+                    <span className="font-medium">{donationData.email}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Campaign:</span>
                   <span className="font-medium capitalize">{donationData.slug.replace('-', ' ')}</span>

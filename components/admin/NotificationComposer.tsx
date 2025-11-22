@@ -207,7 +207,7 @@ export default function NotificationComposer({
       }
       
       if (channel === 'email' && !channelContent?.subject?.trim()) {
-        newErrors[`subject_${channel}`] = 'Subject is required for email'
+        newErrors[`subject_${channel}`] = 'Subject is required for email notifications'
       }
     })
     

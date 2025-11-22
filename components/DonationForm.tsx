@@ -42,45 +42,60 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
 
   // Auto-populate user data when logged in
   useEffect(() => {
-    if (isLoaded && user) {
-      setDonorName(user.fullName || '')
-      setDonorEmail(user.primaryEmailAddress?.emailAddress || '')
-      
-      // Fetch complete user profile from API (like /donate page does)
-      const loadUserProfile = async () => {
-        try {
-          const res = await fetch('/api/protected/users?self=1', { cache: 'no-store' })
-          const ct = res.headers.get('content-type') || ''
-          if (!res.ok || !ct.includes('application/json')) {
-            return
-          }
-          const json = await res.json()
-          if (json.users && json.users.length) {
-            const u = json.users[0]
-            if (u.phone && !donorPhone) {
-              setDonorPhone(u.phone)
-            }
-            if (u.address && !donorAddress) {
-              setDonorAddress(u.address)
-            }
-            if (u.city && !donorCity) {
-              setDonorCity(u.city)
-            }
-            if (u.state && !donorState) {
-              setDonorState(u.state)
-            }
-            if (u.pincode && !donorPincode) {
-              setDonorPincode(u.pincode)
-            }
-          }
-        } catch (e) {
-          console.error('[CAMPAIGN_FORM_PROFILE_FETCH]', e)
-        }
-      }
-      
-      loadUserProfile()
+    if (!isLoaded || !user) return;
+    
+    // Always populate from Clerk data
+    const clerkName = user.fullName || ''
+    const clerkEmail = user.primaryEmailAddress?.emailAddress || ''
+    const clerkPhone = user.primaryPhoneNumber?.phoneNumber || ''
+    
+    setDonorName(clerkName)
+    setDonorEmail(clerkEmail)
+    if (clerkPhone) {
+      setDonorPhone(clerkPhone)
     }
-  }, [isLoaded, user, donorPhone, donorAddress, donorCity, donorState, donorPincode])
+    
+    // Fetch complete user profile from API
+    const loadUserProfile = async () => {
+      try {
+        const res = await fetch('/api/protected/users?self=1', { cache: 'no-store' })
+        const ct = res.headers.get('content-type') || ''
+        
+        if (!res.ok || !ct.includes('application/json')) {
+          return
+        }
+        
+        const json = await res.json()
+        
+        if (json.users && json.users.length) {
+          const u = json.users[0]
+          
+          // Populate phone and address data from API
+          if (u.phone) {
+            setDonorPhone(u.phone)
+          }
+          if (u.address) {
+            setDonorAddress(u.address)
+          }
+          if (u.city) {
+            setDonorCity(u.city)
+          }
+          if (u.state) {
+            setDonorState(u.state)
+          }
+          if (u.pincode) {
+            setDonorPincode(u.pincode)
+          }
+        }
+      } catch (e) {
+        // Silently handle profile fetch errors
+      }
+    }
+    
+    loadUserProfile()
+  }, [isLoaded, user?.id])
+
+
 
   // Load Razorpay script
   useEffect(() => {
@@ -136,23 +151,13 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
   const handleNameChange = (name: string) => {
     setDonorName(name)
 
-    // Auto-generate email for logged out users if email was previously generated
-    if (!user && (emailGenerated || !donorEmail)) {
-      const generatedEmail = generateDynamicEmail(name, donorPhone)
-      setDonorEmail(generatedEmail)
-      setEmailGenerated(true)
-    }
+    // Don't auto-generate email anymore since it's optional
   }
 
   const handlePhoneChange = (phone: string) => {
     setDonorPhone(phone)
 
-    // Auto-generate email for logged out users if email was previously generated
-    if (!user && (emailGenerated || !donorEmail)) {
-      const generatedEmail = generateDynamicEmail(donorName, phone)
-      setDonorEmail(generatedEmail)
-      setEmailGenerated(true)
-    }
+    // Don't auto-generate email anymore since it's optional
   }
 
   const handleEmailChange = (email: string) => {
@@ -181,9 +186,10 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
       return
     }
 
-    if (!donorEmail.trim() || !isValidEmail(donorEmail.trim())) {
-      const fallback = generateDynamicEmail(donorName, donorPhone)
-      setDonorEmail(fallback)
+    // Email is optional, but if provided, must be valid
+    if (donorEmail.trim() && !isValidEmail(donorEmail.trim())) {
+      toast.error('Please enter a valid email address')
+      return
     }
 
     if (!donorPhone.trim()) {
@@ -440,7 +446,7 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
 
         <div>
           <Label htmlFor="donorEmail" className="text-sm font-medium text-foreground">
-            Email *
+            Email <span className="text-muted-foreground">(optional)</span>
             {!user && (
               <span className="text-xs text-muted-foreground ml-1">
                 (Required for all donations)
@@ -452,7 +458,7 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
             type="email"
             value={donorEmail}
             onChange={(e) => handleEmailChange(e.target.value)}
-            placeholder={user ? "Your email" : "Enter your email or use generated"}
+            placeholder={user ? "Your email (optional)" : "Enter your email (optional)"}
             required
             disabled={!!user && !allowEditProfileFields}
             className="text-sm"
@@ -600,7 +606,7 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
       {user && (
         <div className="flex items-center gap-2 text-xs">
           <input id="editProfileFields" type="checkbox" checked={allowEditProfileFields} onChange={e => setAllowEditProfileFields(e.target.checked)} />
-          <label htmlFor="editProfileFields">Edit my name/email for this donation</label>
+          <label htmlFor="editProfileFields">Edit my name/email for this donation (email optional)</label>
         </div>
       )}
 
@@ -608,7 +614,7 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
       <Button
         type="submit"
         className="w-full"
-        disabled={isSubmitting || !amount || !donorName.trim() || !donorEmail.trim()}
+        disabled={isSubmitting || !amount || !donorName.trim()}
       >
         {isSubmitting ? (
           <>

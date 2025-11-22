@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
         let order
         if (type === 'donation') {
-            if (!email) return NextResponse.json({ error: 'Email is required for donations' }, { status: 400 })
+            // Email is optional for donations
             order = await createDonationOrder({ 
                 amount, 
                 currency: 'INR', 
