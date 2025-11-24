@@ -338,7 +338,8 @@ export async function resendDonationReceiptWhatsApp(donationId: string, phoneNum
             donationId,
             donationData.donorName || 'Valued Donor',
             donationData.amount || 0,
-            campaignName || programName
+            campaignName || programName,
+            donationData.razorpayPaymentId // Pass Razorpay payment ID for transaction reference
         )
 
         console.log(`[RECEIPT_RESEND_WHATSAPP] ${phoneNumber} - ${donationId} - Success: ${result.success}`)

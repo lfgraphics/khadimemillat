@@ -339,7 +339,8 @@ class WhatsAppService {
     donationId: string,
     donorName: string,
     amount: number,
-    campaignName?: string
+    campaignName?: string,
+    razorpayPaymentId?: string
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
       const baseUrl = 'https://khadimemillat.org'
@@ -348,31 +349,31 @@ class WhatsAppService {
       const thankYouPageUrl = `${baseUrl}/thank-you?donationId=${donationId}`
 
       // Create template parameters for AiSensy template
-      // Note: For image templates, image URL should be first parameter to make it clickable
+      // Note: Don't include URLs in template parameters to avoid making image clickable to external URLs
       const templateParams = [
-        receiptImageUrl, // {{1}} - Image URL (first parameter for clickable image)
-        donorName || 'Valued Donor', // {{2}}
-        '₹', // {{3}}
-        amount.toString() || '0', // {{4}}
-        '₹', // {{5}}
-        amount.toString() || '0', // {{6}}
-        campaignName || 'General Donation', // {{7}}
-        new Date().toLocaleDateString('en-IN'), // {{8}}
-        donationId.slice(-8), // {{9}}
-        thankYouPageUrl // {{10}}
+        donorName || 'Valued Donor', // {{1}} - Start with donor name
+        '₹', // {{2}}
+        amount.toString() || '0', // {{3}}
+        '₹', // {{4}}
+        amount.toString() || '0', // {{5}}
+        campaignName || 'General Donation', // {{6}}
+        new Date().toLocaleDateString('en-IN'), // {{7}}
+        donationId.slice(-8), // {{8}} - Receipt ID (short donation ID)
+        razorpayPaymentId || donationId.slice(-8), // {{9}} - Transaction ID (Razorpay payment ID)
+        `${thankYouPageUrl}` // {{10}} - Thank you page URL
       ]
 
       // Ensure all parameters are strings and not empty
       const sanitizedParams = templateParams.map((param, index) => {
         const sanitized = String(param || '').trim()
-        return sanitized || (index === 0 ? receiptImageUrl : // Image URL
-          index === 1 ? 'Valued Donor' : // Donor name
-            index === 2 || index === 4 ? '₹' : // Currency symbols
-              index === 3 || index === 5 ? '0' : // Amounts
-                index === 6 ? 'General Donation' : // Campaign name
-                  index === 7 ? new Date().toLocaleDateString('en-IN') : // Date
-                    index === 8 ? donationId.slice(-8) : // Donation ID
-                      thankYouPageUrl) // Thank you URL
+        return sanitized || (index === 0 ? 'Valued Donor' : // Donor name
+          index === 1 || index === 3 ? '₹' : // Currency symbols
+            index === 2 || index === 4 ? '0' : // Amounts
+              index === 5 ? 'General Donation' : // Campaign name
+                index === 6 ? new Date().toLocaleDateString('en-IN') : // Date
+                  index === 7 ? donationId.slice(-8) : // Receipt ID
+                    index === 8 ? razorpayPaymentId || donationId.slice(-8) : // Transaction ID
+                      `${thankYouPageUrl}`) // Thank you page URL
       })
 
       const approvedMessage = sanitizedParams.join('|')
@@ -419,7 +420,7 @@ class WhatsAppService {
 
       // Create template parameters for AiSensy template
       // Template: {{1}} = donorName, {{2}} = currency, {{3}} = amount, {{4}} = currency, {{5}} = amount, 
-      // {{6}} = program, {{7}} = date, {{8}} = receiptId, {{9}} = transactionId, {{10}} = thankYouUrl
+      // {{6}} = program, {{7}} = date, {{8}} = receiptId, {{9}} = transactionId, {{10}} = thankYouMessage
       const templateParams = [
         donationData.donorName || 'Valued Donor', // {{1}}
         donationData.currency || '₹', // {{2}}
@@ -428,9 +429,9 @@ class WhatsAppService {
         donationData.amount.toString() || '0', // {{5}}
         donationData.programName || donationData.campaignName || 'General Donation', // {{6}}
         new Date().toLocaleDateString('en-IN'), // {{7}}
-        donationData.donationId.slice(-8), // {{8}}
-        donationData.razorpayPaymentId || donationData.donationId.slice(-8), // {{9}} - Actual Razorpay transaction ID
-        thankYouPageUrl // {{10}}
+        donationData.donationId.slice(-8), // {{8}} - Receipt ID (short donation ID)
+        donationData.razorpayPaymentId || donationData.donationId.slice(-8), // {{9}} - Transaction ID (Razorpay payment ID)
+        `${thankYouPageUrl}` // {{10}} - Thank you page URL
       ]
 
       // Ensure all parameters are strings and not empty
@@ -443,8 +444,9 @@ class WhatsAppService {
               index === 2 || index === 4 ? '0' :
                 index === 5 ? 'General Donation' :
                   index === 6 ? new Date().toLocaleDateString('en-IN') :
-                    index === 7 || index === 8 ? donationData.donationId.slice(-8) :
-                      thankYouPageUrl
+                    index === 7 ? donationData.donationId.slice(-8) : // Receipt ID
+                      index === 8 ? donationData.razorpayPaymentId || donationData.donationId.slice(-8) : // Transaction ID
+                        `${thankYouPageUrl}` // Thank you page URL
         }
         return sanitized
       })
