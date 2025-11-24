@@ -18,7 +18,7 @@ const expenseCategorySchema = new Schema<IExpenseCategory>({
 
 // Indexes for efficient querying
 expenseCategorySchema.index({ isActive: 1 })
-expenseCategorySchema.index({ name: 1 })
+// Note: name index is already created by unique: true above
 expenseCategorySchema.index({ parentCategory: 1 })
 
 const ExpenseCategory = mongoose.models.ExpenseCategory || mongoose.model<IExpenseCategory>("ExpenseCategory", expenseCategorySchema, 'expense-categories')

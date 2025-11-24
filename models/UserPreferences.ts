@@ -33,8 +33,8 @@ const userPreferencesSchema = new Schema<IUserPreferences>({
   userId: { 
     type: String, 
     required: true, 
-    unique: true,
-    index: true
+    unique: true
+    // Note: index: true is redundant with unique: true
   },
   channels: {
     webPush: { type: Boolean, default: true },

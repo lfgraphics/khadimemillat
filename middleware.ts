@@ -22,6 +22,7 @@ const isPublicRoute = createRouteMatcher([
     '/api/public(.*)',
     '/api/receipts(.*)',
     '/api/upload/cloudinary(.*)',
+    '/api/razorpay(.*)',
     '/workflow'
 ])
 

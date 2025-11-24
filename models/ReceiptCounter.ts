@@ -13,8 +13,8 @@ const receiptCounterSchema = new Schema<IReceiptCounter>({
   financialYear: {
     type: String,
     required: true,
-    unique: true,
-    index: true
+    unique: true
+    // Note: index: true is redundant with unique: true
   },
   sequence: {
     type: Number,

@@ -342,35 +342,37 @@ class WhatsAppService {
     campaignName?: string
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://khadimemillat.org'
+      const baseUrl = 'https://khadimemillat.org'
       // Use PNG image endpoint (publicly accessible via middleware)
       const receiptImageUrl = `${baseUrl}/api/receipts/${donationId}/image`
       const thankYouPageUrl = `${baseUrl}/thank-you?donationId=${donationId}`
 
       // Create template parameters for AiSensy template
+      // Note: For image templates, image URL should be first parameter to make it clickable
       const templateParams = [
-        donorName || 'Valued Donor', // {{1}}
-        '₹', // {{2}}
-        amount.toString() || '0', // {{3}}
-        '₹', // {{4}}
-        amount.toString() || '0', // {{5}}
-        campaignName || 'General Donation', // {{6}}
-        new Date().toLocaleDateString('en-IN'), // {{7}}
-        donationId.slice(-8), // {{8}}
-        donationId.slice(-8), // {{9}} - No Razorpay ID available in this method
+        receiptImageUrl, // {{1}} - Image URL (first parameter for clickable image)
+        donorName || 'Valued Donor', // {{2}}
+        '₹', // {{3}}
+        amount.toString() || '0', // {{4}}
+        '₹', // {{5}}
+        amount.toString() || '0', // {{6}}
+        campaignName || 'General Donation', // {{7}}
+        new Date().toLocaleDateString('en-IN'), // {{8}}
+        donationId.slice(-8), // {{9}}
         thankYouPageUrl // {{10}}
       ]
 
       // Ensure all parameters are strings and not empty
       const sanitizedParams = templateParams.map((param, index) => {
         const sanitized = String(param || '').trim()
-        return sanitized || (index === 0 ? 'Valued Donor' :
-          index === 1 || index === 3 ? '₹' :
-            index === 2 || index === 4 ? '0' :
-              index === 5 ? 'General Donation' :
-                index === 6 ? new Date().toLocaleDateString('en-IN') :
-                  index === 7 || index === 8 ? donationId.slice(-8) :
-                    thankYouPageUrl)
+        return sanitized || (index === 0 ? receiptImageUrl : // Image URL
+          index === 1 ? 'Valued Donor' : // Donor name
+            index === 2 || index === 4 ? '₹' : // Currency symbols
+              index === 3 || index === 5 ? '0' : // Amounts
+                index === 6 ? 'General Donation' : // Campaign name
+                  index === 7 ? new Date().toLocaleDateString('en-IN') : // Date
+                    index === 8 ? donationId.slice(-8) : // Donation ID
+                      thankYouPageUrl) // Thank you URL
       })
 
       const approvedMessage = sanitizedParams.join('|')
@@ -420,9 +422,9 @@ class WhatsAppService {
       // {{6}} = program, {{7}} = date, {{8}} = receiptId, {{9}} = transactionId, {{10}} = thankYouUrl
       const templateParams = [
         donationData.donorName || 'Valued Donor', // {{1}}
-        donationData.currency || 'INR', // {{2}}
+        donationData.currency || '₹', // {{2}}
         donationData.amount.toString() || '0', // {{3}}
-        donationData.currency || 'INR', // {{4}}
+        donationData.currency || '₹', // {{4}}
         donationData.amount.toString() || '0', // {{5}}
         donationData.programName || donationData.campaignName || 'General Donation', // {{6}}
         new Date().toLocaleDateString('en-IN'), // {{7}}
@@ -437,7 +439,7 @@ class WhatsAppService {
         if (!sanitized) {
           console.warn(`⚠️ Empty template parameter at index ${index + 1}:`, param)
           return index === 0 ? 'Valued Donor' :
-            index === 1 || index === 3 ? 'INR' :
+            index === 1 || index === 3 ? '₹' :
               index === 2 || index === 4 ? '0' :
                 index === 5 ? 'General Donation' :
                   index === 6 ? new Date().toLocaleDateString('en-IN') :
@@ -492,7 +494,7 @@ class WhatsAppService {
     _certificateNumber: string
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://khadimemillat.org'
+      const baseUrl = 'https://khadimemillat.org'
       // Use PNG image endpoint (publicly accessible via middleware)
       const receiptImageUrl = `${baseUrl}/api/receipts/${donationId}/image`
       const thankYouPageUrl = `${baseUrl}/thank-you?donationId=${donationId}`
