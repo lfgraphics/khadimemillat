@@ -158,6 +158,14 @@ const adminNavigationItems: NavigationItem[] = [
     category: 'Programs & Campaigns'
   },
   {
+    title: 'Neki Bank (Gullak)',
+    description: 'Manage Gullak locations, caretakers, and collections',
+    href: '/admin/gullak',
+    icon: Store,
+    badge: 'New',
+    category: 'Programs & Campaigns'
+  },
+  {
     title: 'Campaigns',
     description: 'Create and manage fundraising campaigns',
     href: '/admin/campaigns',
