@@ -74,7 +74,7 @@ export function RoleBasedNav({ userRole }: RoleBasedNavProps) {
   };
 
   const config = roleConfig[userRole as keyof typeof roleConfig];
-  
+
   if (!config) return null;
 
   return (
@@ -96,7 +96,7 @@ export function RoleBasedNav({ userRole }: RoleBasedNavProps) {
           {config.label} Access
         </div>
         <DropdownMenuSeparator />
-        
+
         {config.links.map((link) => (
           <DropdownMenuItem key={link.href} asChild>
             <Link href={link.href} className="flex items-center gap-2">
@@ -105,9 +105,9 @@ export function RoleBasedNav({ userRole }: RoleBasedNavProps) {
             </Link>
           </DropdownMenuItem>
         ))}
-        
+
         <DropdownMenuSeparator />
-        
+
         {/* Quick Actions based on role */}
         {userRole === 'admin' && (
           <>
@@ -125,7 +125,7 @@ export function RoleBasedNav({ userRole }: RoleBasedNavProps) {
             </DropdownMenuItem>
           </>
         )}
-        
+
         {userRole === 'surveyor' && (
           <DropdownMenuItem asChild>
             <Link href="/surveyor?filter=assigned" className="flex items-center gap-2">

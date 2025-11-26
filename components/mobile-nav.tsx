@@ -25,7 +25,8 @@ import {
     Menu,
     HeartPlus,
     BookOpenCheck,
-    ChartNoAxesGantt
+    ChartNoAxesGantt,
+    HandCoins
 } from 'lucide-react'
 
 import Link from "next/link"
@@ -94,7 +95,7 @@ export function MobileNav() {
                                     <ChartNoAxesGantt className="h-4 w-4" />
                                     All Admin Tools
                                 </Link>
-                                
+
                                 {/* Core Management */}
                                 <div className="mt-3 mb-2">
                                     <p className="px-2 text-xs font-medium text-muted-foreground">CORE MANAGEMENT</p>
@@ -194,7 +195,14 @@ export function MobileNav() {
                                     <Heart className="h-4 w-4" />
                                     Money Donations
                                 </Link>
-
+                                <Link
+                                    href="/cash-intake"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <HandCoins className="h-4 w-4" />
+                                    Offline Donation
+                                </Link>
                                 {/* Programs */}
                                 <div className="mt-3 mb-2">
                                     <p className="px-2 text-xs font-medium text-muted-foreground">PROGRAMS</p>
