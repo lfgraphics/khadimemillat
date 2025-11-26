@@ -260,14 +260,14 @@ export function AdminNavigationDashboard() {
         <div key={category}>
           <div className="flex items-center gap-2 mb-4">
             <h2 className="text-xl font-semibold">{category}</h2>
-            <Badge 
-              variant="outline" 
+            <Badge
+              variant="outline"
               className={categoryColors[category as keyof typeof categoryColors]}
             >
               {items.length} tools
             </Badge>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {items.map((item) => (
               <Link key={item.href} href={item.href}>
