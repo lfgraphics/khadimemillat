@@ -49,7 +49,7 @@ import NotificationBell from '@/components/NotificationBell'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const pathname = usePathname()
-    
+
     return (
         <Sidebar collapsible="icon" {...props} className="z-[2000]">
             <SidebarHeader>
@@ -87,8 +87,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                             <SidebarMenuItem>
-                                <SidebarMenuButton 
-                                    asChild 
+                                <SidebarMenuButton
+                                    asChild
                                     tooltip="Create Collection Request"
                                     isActive={pathname === '/admin/create-collection-request'}
                                 >
