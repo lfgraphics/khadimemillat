@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import {
   LayoutDashboard,
-  Users,
   ClipboardCheck,
   Plus,
   UserCog2,
@@ -18,24 +17,15 @@ import {
   ImageIcon,
   Store,
   FileCheck,
-  Settings,
   Database,
-  ShoppingCart,
   Search,
-  BookOpen,
-  Calendar,
   BarChart3,
   Mail,
   History,
   FileText as FileTemplate,
-  Truck,
   Package,
   CreditCard,
-  Shield,
-  Activity,
-  Zap,
   TrendingUp,
-  Globe,
   Layers
 } from 'lucide-react';
 
@@ -128,6 +118,14 @@ const adminNavigationItems: NavigationItem[] = [
 
   // Financial & Donations
   {
+    title: 'Cash Intake Entry',
+    description: 'Record and manage cash donations and contributions',
+    href: '/admin/money-donations',
+    icon: CreditCard,
+    badge: 'Updated',
+    category: 'Financial Management'
+  },
+  {
     title: 'Money Donations',
     description: 'Track and manage monetary contributions',
     href: '/admin/money-donations',
@@ -138,7 +136,7 @@ const adminNavigationItems: NavigationItem[] = [
     title: 'Expense Management',
     description: 'Track organizational expenses with receipts and audit trails',
     href: '/admin/expenses',
-    icon: CreditCard,
+    icon: TrendingUp,
     category: 'Financial Management'
   },
   {

@@ -25,10 +25,11 @@ import type { GullakListResponse } from '@/types/gullak'
 export default async function GullakManagementPage({
     searchParams
 }: {
-    searchParams: { page?: string; status?: string }
+    searchParams: Promise<{ page?: string; status?: string }>
 }) {
-    const page = parseInt(searchParams.page || '1')
-    const status = searchParams.status || 'all'
+    const params = await searchParams
+    const page = parseInt(params.page || '1')
+    const status = params.status || 'all'
     
     const result = await getGullaks(page, 10, status) as GullakListResponse
 

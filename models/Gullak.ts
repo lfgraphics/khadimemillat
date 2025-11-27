@@ -11,7 +11,7 @@ export interface IGullak extends Document {
         landmark?: string
     }
     caretaker: {
-        userId: mongoose.Types.ObjectId // Reference to User with gullak_caretaker role
+        userId: string // Clerk user ID (not ObjectId since we use Clerk as source of truth)
         name: string
         phone: string
         assignedAt: Date
@@ -23,8 +23,9 @@ export interface IGullak extends Document {
     totalAmountCollected: number
     description?: string
     notes?: string
-    createdBy: mongoose.Types.ObjectId // Reference to User (admin/neki_bank_manager)
-    updatedBy?: mongoose.Types.ObjectId
+    image?: string // Cloudinary URL for Gullak photo
+    createdBy: string // Clerk user ID of admin/neki_bank_manager
+    updatedBy?: string // Clerk user ID
 }
 
 const gullakSchema = new Schema<IGullak>({
@@ -43,7 +44,7 @@ const gullakSchema = new Schema<IGullak>({
         landmark: { type: String }
     },
     caretaker: {
-        userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+        userId: { type: String, required: true }, // Clerk user ID
         name: { type: String, required: true },
         phone: { type: String, required: true },
         assignedAt: { type: Date, default: Date.now }
@@ -59,8 +60,9 @@ const gullakSchema = new Schema<IGullak>({
     totalAmountCollected: { type: Number, default: 0 },
     description: { type: String },
     notes: { type: String },
-    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    updatedBy: { type: Schema.Types.ObjectId, ref: 'User' }
+    image: { type: String }, // Cloudinary URL
+    createdBy: { type: String, required: true }, // Clerk user ID
+    updatedBy: { type: String } // Clerk user ID
 }, { 
     timestamps: true,
     toJSON: { virtuals: true },
@@ -70,13 +72,8 @@ const gullakSchema = new Schema<IGullak>({
 // Index for geospatial queries - GeoJSON format
 gullakSchema.index({ "location.coordinates": "2dsphere" })
 
-// Virtual for caretaker details
-gullakSchema.virtual('caretakerDetails', {
-    ref: 'User',
-    localField: 'caretaker.userId',
-    foreignField: '_id',
-    justOne: true
-})
+// Note: No virtual for caretaker details since we use Clerk as source of truth
+// Caretaker details are fetched from Clerk API when needed
 
 // Static method to generate next Gullak ID
 gullakSchema.statics.generateGullakId = async function(): Promise<string> {
@@ -96,4 +93,9 @@ interface IGullakModel extends Model<IGullak> {
     generateGullakId(): Promise<string>
 }
 
-export default mongoose.models.Gullak || mongoose.model<IGullak>("Gullak", gullakSchema, 'gullaks')
+// Force model refresh to ensure schema changes are applied
+if (mongoose.models.Gullak) {
+    delete mongoose.models.Gullak
+}
+
+export default mongoose.model<IGullak>("Gullak", gullakSchema, 'gullaks')

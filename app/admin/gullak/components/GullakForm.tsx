@@ -16,7 +16,8 @@ import {
 import { createGullak, updateGullak } from '@/actions/gullak-actions'
 import { getCurrentLocationAsGeoJSON, geoJSONToLatLng } from '@/utils/geolocation'
 import { toast } from 'sonner'
-import { MapPin, User, Calendar, FileText, Loader2 } from 'lucide-react'
+import { MapPin, User, Calendar, FileText, Loader2, Camera } from 'lucide-react'
+import PhotoCapture, { CapturedPhoto } from '@/components/sponsorship/PhotoCapture'
 import type { CaretakerType, GullakType } from '@/types/gullak'
 
 interface GullakFormProps {
@@ -34,6 +35,7 @@ export function GullakForm({ caretakers, mode, initialData }: GullakFormProps) {
         longitude: initialData?.location?.coordinates?.coordinates?.[0]?.toString() || '', // longitude is first in GeoJSON
         landmark: initialData?.location?.landmark || '',
         caretakerUserId: initialData?.caretaker?.userId?.toString() || '',
+        caretakerPhone: initialData?.caretaker?.phone || '',
         installationDate: initialData?.installationDate 
             ? new Date(initialData.installationDate).toISOString().split('T')[0] 
             : new Date().toISOString().split('T')[0],
@@ -41,16 +43,72 @@ export function GullakForm({ caretakers, mode, initialData }: GullakFormProps) {
         description: initialData?.description || '',
         notes: initialData?.notes || ''
     })
+    
+    const [gullakPhotos, setGullakPhotos] = useState<CapturedPhoto[]>(
+        initialData?.image ? [{
+            id: 'existing',
+            url: initialData.image,
+            file: null as any,
+            category: 'other' as const,
+            timestamp: new Date(),
+            publicId: undefined
+        }] : []
+    )
+
+    const deleteCloudinaryImage = async (publicId: string) => {
+        try {
+            const response = await fetch('/api/upload/cloudinary/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ publicId })
+            })
+            
+            if (!response.ok) {
+                console.warn('Failed to delete image from Cloudinary:', publicId)
+            }
+        } catch (error) {
+            console.warn('Error deleting image from Cloudinary:', error)
+        }
+    }
+
+    const handlePhotosChange = (photos: CapturedPhoto[]) => {
+        // If photos were removed, clean up any uploaded ones
+        if (gullakPhotos.length > photos.length) {
+            const removedPhotos = gullakPhotos.filter(
+                oldPhoto => !photos.find(newPhoto => newPhoto.id === oldPhoto.id)
+            )
+            
+            // Delete removed photos from Cloudinary if they were uploaded
+            removedPhotos.forEach(photo => {
+                if (photo.publicId) {
+                    // Use the publicId directly from PhotoCapture
+                    deleteCloudinaryImage(photo.publicId)
+                }
+            })
+        }
+        
+        setGullakPhotos(photos)
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsSubmitting(true)
 
         try {
+            // Use uploaded image URL from PhotoCapture or keep existing
+            let imageUrl: string = initialData?.image || ''
+            if (gullakPhotos.length > 0 && gullakPhotos[0].url) {
+                imageUrl = gullakPhotos[0].url
+            }
+
             const formDataObj = new FormData()
             Object.entries(formData).forEach(([key, value]) => {
                 if (value) formDataObj.append(key, value)
             })
+            
+            if (imageUrl) {
+                formDataObj.append('image', imageUrl)
+            }
 
             const result = mode === 'create' 
                 ? await createGullak(formDataObj)
@@ -191,6 +249,29 @@ export function GullakForm({ caretakers, mode, initialData }: GullakFormProps) {
                 </div>
             </div>
 
+            {/* Image Upload Section */}
+            <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-4">
+                    <Camera className="w-5 h-5 text-primary" />
+                    <h3 className="text-lg font-semibold">Gullak Photo</h3>
+                </div>
+
+                <div className="space-y-2">
+                    <Label>Capture or Upload Gullak Image (Optional)</Label>
+                    <p className="text-xs text-muted-foreground">
+                        Take a photo or upload an image of the Gullak location for better identification
+                    </p>
+                </div>
+
+                <PhotoCapture
+                    category="other"
+                    maxPhotos={1}
+                    onPhotosChange={handlePhotosChange}
+                    existingPhotos={gullakPhotos}
+                    disabled={isSubmitting}
+                />
+            </div>
+
             {/* Caretaker Section */}
             <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-4">
@@ -226,6 +307,21 @@ export function GullakForm({ caretakers, mode, initialData }: GullakFormProps) {
                             No caretakers available. Please create caretaker accounts first.
                         </p>
                     )}
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="caretakerPhone">Caretaker Phone Number *</Label>
+                    <Input
+                        id="caretakerPhone"
+                        type="tel"
+                        placeholder="e.g., +91 9876543210"
+                        value={formData.caretakerPhone}
+                        onChange={(e) => handleInputChange('caretakerPhone', e.target.value)}
+                        required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Primary contact number for the caretaker
+                    </p>
                 </div>
             </div>
 

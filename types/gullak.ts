@@ -21,6 +21,7 @@ export interface GullakType {
     totalAmountCollected: number
     description?: string
     notes?: string
+    image?: string
     createdBy?: {
         _id: string
         name: string

@@ -6,11 +6,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { 
-  Camera, 
-  Upload, 
-  X, 
-  Eye, 
+import {
+  Camera,
+  Upload,
+  X,
+  Eye,
   Download,
   RotateCcw,
   Trash2,
@@ -26,6 +26,7 @@ export interface CapturedPhoto {
   category: 'identity' | 'housing' | 'documentation' | 'family' | 'other';
   description?: string;
   timestamp: Date;
+  publicId?: string; // Added after upload to Cloudinary
 }
 
 interface PhotoCaptureProps {
@@ -65,7 +66,7 @@ export default function PhotoCapture({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [previewPhoto, setPreviewPhoto] = useState<CapturedPhoto | null>(null);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -76,13 +77,13 @@ export default function PhotoCapture({
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { 
+        video: {
           facingMode: 'environment', // Use back camera on mobile
           width: { ideal: 1280 },
           height: { ideal: 720 }
         }
       });
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         setStream(mediaStream);
@@ -126,7 +127,7 @@ export default function PhotoCapture({
         const file = new File([blob], `${category}-${Date.now()}.jpg`, {
           type: 'image/jpeg'
         });
-        
+
         addPhoto(file);
         stopCamera();
       }
@@ -136,7 +137,7 @@ export default function PhotoCapture({
   // Handle file selection
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    
+
     files.forEach(file => {
       if (file.type.startsWith('image/')) {
         addPhoto(file);
@@ -175,8 +176,6 @@ export default function PhotoCapture({
     const updatedPhotos = [...photos, newPhoto];
     setPhotos(updatedPhotos);
     onPhotosChange(updatedPhotos);
-    
-    toast.success('Photo added successfully');
   };
 
   // Remove photo
@@ -189,7 +188,7 @@ export default function PhotoCapture({
     const updatedPhotos = photos.filter(p => p.id !== photoId);
     setPhotos(updatedPhotos);
     onPhotosChange(updatedPhotos);
-    
+
     toast.success('Photo removed');
   };
 
@@ -204,39 +203,36 @@ export default function PhotoCapture({
       const uploadPromises = photos.map(async (photo, index) => {
         const formData = new FormData();
         formData.append('file', photo.file);
-        formData.append('category', photo.category);
-        formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'kmwf_surveys');
+        formData.append('folder', `kmwf/${photo.category}`);
 
-        const response = await fetch(
-          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-          {
-            method: 'POST',
-            body: formData
-          }
-        );
+        const response = await fetch('/api/upload/cloudinary', {
+          method: 'POST',
+          body: formData
+        });
 
         if (!response.ok) {
-          throw new Error(`Upload failed for photo ${index + 1}`);
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(`Upload failed for photo ${index + 1}: ${errorData.error || response.statusText}`);
         }
 
         const result = await response.json();
-        
+
         // Update progress
         setUploadProgress(((index + 1) / photos.length) * 100);
-        
+
         return {
           ...photo,
-          url: result.secure_url,
+          url: result.secure_url || result.url,
           publicId: result.public_id
         };
       });
 
       const uploadedPhotos = await Promise.all(uploadPromises);
-      
+
       // Update photos with server URLs
       setPhotos(uploadedPhotos);
       onPhotosChange(uploadedPhotos);
-      
+
       toast.success('All photos uploaded successfully');
     } catch (error) {
       console.error('Upload error:', error);
@@ -288,7 +284,7 @@ export default function PhotoCapture({
                 className="w-full max-w-md mx-auto rounded-lg"
               />
               <canvas ref={canvasRef} className="hidden" />
-              
+
               <div className="flex justify-center gap-2 mt-4">
                 <Button type="button" onClick={capturePhoto} size="lg">
                   <Camera className="w-5 h-5 mr-2" />
@@ -313,7 +309,7 @@ export default function PhotoCapture({
                 <Camera className="w-4 h-4 mr-2" />
                 Take Photo
               </Button>
-              
+
               <Button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -370,7 +366,7 @@ export default function PhotoCapture({
                       fill
                       className="object-cover"
                     />
-                    
+
                     {/* Overlay with actions */}
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                       <Button
@@ -381,7 +377,7 @@ export default function PhotoCapture({
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
-                      
+
                       <Button
                         type="button"
                         size="sm"
@@ -390,7 +386,7 @@ export default function PhotoCapture({
                       >
                         <Download className="w-4 h-4" />
                       </Button>
-                      
+
                       <Button
                         type="button"
                         size="sm"
@@ -402,7 +398,7 @@ export default function PhotoCapture({
                       </Button>
                     </div>
                   </div>
-                  
+
                   <p className="text-xs text-muted-foreground mt-1 truncate">
                     {photo.timestamp.toLocaleString()}
                   </p>
@@ -456,7 +452,7 @@ export default function PhotoCapture({
               >
                 <X className="w-4 h-4" />
               </Button>
-              
+
               <Image
                 src={previewPhoto.url}
                 alt="Photo preview"
@@ -464,7 +460,7 @@ export default function PhotoCapture({
                 height={600}
                 className="max-w-full max-h-full object-contain rounded-lg"
               />
-              
+
               <div className="absolute bottom-4 left-4 bg-black/70 text-white p-2 rounded">
                 <p className="text-sm">
                   {categoryLabels[previewPhoto.category]} - {previewPhoto.timestamp.toLocaleString()}

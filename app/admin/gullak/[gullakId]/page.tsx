@@ -14,12 +14,10 @@ import {
     Navigation,
     Phone,
     Mail,
-    CheckCircle,
-    Clock,
-    Wrench,
-    AlertCircle,
     DollarSign,
-    TrendingUp
+    TrendingUp,
+    FileText,
+    Plus
 } from 'lucide-react'
 import { getGoogleMapsUrl, geoJSONToLatLng } from '@/utils/geolocation'
 import { GULLAK_STATUS_CONFIG } from '@/utils/gullak-constants'
@@ -30,9 +28,10 @@ import type { GullakDetailResponse } from '@/types/gullak'
 export default async function GullakDetailPage({
     params
 }: {
-    params: { gullakId: string }
+    params: Promise<{ gullakId: string }>
 }) {
-    const result = await getGullakById(params.gullakId) as GullakDetailResponse
+    const { gullakId } = await params
+    const result = await getGullakById(gullakId) as GullakDetailResponse
     
     if (!result.success || !result.data) {
         notFound()
@@ -43,10 +42,7 @@ export default async function GullakDetailPage({
     const StatusIcon = statusInfo.icon
     const { latitude, longitude } = geoJSONToLatLng(gullak.location.coordinates)
 
-    const openInGoogleMaps = () => {
-        const url = getGoogleMapsUrl(gullak.location.coordinates)
-        window.open(url, '_blank')
-    }
+
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -114,26 +110,25 @@ export default async function GullakDetailPage({
                                 </div>
 
                                 <div className="flex flex-col sm:flex-row gap-2 pt-4">
-                                    <Button 
-                                        variant="outline" 
-                                        onClick={() => {
-                                            const url = getGoogleMapsUrl(gullak.location.coordinates)
-                                            window.open(url, '_blank')
-                                        }}
-                                    >
-                                        <ExternalLink className="w-4 h-4 mr-2" />
-                                        View on Google Maps
+                                    <Button variant="outline" asChild>
+                                        <Link 
+                                            href={getGoogleMapsUrl(gullak.location.coordinates)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            <ExternalLink className="w-4 h-4 mr-2" />
+                                            View on Google Maps
+                                        </Link>
                                     </Button>
-                                    <Button 
-                                        variant="outline"
-                                        onClick={() => {
-                                            // For directions, we'd need user location
-                                            const url = getGoogleMapsUrl(gullak.location.coordinates)
-                                            window.open(url, '_blank')
-                                        }}
-                                    >
-                                        <Navigation className="w-4 h-4 mr-2" />
-                                        Get Directions
+                                    <Button variant="outline" asChild>
+                                        <Link 
+                                            href={`https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            <Navigation className="w-4 h-4 mr-2" />
+                                            Get Directions
+                                        </Link>
                                     </Button>
                                 </div>
                             </CardContent>
@@ -313,15 +308,20 @@ export default async function GullakDetailPage({
                                         ))}
                                     </div>
                                     
-                                    {recentCollections.length >= 5 && (
-                                        <div className="mt-4 text-center">
-                                            <Button variant="outline" size="sm" asChild>
-                                                <Link href={`/admin/gullak/${gullak.gullakId}/collections`}>
-                                                    View All Collections
-                                                </Link>
-                                            </Button>
-                                        </div>
-                                    )}
+                                    <div className="mt-4 text-center space-y-2">
+                                        <Button variant="outline" size="sm" asChild className="w-full">
+                                            <Link href={`/admin/gullak/${gullak.gullakId}/collections`}>
+                                                <FileText className="w-4 h-4 mr-2" />
+                                                View All Collections
+                                            </Link>
+                                        </Button>
+                                        <Button size="sm" asChild className="w-full">
+                                            <Link href={`/admin/gullak/${gullak.gullakId}/collections/create`}>
+                                                <Plus className="w-4 h-4 mr-2" />
+                                                Record New Collection
+                                            </Link>
+                                        </Button>
+                                    </div>
                                 </CardContent>
                             </Card>
                         )}

@@ -224,6 +224,14 @@ export function MobileNav() {
                                     Campaigns
                                 </Link>
                                 <Link
+                                    href="/admin/gullak"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <Store className="h-4 w-4" />
+                                    Neki Bank (Gullak)
+                                </Link>
+                                <Link
                                     href="/admin/activities"
                                     className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                     onClick={() => setOpen(false)}
@@ -243,6 +251,56 @@ export function MobileNav() {
                                 >
                                     <BellDot className="h-4 w-4" />
                                     Notifications
+                                </Link>
+                            </div>
+                        </div>
+                    </RoleGuard>
+
+                    {/* Gullak Caretaker Section */}
+                    <RoleGuard allowedRoles={["gullak_caretaker", "admin"]}>
+                        <div className="mb-6">
+                            <h3 className="mb-2 px-2 text-sm font-semibold text-muted-foreground">Gullak Caretaker</h3>
+                            <div className="space-y-1">
+                                <Link
+                                    href="/gullak-caretaker"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <Store className="h-4 w-4" />
+                                    My Gullaks
+                                </Link>
+                                <Link
+                                    href="/programs/golak-map"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <HandCoins className="h-4 w-4" />
+                                    Gullak Map
+                                </Link>
+                            </div>
+                        </div>
+                    </RoleGuard>
+
+                    {/* Neki Bank Manager Section */}
+                    <RoleGuard allowedRoles={["neki_bank_manager", "admin"]}>
+                        <div className="mb-6">
+                            <h3 className="mb-2 px-2 text-sm font-semibold text-muted-foreground">Neki Bank Manager</h3>
+                            <div className="space-y-1">
+                                <Link
+                                    href="/admin/gullak"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <Store className="h-4 w-4" />
+                                    Manage Gullaks
+                                </Link>
+                                <Link
+                                    href="/programs/golak-map"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <HandCoins className="h-4 w-4" />
+                                    Gullak Map
                                 </Link>
                             </div>
                         </div>
@@ -422,6 +480,14 @@ export function MobileNav() {
                             >
                                 <Store className="h-4 w-4" />
                                 Marketplace
+                            </Link>
+                            <Link
+                                href="/programs/golak-map"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                onClick={() => setOpen(false)}
+                            >
+                                <HandCoins className="h-4 w-4" />
+                                Find Gullak
                             </Link>
                             <Link
                                 href="/my-donations"

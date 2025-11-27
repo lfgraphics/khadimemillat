@@ -1,21 +1,61 @@
-import mongoose, { Schema, models } from "mongoose";
+import mongoose, { Schema, Document, models } from "mongoose";
 
-const OfflineDonationSchema = new Schema(
+export interface IOfflineDonation extends Document {
+  donorName: string;
+  amount: number;
+  notes?: string;
+  collectedBy: {
+    name: string;
+    userId: string; // Clerk user ID (consistent with Gullak system)
+  };
+  type: 'cash' | 'cheque' | 'other';
+  receivedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const OfflineDonationSchema = new Schema<IOfflineDonation>(
   {
-    donorName: { type: String, required: true },
-    amount: { type: Number, required: true },
-    notes: { type: String, default: "" },
-    collectedBy: {
-      type: {
-        _id: false,
-        name: String,
-        user_id: String,
-      }, required: true
+    donorName: { 
+      type: String, 
+      required: true,
+      trim: true,
+      maxlength: 100
     },
-    type: { type: String, default: "cash" },
-    receivedAt: { type: Date, required: true },
+    amount: { 
+      type: Number, 
+      required: true,
+      min: 1
+    },
+    notes: { 
+      type: String, 
+      default: "",
+      maxlength: 500
+    },
+    collectedBy: {
+      name: { type: String, required: true },
+      userId: { type: String, required: true } // Clerk user ID
+    },
+    type: { 
+      type: String, 
+      enum: ['cash', 'cheque', 'other'],
+      default: "cash" 
+    },
+    receivedAt: { 
+      type: Date, 
+      required: true 
+    },
   },
-  { timestamps: true }
+  { 
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
 );
 
-export default models.OfflineDonation || mongoose.model("OfflineDonation", OfflineDonationSchema)
+// Index for efficient queries
+OfflineDonationSchema.index({ receivedAt: -1 });
+OfflineDonationSchema.index({ 'collectedBy.userId': 1 });
+OfflineDonationSchema.index({ amount: -1 });
+
+export default models.OfflineDonation || mongoose.model<IOfflineDonation>("OfflineDonation", OfflineDonationSchema);

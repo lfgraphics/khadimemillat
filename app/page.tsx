@@ -1,4 +1,4 @@
-import { ArrowRight, ClipboardCheck, Headphones, Heart, HeartHandshake, HandHeart, HomeIcon, Mail, Package, Phone, Recycle, ShoppingBag, Truck, Users, HandHelping, UtensilsCrossed } from "lucide-react";
+ import { ArrowRight, ClipboardCheck, Headphones, Heart, HeartHandshake, HandHeart, HomeIcon, Mail, Package, Phone, Recycle, ShoppingBag, Truck, Users, HandHelping, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 import SuspenseSection from "@/components/SuspenseSection";
 import Loading from "@/components/Loading";
@@ -50,7 +50,7 @@ const supportOptions = [
     title: "Purchase Upcycled Products",
     description: "From repaired household items to cotton-filled mattresses made from recycled fabric — our upcycled products fund medical aid, education support, and monthly stipends.",
     cta: "Visit the Marketplace",
-    link: "/programs",
+    link: "/marketplace",
     color: "from-blue-500 to-purple-500"
   },
   {
@@ -74,7 +74,7 @@ const supportOptions = [
     title: "Neki Bank (Gullak) Contribution",
     description: `Your coins become currency for the Hereafter \n Our community Gullak network — also called the Neki Bank — turns daily generosity into ongoing support. Placed in homes, shops, and offices, each Gullak collects small donations that together fund education, food, and healthcare for families in need. Simple, transparent, and spiritually rewarding.`,
     cta: "Find a Gullak Near You",
-    link: "/programs",
+    link: "/programs/golak-map",
     color: "from-cyan-500 to-blue-500"
   },
   {
@@ -153,24 +153,44 @@ export default function Home() {
                 We bring compassionate donors together with verified families and individuals in need — supporting them through sponsorships, community drives, and sustainable programs funded by scrap recycling initiatives.
               </p>
 
-              <div className="flex flex-row gap-4 justify-center lg:justify-start">
+              <div className="grid grid-cols-2 lg:flex lg:flex-row gap-3 justify-center lg:justify-start">
                 <Link href="/donate">
                   <Button
                     size="lg"
-                    className="bg-primary hoact:bg-primary/90 text-base h-10 px-8 group"
+                    className="bg-primary hoact:bg-primary/90 text-sm lg:text-base h-10 px-4 lg:px-8 group w-full"
                   >
                     Donate Now
-                    <ArrowRight className="ml-2 w-5 h-5 group-hoact:translate-x-1 transition-transform" />
+                    <ArrowRight className="ml-2 w-4 h-4 group-hoact:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
-                <Link href="/#">
+                <Link href="/sponsorship">
                   <Button
                     size="lg"
                     variant="outline"
-                    className="gap-2 text-base h-10 px-8 border-border hoact:bg-accent group"
+                    className="gap-2 text-sm lg:text-base h-10 px-4 lg:px-8 border-border hoact:bg-accent group w-full"
                   >
-                    <HeartHandshake className="w-5 h-5 animate-bounce" />
+                    <HeartHandshake className="w-4 h-4 animate-bounce" />
                     Sponsor Now
+                  </Button>
+                </Link>
+                <Link href="/marketplace">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="gap-2 text-sm lg:text-base h-10 px-4 lg:px-8 border-border hoact:bg-accent group w-full"
+                  >
+                    <ShoppingBag className="w-4 h-4" />
+                    Marketplace
+                  </Button>
+                </Link>
+                <Link href="/programs/golak-map">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="gap-2 text-sm lg:text-base h-10 px-4 lg:px-8 border-border hoact:bg-accent group w-full"
+                  >
+                    <HomeIcon className="w-4 h-4" />
+                    Find Gullak
                   </Button>
                 </Link>
               </div>

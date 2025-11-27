@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
 
     // Return standardized response
     return NextResponse.json({
+      success: true,
       public_id: result.public_id,
       url: result.url,
       secure_url: result.secure_url,
@@ -85,24 +86,24 @@ export async function POST(request: NextRequest) {
       
       if (cloudinaryError.http_code === 400) {
         return NextResponse.json(
-          { error: 'Invalid file or upload parameters' },
+          { success: false, error: 'Invalid file or upload parameters' },
           { status: 400 }
         )
       } else if (cloudinaryError.http_code === 401) {
         return NextResponse.json(
-          { error: 'Cloudinary authentication failed' },
+          { success: false, error: 'Cloudinary authentication failed' },
           { status: 401 }
         )
       } else if (cloudinaryError.http_code === 413) {
         return NextResponse.json(
-          { error: 'File too large for Cloudinary' },
+          { success: false, error: 'File too large for Cloudinary' },
           { status: 413 }
         )
       }
     }
 
     return NextResponse.json(
-      { error: 'Internal server error during upload' },
+      { success: false, error: 'Internal server error during upload', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

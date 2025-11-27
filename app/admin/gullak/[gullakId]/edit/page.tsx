@@ -10,10 +10,11 @@ import type { GullakDetailResponse, CaretakersResponse } from '@/types/gullak'
 export default async function EditGullakPage({
     params
 }: {
-    params: { gullakId: string }
+    params: Promise<{ gullakId: string }>
 }) {
+    const { gullakId } = await params
     const [gullakResult, caretakersResult] = await Promise.all([
-        getGullakById(params.gullakId) as Promise<GullakDetailResponse>,
+        getGullakById(gullakId) as Promise<GullakDetailResponse>,
         getAvailableCaretakers() as Promise<CaretakersResponse>
     ])
     

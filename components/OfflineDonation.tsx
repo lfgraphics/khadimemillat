@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { Loader2, DollarSign, Calendar, User, FileText } from "lucide-react";
 
 export default function OfflineDonationForm() {
   const [donorName, setDonorName] = useState("");
@@ -9,154 +17,202 @@ export default function OfflineDonationForm() {
   const [notes, setNotes] = useState("");
   const [receivedAt, setReceivedAt] = useState("");
   const [loading, setLoading] = useState(false);
-  const [responseMsg, setResponseMsg] = useState("");
   const { user } = useUser();
 
-  const name = `${user?.firstName} ${user?.lastName}`
+  const name = `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
   const amounts = [500, 1000, 2500, 5000];
 
   async function submitOfflineDonation() {
-    setLoading(true); setResponseMsg("");
+    if (!isFormValid) return;
 
-    const res = await fetch("/api/cash-intake", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        donorName,
-        amount: Number(amount),
-        notes,
-        receivedAt,
-        collectedBy: name,
-      }),
-    });
+    setLoading(true);
 
-    const data = await res.json();
-    setLoading(false);
+    try {
+      const res = await fetch("/api/cash-intake", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          donorName: donorName.trim(),
+          amount: Number(amount),
+          notes: notes.trim(),
+          receivedAt,
+          collectedBy: {
+            name: name,
+            userId: user?.id
+          },
+        }),
+      });
 
-    if (data.success) {
-      setResponseMsg("Donation added successfully");
-      setDonorName("");
-      setAmount("");
-      setNotes("");
-      setReceivedAt("");
-    } else {
-      setResponseMsg(data.error || "Something went wrong");
+      const data = await res.json();
+
+      if (data.success) {
+        toast.success("Donation added successfully!");
+        // Reset form
+        setDonorName("");
+        setAmount("");
+        setNotes("");
+        setReceivedAt("");
+      } else {
+        toast.error(data.error || "Something went wrong");
+      }
+    } catch (error) {
+      toast.error("Network error. Please try again.");
+    } finally {
+      setLoading(false);
     }
   }
+
   const isFormValid =
     donorName.trim() !== "" &&
     amount.trim() !== "" &&
+    Number(amount) > 0 &&
     receivedAt.trim() !== "";
 
+  // Set default date to today
   useEffect(() => {
-    if (!responseMsg) return;
-
-    const timer = setTimeout(() => {
-      setResponseMsg("");
-    }, 3000);
-    return () => clearTimeout(timer)
-  }, [responseMsg]);
-
+    if (!receivedAt) {
+      setReceivedAt(new Date().toISOString().split('T')[0]);
+    }
+  }, [receivedAt]);
 
   return (
+    <Card className="w-full max-w-2xl">
+      <CardHeader className="text-center">
+        <CardTitle className="flex items-center justify-center gap-2 text-2xl">
+          <DollarSign className="w-6 h-6 text-primary" />
+          Add Offline Donation
+        </CardTitle>
+        <p className="text-muted-foreground">
+          Record cash donations received offline
+        </p>
+      </CardHeader>
 
-    <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-green-50 dark:from-gray-900 dark:to-gray-800 flex justify-center items-start py-20">
-      <div className="w-full max-w-xl bg-white p-6 rounded-2xl shadow-xl">
-        <h2 className="text-2xl font-semibold text-center mb-6">Add Offline Donation</h2>
-
-        {
-          responseMsg && (
-            <div
-              className={`mt-4 mb-4 p-4 rounded-lg text-center font-medium border
-      animate-[fadein_0.4s_ease-out,fadeout_0.4s_ease-in_2.6s_forwards]
-      ${responseMsg.includes("successfully")
-                  ? "bg-green-100 text-green-700 border-green-300"
-                  : "bg-red-100 text-red-700 border-red-300"
-                }
-    `}
-            >
-              {responseMsg}
-            </div>
-          )
-        }
-
-        <div className="grid grid-cols-2 gap-4 mb-3">
-          {amounts.map((amt) => (
-            <button
-              key={amt}
-              onClick={() => setAmount(amt.toString())}
-              className={`py-2 border rounded-lg hover:bg-gray-100 ${Number(amount) == amt ? "bg-purple-100 border-purple-500 font-semibold" : ""
-                }`}
-            >
-              ₹{amt.toLocaleString()}
-            </button>
-          ))}
+      <CardContent className="space-y-6">
+        {/* Quick Amount Selection */}
+        <div className="space-y-3">
+          <Label className="text-base font-medium">Quick Amount Selection</Label>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {amounts.map((amt) => (
+              <Button
+                key={amt}
+                type="button"
+                variant={Number(amount) === amt ? "default" : "outline"}
+                onClick={() => setAmount(amt.toString())}
+                className="h-12"
+              >
+                ₹{amt.toLocaleString()}
+              </Button>
+            ))}
+          </div>
         </div>
 
-        <label className="block text-sm font-medium">
-          Amount <span className="text-red-500">*</span>
-        </label>
+        {/* Custom Amount */}
+        <div className="space-y-2">
+          <Label htmlFor="amount" className="flex items-center gap-2">
+            <DollarSign className="w-4 h-4" />
+            Amount <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="amount"
+            type="string"
+            inputMode="numeric"
+            placeholder="Enter custom amount"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            min="1"
+            className="text-lg"
+          />
+        </div>
 
-        <input
-          type="number"
-          placeholder="Enter custom amount"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          className="w-full border p-2 rounded-lg mb-3"
-        />
+        {/* Donor Name */}
+        <div className="space-y-2">
+          <Label htmlFor="donorName" className="flex items-center gap-2">
+            <User className="w-4 h-4" />
+            Donor Name <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="donorName"
+            type="text"
+            placeholder="Enter donor's full name"
+            value={donorName}
+            maxLength={100}
+            onChange={(e) => setDonorName(e.target.value)}
+          />
+        </div>
 
+        {/* Date Received */}
+        <div className="space-y-2">
+          <Label htmlFor="receivedAt" className="flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            Date Donation Received <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="receivedAt"
+            type="date"
+            value={receivedAt}
+            onChange={(e) => setReceivedAt(e.target.value)}
+            max={new Date().toISOString().split('T')[0]} // Can't be future date
+          />
+        </div>
 
-        <label className="block text-sm font-medium">
-          Donor Name<span className="text-red-500">*</span>
-        </label>
+        {/* Notes */}
+        <div className="space-y-2">
+          <Label htmlFor="notes" className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            Notes (Optional)
+          </Label>
+          <Textarea
+            id="notes"
+            placeholder="Additional notes or message from donor"
+            value={notes}
+            maxLength={500}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={3}
+          />
+          <div className="flex justify-between items-center">
+            <p className="text-xs text-muted-foreground">
+              {notes.length}/500 characters used
+            </p>
+            {notes.length > 400 && (
+              <Badge variant="outline" className="text-xs">
+                {500 - notes.length} remaining
+              </Badge>
+            )}
+          </div>
+        </div>
 
-        <input
-          type="text"
-          placeholder="Donor Name"
-          value={donorName}
-          maxLength={50}
-          onChange={(e) => setDonorName(e.target.value)}
-          className="w-full border p-2 rounded-lg mb-3"
-        />
-
-        <label className="block text-sm font-medium">
-          Notes
-        </label>
-
-        <textarea
-          placeholder="Notes / Message (optional)"
-          value={notes}
-          maxLength={200}
-          onChange={(e) => setNotes(e.target.value)}
-          className="w-full border p-2 rounded-lg mb-3"
-        />
-        <p className="text-xs text-gray-500 mb-3">
-          {notes.length}/200 characters used
-        </p>
-
-        <label className="text-sm font-medium">
-          Date Donation Received <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="date"
-          value={receivedAt}
-          onChange={(e) => setReceivedAt(e.target.value)}
-          className="w-full border p-2 rounded-lg mb-4"
-        />
-
-        <button
+        {/* Submit Button */}
+        <Button
           onClick={submitOfflineDonation}
           disabled={!isFormValid || loading}
-          className={`w-full py-3 rounded-lg font-semibold transition-all
-    ${!isFormValid || loading
-              ? "bg-gray-400"
-              : "bg-purple-600 hover:bg-purple-700 text-white"
-            }
-  `}
+          className="w-full h-12 text-lg"
+          size="lg"
         >
-          {loading ? "Saving..." : "Submit Donation"}
-        </button>
-      </div>
-    </div >
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Saving Donation...
+            </>
+          ) : (
+            <>
+              <DollarSign className="w-4 h-4 mr-2" />
+              Submit Donation
+            </>
+          )}
+        </Button>
+
+        {/* Form Validation Info */}
+        {!isFormValid && (donorName || amount || receivedAt) && (
+          <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
+            <p className="font-medium mb-1">Please complete:</p>
+            <ul className="space-y-1">
+              {!donorName.trim() && <li>• Donor name is required</li>}
+              {(!amount.trim() || Number(amount) <= 0) && <li>• Valid amount is required</li>}
+              {!receivedAt.trim() && <li>• Date received is required</li>}
+            </ul>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
