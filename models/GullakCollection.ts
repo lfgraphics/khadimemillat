@@ -7,11 +7,11 @@ export interface IGullakCollection extends Document {
     amount: number
     collectionDate: Date
     collectedBy: {
-        userId: mongoose.Types.ObjectId // Collection team member
+        userId: string // Clerk user ID
         name: string
     }
     caretakerPresent: {
-        userId: mongoose.Types.ObjectId // Caretaker who was present
+        userId: string // Clerk user ID
         name: string
         signature?: string // Base64 encoded signature if captured
     }
@@ -24,7 +24,7 @@ export interface IGullakCollection extends Document {
     photos?: string[] // Cloudinary URLs of collection photos
     verificationStatus: 'pending' | 'verified' | 'disputed'
     verifiedBy?: {
-        userId: mongoose.Types.ObjectId // Finance officer or admin
+        userId: string // Clerk user ID
         name: string
         verifiedAt: Date
         notes?: string
@@ -33,9 +33,9 @@ export interface IGullakCollection extends Document {
         bankAccount: string
         transactionId: string
         depositDate: Date
-        depositedBy: mongoose.Types.ObjectId
+        depositedBy: string // Clerk user ID
     }
-    createdBy: mongoose.Types.ObjectId
+    createdBy: string // Clerk user ID
 }
 
 const gullakCollectionSchema = new Schema<IGullakCollection>({
@@ -50,11 +50,11 @@ const gullakCollectionSchema = new Schema<IGullakCollection>({
     amount: { type: Number, required: true, min: 0 },
     collectionDate: { type: Date, required: true },
     collectedBy: {
-        userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+        userId: { type: String, required: true }, // Clerk user ID
         name: { type: String, required: true }
     },
     caretakerPresent: {
-        userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+        userId: { type: String, required: true }, // Clerk user ID
         name: { type: String, required: true },
         signature: { type: String }
     },
@@ -71,7 +71,7 @@ const gullakCollectionSchema = new Schema<IGullakCollection>({
         default: 'pending' 
     },
     verifiedBy: {
-        userId: { type: Schema.Types.ObjectId, ref: 'User' },
+        userId: { type: String }, // Clerk user ID
         name: { type: String },
         verifiedAt: { type: Date },
         notes: { type: String }
@@ -80,9 +80,9 @@ const gullakCollectionSchema = new Schema<IGullakCollection>({
         bankAccount: { type: String },
         transactionId: { type: String },
         depositDate: { type: Date },
-        depositedBy: { type: Schema.Types.ObjectId, ref: 'User' }
+        depositedBy: { type: String } // Clerk user ID
     },
-    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true }
+    createdBy: { type: String, required: true } // Clerk user ID
 }, { 
     timestamps: true,
     toJSON: { virtuals: true },

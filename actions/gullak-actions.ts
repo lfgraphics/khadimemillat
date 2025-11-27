@@ -4,7 +4,9 @@ import { auth, clerkClient } from '@clerk/nextjs/server'
 import connectDB from '@/lib/db'
 import Gullak from '@/models/Gullak'
 import GullakCollection from '@/models/GullakCollection'
+import User from '@/models/User'
 import { revalidatePath } from 'next/cache'
+import { notificationService } from '@/lib/services/notification.service'
 
 type ActionState = { success: boolean; message: string; data?: any }
 
@@ -16,10 +18,12 @@ async function checkGullakPermission(): Promise<{ authorized: boolean; userId: s
         return { authorized: false, userId: '' }
     }
 
-    const userRole = sessionClaims?.metadata?.role
-    const authorizedRoles = ['admin', 'moderator', 'neki_bank_manager']
+    const userRole = sessionClaims?.metadata?.role as string
+    const userRoles = (sessionClaims?.metadata as any)?.roles as string[] || []
+    const allRoles = [...(userRoles || []), ...(userRole ? [userRole] : [])]
+    const authorizedRoles = ['admin', 'moderator', 'neki_bank_manager', 'gullak_caretaker']
 
-    if (!userRole || !authorizedRoles.includes(userRole)) {
+    if (!allRoles.some(role => authorizedRoles.includes(role))) {
         return { authorized: false, userId: '' }
     }
 
@@ -360,21 +364,6 @@ export async function getAvailableCaretakers() {
                 
                 const hasRole = allRoles.includes('gullak_caretaker')
                 
-                // Debug specific user
-                if (user.firstName?.toLowerCase().includes('kmwf') || user.lastName?.toLowerCase().includes('tech')) {
-                    console.log('Found target user:', {
-                        id: user.id,
-                        name: `${user.firstName} ${user.lastName}`,
-                        email: user.emailAddresses?.[0]?.emailAddress,
-                        singleRole: singleRole,
-                        publicRoles: roles,
-                        privateRoles: privateRoles,
-                        unsafeRoles: unsafeRoles,
-                        allRoles: allRoles,
-                        hasCaretakerRole: hasRole
-                    })
-                }
-                
                 return hasRole
             })
             .map((user: any) => ({
@@ -429,15 +418,20 @@ export async function createGullakCollection(formData: FormData): Promise<Action
         const witnessesJson = formData.get('witnesses') as string
         const witnesses = witnessesJson ? JSON.parse(witnessesJson) : []
 
+        // Check if this is a caretaker request (no amount provided) or admin collection
+        const amount = formData.get('amount') as string
+        const estimatedAmount = formData.get('estimatedAmount') as string
+        const status = formData.get('status') as string
+        
         const collectionData = {
             collectionId,
             gullakId: gullak._id,
             gullakReadableId,
-            amount: parseFloat(formData.get('amount') as string),
-            collectionDate: new Date(formData.get('collectionDate') as string),
+            amount: amount ? parseFloat(amount) : (estimatedAmount ? parseFloat(estimatedAmount) : 0),
+            collectionDate: new Date((formData.get('collectionDate') || formData.get('reportDate')) as string),
             collectedBy: {
                 userId: userId,
-                name: formData.get('collectorName') as string
+                name: formData.get('collectorName') as string || 'Caretaker Request'
             },
             caretakerPresent: {
                 userId: formData.get('caretakerId') as string,
@@ -447,28 +441,80 @@ export async function createGullakCollection(formData: FormData): Promise<Action
             witnesses,
             notes: formData.get('notes') as string || undefined,
             photos,
-            verificationStatus: 'pending',
+            verificationStatus: status === 'collection_requested' ? 'pending' : 'pending',
             createdBy: userId
         }
 
         const newCollection = new GullakCollection(collectionData)
         await newCollection.save()
 
-        // Update Gullak statistics
-        await Gullak.findByIdAndUpdate(gullak._id, {
-            $inc: { 
-                totalCollections: 1,
-                totalAmountCollected: collectionData.amount
-            },
-            lastCollectionDate: collectionData.collectionDate
-        })
+        // Update Gullak status based on collection type
+        if (status === 'collection_requested') {
+            // Caretaker is requesting collection - mark Gullak as full
+            await Gullak.findByIdAndUpdate(gullak._id, {
+                status: 'full',
+                updatedBy: userId
+            })
+
+            // Notify admins and neki bank managers about collection request (web push only)
+            try {
+                // Get admin/moderator/neki_bank_manager user IDs
+                const adminUsers = await User.find({ 
+                    role: { $in: ['admin', 'moderator', 'neki_bank_manager'] } 
+                }).select('clerkUserId').lean()
+                
+                const adminUserIds = adminUsers.map(user => user.clerkUserId)
+                
+                await notificationService.notifyUsersWebPushOnly(
+                    adminUserIds,
+                    {
+                        title: `🏦 Gullak Collection Request - ${gullak.gullakId}`,
+                        body: `${gullak.caretaker.name} has requested collection for Gullak ${gullak.gullakId} at ${gullak.location.address}. Estimated amount: ₹${collectionData.amount || 'Not specified'}`,
+                        url: `/admin/gullak/${gullak.gullakId}/collections/${collectionId}`,
+                        type: 'gullak_collection_request'
+                    }
+                )
+            } catch (notificationError) {
+                console.error('Failed to send collection request notification:', notificationError)
+                // Don't fail the collection creation if notification fails
+            }
+        } else {
+            // Admin is recording actual collection - just set status to active
+            // Stats will be updated when collection is verified
+            await Gullak.findByIdAndUpdate(gullak._id, {
+                lastCollectionDate: collectionData.collectionDate,
+                status: 'active', // Ensure it's active after collection
+                updatedBy: userId
+            })
+
+            // Notify caretaker about collection recording (web push only)
+            try {
+                await notificationService.notifyUsersWebPushOnly(
+                    [gullak.caretaker.userId],
+                    {
+                        title: `✅ Collection Recorded - ${gullak.gullakId}`,
+                        body: `Your Gullak collection of ₹${collectionData.amount} has been recorded and is pending verification.`,
+                        url: `/gullak-caretaker/gullak/${gullak.gullakId}`,
+                        type: 'gullak_collection_recorded'
+                    }
+                )
+            } catch (notificationError) {
+                console.error('Failed to send collection recorded notification:', notificationError)
+                // Don't fail the collection creation if notification fails
+            }
+        }
 
         revalidatePath('/admin/gullak')
         revalidatePath(`/admin/gullak/${gullakReadableId}`)
-        
+        revalidatePath('/gullak-caretaker')
+
+        const message = status === 'collection_requested' 
+            ? `Collection request ${collectionId} submitted successfully`
+            : `Collection ${collectionId} recorded successfully`
+
         return {
             success: true,
-            message: `Collection ${collectionId} recorded successfully`,
+            message,
             data: { collectionId }
         }
 
@@ -549,8 +595,61 @@ export async function verifyGullakCollection(collectionId: string, formData: For
 
         await collection.save()
 
+        // Update Gullak status when collection is verified
+        if (status === 'verified') {
+            // Get the gullak and update its status and stats
+            const gullak = await Gullak.findById(collection.gullakId)
+            if (gullak) {
+                await Gullak.findByIdAndUpdate(gullak._id, {
+                    $inc: { 
+                        totalCollections: 1,
+                        totalAmountCollected: collection.amount
+                    },
+                    lastCollectionDate: collection.collectionDate,
+                    status: 'active', // Set back to active after successful collection
+                    updatedBy: userId
+                })
+
+                // Notify caretaker about verification (web push only)
+                try {
+                    await notificationService.notifyUsersWebPushOnly(
+                        [gullak.caretaker.userId],
+                        {
+                            title: `🎉 Collection Verified - ${gullak.gullakId}`,
+                            body: `Your collection of ₹${collection.amount} has been verified and approved. The Gullak is now active again for new donations.`,
+                            url: `/gullak-caretaker/gullak/${gullak.gullakId}`,
+                            type: 'gullak_collection_verified'
+                        }
+                    )
+                } catch (notificationError) {
+                    console.error('Failed to send collection verified notification:', notificationError)
+                    // Don't fail the verification if notification fails
+                }
+            }
+        } else if (status === 'disputed') {
+            // Notify caretaker about dispute
+            const gullak = await Gullak.findById(collection.gullakId)
+            if (gullak) {
+                try {
+                    await notificationService.notifyUsersWebPushOnly(
+                        [gullak.caretaker.userId],
+                        {
+                            title: `⚠️ Collection Disputed - ${gullak.gullakId}`,
+                            body: `Your collection of ₹${collection.amount} has been disputed. Please contact administration for clarification.`,
+                            url: `/gullak-caretaker/gullak/${gullak.gullakId}`,
+                            type: 'gullak_collection_disputed'
+                        }
+                    )
+                } catch (notificationError) {
+                    console.error('Failed to send collection disputed notification:', notificationError)
+                    // Don't fail the verification if notification fails
+                }
+            }
+        }
+
         revalidatePath('/admin/gullak')
         revalidatePath(`/admin/gullak/${collection.gullakReadableId}`)
+        revalidatePath('/gullak-caretaker')
         
         return {
             success: true,

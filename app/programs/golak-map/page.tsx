@@ -15,7 +15,7 @@ async function getPublicGullaks() {
     await connectDB()
     
     const gullaks = await Gullak.find({ 
-        status: 'active' // Only show active Gullaks to public
+        status: { $in: ['active', 'full'] } // Show both active and full Gullaks to public
     })
     .populate('caretaker.userId', 'name phone')
     .select('gullakId location caretaker status totalCollections totalAmountCollected image description installationDate')

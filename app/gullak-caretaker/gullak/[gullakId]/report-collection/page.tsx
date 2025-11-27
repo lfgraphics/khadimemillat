@@ -20,12 +20,13 @@ export default async function ReportCollectionPage({
         redirect('/sign-in')
     }
     
-    // Check if user has gullak_caretaker role
+    // Check if user has permission to access gullak operations
     const userRole = sessionClaims?.metadata?.role as string
     const userRoles = (sessionClaims?.metadata as any)?.roles as string[] || []
     const allRoles = [...(userRoles || []), ...(userRole ? [userRole] : [])]
+    const authorizedRoles = ['gullak_caretaker', 'admin', 'moderator', 'neki_bank_manager']
     
-    if (!allRoles.includes('gullak_caretaker')) {
+    if (!allRoles.some(role => authorizedRoles.includes(role))) {
         redirect('/unauthorized')
     }
     
@@ -37,8 +38,9 @@ export default async function ReportCollectionPage({
 
     const { gullak } = result.data
     
-    // Check if this caretaker is assigned to this gullak
-    if (gullak.caretaker.userId !== userId) {
+    // Check if this caretaker is assigned to this gullak (only for caretakers, not admins)
+    const isCaretaker = allRoles.includes('gullak_caretaker') && !allRoles.includes('admin') && !allRoles.includes('moderator') && !allRoles.includes('neki_bank_manager')
+    if (isCaretaker && gullak.caretaker.userId !== userId) {
         redirect('/unauthorized')
     }
 
@@ -55,10 +57,10 @@ export default async function ReportCollectionPage({
                     </Button>
                     <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                            <h1 className="text-3xl font-bold">Report Collection</h1>
+                            <h1 className="text-3xl font-bold">Report Gullak Ready</h1>
                         </div>
                         <p className="text-muted-foreground">
-                            Report a collection for {gullak.gullakId} - {gullak.location.address}
+                            Report that {gullak.gullakId} is ready for collection - {gullak.location.address}
                         </p>
                     </div>
                 </div>

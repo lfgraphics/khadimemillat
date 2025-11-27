@@ -70,12 +70,20 @@ export default async function GullakDetailPage({
                             Neki Bank Location Details
                         </p>
                     </div>
-                    <Button asChild>
-                        <Link href={`/admin/gullak/${gullak.gullakId}/edit`}>
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit Gullak
-                        </Link>
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button variant="outline" asChild>
+                            <Link href={`/admin/gullak/${gullak.gullakId}/collections/create`}>
+                                <Plus className="w-4 h-4 mr-2" />
+                                Record Collection
+                            </Link>
+                        </Button>
+                        <Button asChild>
+                            <Link href={`/admin/gullak/${gullak.gullakId}/edit`}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit Gullak
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
 
                 <div className="grid lg:grid-cols-3 gap-6">
@@ -282,6 +290,36 @@ export default async function GullakDetailPage({
                             </CardContent>
                         </Card>
 
+                        {/* Quick Actions */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Plus className="w-5 h-5" />
+                                    Quick Actions
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                <Button asChild className="w-full">
+                                    <Link href={`/admin/gullak/${gullak.gullakId}/collections/create`}>
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        Record New Collection
+                                    </Link>
+                                </Button>
+                                <Button variant="outline" asChild className="w-full">
+                                    <Link href={`/admin/gullak/${gullak.gullakId}/collections`}>
+                                        <FileText className="w-4 h-4 mr-2" />
+                                        View All Collections
+                                    </Link>
+                                </Button>
+                                <Button variant="outline" asChild className="w-full">
+                                    <Link href={`/admin/gullak/${gullak.gullakId}/edit`}>
+                                        <Edit className="w-4 h-4 mr-2" />
+                                        Edit Gullak Settings
+                                    </Link>
+                                </Button>
+                            </CardContent>
+                        </Card>
+
                         {/* Recent Collections */}
                         {recentCollections.length > 0 && (
                             <Card>
@@ -322,6 +360,25 @@ export default async function GullakDetailPage({
                                             </Link>
                                         </Button>
                                     </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* No Collections State */}
+                        {recentCollections.length === 0 && (
+                            <Card className="border-dashed border-2">
+                                <CardContent className="p-6 text-center">
+                                    <DollarSign className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                                    <h3 className="text-lg font-semibold mb-2">No Collections Yet</h3>
+                                    <p className="text-muted-foreground mb-4">
+                                        This Gullak hasn't had any collections recorded yet.
+                                    </p>
+                                    <Button asChild>
+                                        <Link href={`/admin/gullak/${gullak.gullakId}/collections/create`}>
+                                            <Plus className="w-4 h-4 mr-2" />
+                                            Record First Collection
+                                        </Link>
+                                    </Button>
                                 </CardContent>
                             </Card>
                         )}

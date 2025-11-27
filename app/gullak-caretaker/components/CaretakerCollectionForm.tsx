@@ -7,18 +7,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { createGullakCollection } from '@/actions/gullak-actions'
 import { toast } from 'sonner'
 import { 
-    DollarSign, 
-    Calendar, 
-    User, 
     FileText, 
     Camera, 
     Loader2,
-    Plus,
-    Trash2,
     CheckCircle
 } from 'lucide-react'
 import PhotoCapture, { CapturedPhoto } from '@/components/sponsorship/PhotoCapture'
@@ -28,46 +23,22 @@ interface CaretakerCollectionFormProps {
     gullak: GullakType
 }
 
-interface Witness {
-    id: string
-    name: string
-    phone: string
-}
+
 
 export function CaretakerCollectionForm({ gullak }: CaretakerCollectionFormProps) {
     const router = useRouter()
     const { user } = useUser()
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [formData, setFormData] = useState({
-        amount: '',
-        collectionDate: new Date().toISOString().split('T')[0],
-        notes: ''
+        reportDate: new Date().toISOString().split('T')[0],
+        notes: '',
+        estimatedAmount: ''
     })
     
-    const [collectionPhotos, setCollectionPhotos] = useState<CapturedPhoto[]>([])
-    const [witnesses, setWitnesses] = useState<Witness[]>([])
+    const [gullakPhotos, setGullakPhotos] = useState<CapturedPhoto[]>([])
 
     const handleInputChange = (field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }))
-    }
-
-    const addWitness = () => {
-        const newWitness: Witness = {
-            id: Date.now().toString(),
-            name: '',
-            phone: ''
-        }
-        setWitnesses(prev => [...prev, newWitness])
-    }
-
-    const updateWitness = (id: string, field: 'name' | 'phone', value: string) => {
-        setWitnesses(prev => 
-            prev.map(w => w.id === id ? { ...w, [field]: value } : w)
-        )
-    }
-
-    const removeWitness = (id: string) => {
-        setWitnesses(prev => prev.filter(w => w.id !== id))
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -75,51 +46,32 @@ export function CaretakerCollectionForm({ gullak }: CaretakerCollectionFormProps
         setIsSubmitting(true)
 
         try {
-            // Validate required fields
-            if (!formData.amount) {
-                toast.error('Please enter the collection amount')
-                return
-            }
-
-            const amount = parseFloat(formData.amount)
-            if (isNaN(amount) || amount <= 0) {
-                toast.error('Please enter a valid amount')
-                return
-            }
-
-            // Prepare form data
-            const submitData = new FormData()
-            Object.entries(formData).forEach(([key, value]) => {
-                if (value) submitData.append(key, value)
-            })
-            
-            // Add gullak and caretaker info
-            submitData.append('gullakId', gullak.gullakId)
-            submitData.append('caretakerId', gullak.caretaker.userId)
-            submitData.append('caretakerName', gullak.caretaker.name)
-            
-            // Add collector name (caretaker reporting their own collection)
-            const collectorName = user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || gullak.caretaker.name
-            submitData.append('collectorName', collectorName)
+            // Create a collection request/notification
+            const requestData = new FormData()
+            requestData.append('gullakId', gullak.gullakId)
+            requestData.append('caretakerId', gullak.caretaker.userId)
+            requestData.append('caretakerName', gullak.caretaker.name)
+            requestData.append('reportDate', formData.reportDate)
+            requestData.append('estimatedAmount', formData.estimatedAmount || '0')
+            requestData.append('notes', formData.notes)
+            requestData.append('status', 'collection_requested')
+            requestData.append('collectorName', user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Caretaker Request')
             
             // Add photos
-            const photoUrls = collectionPhotos.map(photo => photo.url).filter(Boolean)
-            submitData.append('photos', JSON.stringify(photoUrls))
+            const photoUrls = gullakPhotos.map(photo => photo.url).filter(Boolean)
+            requestData.append('photos', JSON.stringify(photoUrls))
             
-            // Add witnesses (only those with names)
-            const validWitnesses = witnesses.filter(w => w.name.trim())
-            submitData.append('witnesses', JSON.stringify(validWitnesses))
-
-            const result = await createGullakCollection(submitData)
-
+            // For now, we'll create a pending collection record that admin needs to complete
+            const result = await createGullakCollection(requestData)
+            
             if (result.success) {
-                toast.success('Collection reported successfully! It will be verified by the administration.')
+                toast.success('Collection request sent successfully! Administration will schedule collection soon.')
                 router.push(`/gullak-caretaker/gullak/${gullak.gullakId}`)
             } else {
                 toast.error(result.message)
             }
         } catch (error) {
-            toast.error('An error occurred while reporting the collection')
+            toast.error('An error occurred while sending the collection request')
         } finally {
             setIsSubmitting(false)
         }
@@ -127,136 +79,71 @@ export function CaretakerCollectionForm({ gullak }: CaretakerCollectionFormProps
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Collection Details */}
+            {/* Report Details */}
             <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-4">
-                    <DollarSign className="w-5 h-5 text-primary" />
-                    <h3 className="text-lg font-semibold">Collection Details</h3>
+                    <CheckCircle className="w-5 h-5 text-primary" />
+                    <h3 className="text-lg font-semibold">Collection Request Details</h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label htmlFor="amount">Amount Collected (₹) *</Label>
+                        <Label htmlFor="estimatedAmount">Estimated Amount (₹) - Optional</Label>
                         <Input
-                            id="amount"
+                            id="estimatedAmount"
                             type="number"
                             step="0.01"
                             min="0"
                             placeholder="e.g., 1500.00"
-                            value={formData.amount}
-                            onChange={(e) => handleInputChange('amount', e.target.value)}
-                            required
+                            value={formData.estimatedAmount}
+                            onChange={(e) => handleInputChange('estimatedAmount', e.target.value)}
                             className="text-lg"
                         />
                         <p className="text-xs text-muted-foreground">
-                            Enter the exact amount collected from the Gullak
+                            Rough estimate of how much might be in the Gullak
                         </p>
                     </div>
                     
                     <div className="space-y-2">
-                        <Label htmlFor="collectionDate">Collection Date *</Label>
+                        <Label htmlFor="reportDate">Report Date</Label>
                         <Input
-                            id="collectionDate"
+                            id="reportDate"
                             type="date"
-                            value={formData.collectionDate}
-                            onChange={(e) => handleInputChange('collectionDate', e.target.value)}
+                            value={formData.reportDate}
+                            onChange={(e) => handleInputChange('reportDate', e.target.value)}
                             required
                         />
                         <p className="text-xs text-muted-foreground">
-                            When was this collection made?
+                            When are you reporting this?
                         </p>
                     </div>
                 </div>
             </div>
 
-            {/* Witnesses */}
-            <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <User className="w-5 h-5 text-primary" />
-                        <h3 className="text-lg font-semibold">Community Witnesses</h3>
-                    </div>
-                    <Button type="button" variant="outline" size="sm" onClick={addWitness}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Witness
-                    </Button>
-                </div>
 
-                <p className="text-sm text-muted-foreground">
-                    Add community members who witnessed the collection process (optional but recommended)
-                </p>
-
-                {witnesses.length === 0 ? (
-                    <Card className="border-dashed">
-                        <CardContent className="p-6 text-center">
-                            <User className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                            <p className="text-sm text-muted-foreground">
-                                No witnesses added yet. Click "Add Witness" to include community members.
-                            </p>
-                        </CardContent>
-                    </Card>
-                ) : (
-                    <div className="space-y-3">
-                        {witnesses.map((witness) => (
-                            <Card key={witness.id}>
-                                <CardContent className="p-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="space-y-1">
-                                                <Label className="text-xs">Witness Name</Label>
-                                                <Input
-                                                    placeholder="Full name"
-                                                    value={witness.name}
-                                                    onChange={(e) => updateWitness(witness.id, 'name', e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <Label className="text-xs">Phone Number (Optional)</Label>
-                                                <Input
-                                                    placeholder="Contact number"
-                                                    value={witness.phone}
-                                                    onChange={(e) => updateWitness(witness.id, 'phone', e.target.value)}
-                                                />
-                                            </div>
-                                        </div>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => removeWitness(witness.id)}
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                )}
-            </div>
 
             {/* Photos */}
             <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-4">
                     <Camera className="w-5 h-5 text-primary" />
-                    <h3 className="text-lg font-semibold">Collection Photos</h3>
+                    <h3 className="text-lg font-semibold">Gullak Status Photos</h3>
                 </div>
 
                 <div className="space-y-2">
-                    <Label>Take Photos of the Collection Process</Label>
+                    <Label>Take Photos of Current Gullak State</Label>
                     <p className="text-xs text-muted-foreground">
-                        Photos help verify the collection and provide transparency. Take pictures of:
-                        <br />• The Gullak before opening
-                        <br />• The contents being counted
-                        <br />• The empty Gullak after collection
+                        Photos help administration assess the collection need:
+                        <br />• Current state of the Gullak
+                        <br />• How full it appears to be
+                        <br />• Any issues or concerns
                     </p>
                 </div>
 
                 <PhotoCapture
                     category="other"
-                    maxPhotos={5}
-                    onPhotosChange={setCollectionPhotos}
-                    existingPhotos={collectionPhotos}
+                    maxPhotos={3}
+                    onPhotosChange={setGullakPhotos}
+                    existingPhotos={gullakPhotos}
                     disabled={isSubmitting}
                 />
             </div>
@@ -265,18 +152,19 @@ export function CaretakerCollectionForm({ gullak }: CaretakerCollectionFormProps
             <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-4">
                     <FileText className="w-5 h-5 text-primary" />
-                    <h3 className="text-lg font-semibold">Additional Notes</h3>
+                    <h3 className="text-lg font-semibold">Additional Information</h3>
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="notes">Collection Notes (Optional)</Label>
+                    <Label htmlFor="notes">Report Notes (Optional)</Label>
                     <Textarea
                         id="notes"
-                        placeholder="Any additional information about the collection:
+                        placeholder="Any additional information about the Gullak status:
+• How full does it appear?
 • Condition of the Gullak
 • Community feedback
-• Any issues encountered
-• Special circumstances"
+• Any issues or concerns
+• Urgency level"
                         value={formData.notes}
                         onChange={(e) => handleInputChange('notes', e.target.value)}
                         rows={4}
@@ -284,16 +172,19 @@ export function CaretakerCollectionForm({ gullak }: CaretakerCollectionFormProps
                 </div>
             </div>
 
-            {/* Verification Notice */}
+            {/* Collection Notice */}
             <Card className="border-blue-200 bg-blue-50">
                 <CardContent className="p-4">
                     <div className="flex items-start gap-3">
                         <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                         <div>
-                            <h4 className="font-medium text-blue-800 mb-1">Verification Process</h4>
+                            <h4 className="font-medium text-blue-800 mb-1">Collection Process</h4>
                             <p className="text-sm text-blue-700">
-                                After you submit this report, it will be reviewed and verified by the administration. 
-                                You will be notified once the verification is complete.
+                                After you submit this request:
+                                <br />• The Gullak will be marked as "Full" to prevent new donations
+                                <br />• Administration will schedule a collection visit
+                                <br />• A team member will collect the actual amount and record it officially
+                                <br />• Once verified, the Gullak will automatically become "Active" again
                             </p>
                         </div>
                     </div>
@@ -317,7 +208,7 @@ export function CaretakerCollectionForm({ gullak }: CaretakerCollectionFormProps
                     className="flex-1"
                 >
                     {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    Report Collection
+                    Request Collection
                 </Button>
             </div>
         </form>

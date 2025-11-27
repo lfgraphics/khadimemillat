@@ -104,43 +104,6 @@ export async function GullakStats() {
                     </Card>
                 ))}
             </div>
-
-            {/* Status Breakdown */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Users className="w-5 h-5" />
-                        Status Breakdown
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {statusStats.map((status, index) => (
-                            <div key={index} className="text-center p-4 rounded-lg bg-muted/50">
-                                <status.icon className={`w-8 h-8 mx-auto mb-2 ${status.color}`} />
-                                <p className="text-2xl font-bold">{status.count}</p>
-                                <p className="text-sm text-muted-foreground">{status.label}</p>
-                            </div>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Recent Activity */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>This Month</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-muted-foreground">Collections This Month</p>
-                            <p className="text-2xl font-bold">{thisMonthCollections}</p>
-                        </div>
-                        <TrendingUp className="w-8 h-8 text-green-600" />
-                    </div>
-                </CardContent>
-            </Card>
         </div>
     )
 }

@@ -3,8 +3,7 @@ import type { Metadata } from "next";
 import { Toaster } from "sonner"
 import "./globals.css";
 import "./loading";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { ClerkProvider } from '@clerk/nextjs';
 import { Footer } from "@/components/footer";
 import WebPushManager from "@/components/WebPushManager";

@@ -36,12 +36,13 @@ export default async function CaretakerGullakDetailPage({
         redirect('/sign-in')
     }
     
-    // Check if user has gullak_caretaker role
+    // Check if user has permission to access gullak operations
     const userRole = sessionClaims?.metadata?.role as string
     const userRoles = (sessionClaims?.metadata as any)?.roles as string[] || []
     const allRoles = [...(userRoles || []), ...(userRole ? [userRole] : [])]
+    const authorizedRoles = ['gullak_caretaker', 'admin', 'moderator', 'neki_bank_manager']
     
-    if (!allRoles.includes('gullak_caretaker')) {
+    if (!allRoles.some(role => authorizedRoles.includes(role))) {
         redirect('/unauthorized')
     }
     
@@ -56,8 +57,9 @@ export default async function CaretakerGullakDetailPage({
     
     const { gullak } = gullakResult.data
     
-    // Check if this caretaker is assigned to this gullak
-    if (gullak.caretaker.userId !== userId) {
+    // Check if this caretaker is assigned to this gullak (only for caretakers, not admins)
+    const isCaretaker = allRoles.includes('gullak_caretaker') && !allRoles.includes('admin') && !allRoles.includes('moderator') && !allRoles.includes('neki_bank_manager')
+    if (isCaretaker && gullak.caretaker.userId !== userId) {
         redirect('/unauthorized')
     }
     
@@ -111,7 +113,7 @@ export default async function CaretakerGullakDetailPage({
                     <Button asChild>
                         <Link href={`/gullak-caretaker/gullak/${gullak.gullakId}/report-collection`}>
                             <Plus className="w-4 h-4 mr-2" />
-                            Report Collection
+                            Request Collection
                         </Link>
                     </Button>
                 </div>
@@ -191,7 +193,7 @@ export default async function CaretakerGullakDetailPage({
                                         <Button asChild>
                                             <Link href={`/gullak-caretaker/gullak/${gullak.gullakId}/report-collection`}>
                                                 <Plus className="w-4 h-4 mr-2" />
-                                                Report First Collection
+                                                Request First Collection
                                             </Link>
                                         </Button>
                                     </div>
@@ -217,74 +219,23 @@ export default async function CaretakerGullakDetailPage({
                                                             {new Date(collection.collectionDate).toLocaleDateString()}
                                                         </div>
                                                     </div>
-                                                    <Button variant="outline" size="sm" asChild>
-                                                        <Link href={`/gullak-caretaker/collections/${collection.collectionId}`}>
-                                                            <Eye className="w-4 h-4 mr-1" />
-                                                            View
-                                                        </Link>
-                                                    </Button>
+                                                    <div className="text-xs text-muted-foreground">
+                                                        {collection.verificationStatus === 'pending' ? 'Awaiting admin collection' : 'Completed'}
+                                                    </div>
                                                 </div>
                                             )
                                         })}
                                         
                                         <div className="text-center pt-4 space-y-2">
-                                            <Button variant="outline" size="sm" asChild className="w-full">
-                                                <Link href={`/gullak-caretaker/collections?gullak=${gullak.gullakId}`}>
-                                                    <FileText className="w-4 h-4 mr-2" />
-                                                    View All Collections
-                                                </Link>
-                                            </Button>
                                             <Button size="sm" asChild className="w-full">
                                                 <Link href={`/gullak-caretaker/gullak/${gullak.gullakId}/report-collection`}>
                                                     <Plus className="w-4 h-4 mr-2" />
-                                                    Report New Collection
+                                                    Request New Collection
                                                 </Link>
                                             </Button>
                                         </div>
                                     </div>
                                 )}
-                            </CardContent>
-                        </Card>
-
-                        {/* Instructions */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Caretaker Instructions</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="space-y-3">
-                                    <div className="flex items-start gap-3">
-                                        <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">1</div>
-                                        <div>
-                                            <h4 className="font-medium">Regular Monitoring</h4>
-                                            <p className="text-sm text-muted-foreground">Check the Gullak regularly and ensure it's secure and accessible to the community.</p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="flex items-start gap-3">
-                                        <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">2</div>
-                                        <div>
-                                            <h4 className="font-medium">Collection Reporting</h4>
-                                            <p className="text-sm text-muted-foreground">When collections are made, report them immediately using the "Report Collection" button.</p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="flex items-start gap-3">
-                                        <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">3</div>
-                                        <div>
-                                            <h4 className="font-medium">Community Engagement</h4>
-                                            <p className="text-sm text-muted-foreground">Encourage community participation and answer questions about the Neki Bank program.</p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="flex items-start gap-3">
-                                        <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">4</div>
-                                        <div>
-                                            <h4 className="font-medium">Issue Reporting</h4>
-                                            <p className="text-sm text-muted-foreground">Report any issues, damage, or concerns to the administration immediately.</p>
-                                        </div>
-                                    </div>
-                                </div>
                             </CardContent>
                         </Card>
                     </div>
@@ -324,36 +275,6 @@ export default async function CaretakerGullakDetailPage({
                             </CardContent>
                         </Card>
 
-                        {/* Contact Information */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Emergency Contact</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                                <div>
-                                    <div className="text-sm text-muted-foreground">For urgent issues or support</div>
-                                    <div className="flex items-center gap-2 mt-2">
-                                        <Phone className="w-4 h-4 text-muted-foreground" />
-                                        <a 
-                                            href="tel:+919876543210"
-                                            className="text-primary hover:underline font-medium"
-                                        >
-                                            +91 98765 43210
-                                        </a>
-                                    </div>
-                                </div>
-                                
-                                <div className="pt-2">
-                                    <Button variant="outline" size="sm" asChild className="w-full">
-                                        <Link href="/gullak-caretaker/help">
-                                            <FileText className="w-4 h-4 mr-2" />
-                                            Help & Guidelines
-                                        </Link>
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-
                         {/* Quick Actions */}
                         <Card>
                             <CardHeader>
@@ -363,7 +284,7 @@ export default async function CaretakerGullakDetailPage({
                                 <Button className="w-full" asChild>
                                     <Link href={`/gullak-caretaker/gullak/${gullak.gullakId}/report-collection`}>
                                         <Plus className="w-4 h-4 mr-2" />
-                                        Report Collection
+                                        Request Collection
                                     </Link>
                                 </Button>
                                 

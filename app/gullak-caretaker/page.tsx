@@ -18,24 +18,28 @@ import {
     CheckCircle
 } from 'lucide-react'
 
-async function getCaretakerGullaks(userId: string) {
+async function getCaretakerGullaks(userId: string, isCaretaker: boolean) {
     await connectDB()
     
-    const gullaks = await Gullak.find({ 'caretaker.userId': userId })
+    // If user is admin/manager, show all gullaks. If caretaker, show only assigned ones
+    const filter = isCaretaker ? { 'caretaker.userId': userId } : {}
+    const gullaks = await Gullak.find(filter)
         .select('gullakId location status totalCollections totalAmountCollected lastCollectionDate')
         .lean()
     
     return JSON.parse(JSON.stringify(gullaks))
 }
 
-async function getCaretakerStats(userId: string) {
+async function getCaretakerStats(userId: string, isCaretaker: boolean) {
     await connectDB()
     
-    const gullaks = await Gullak.find({ 'caretaker.userId': userId })
+    // If user is admin/manager, show stats for all gullaks. If caretaker, show only assigned ones
+    const filter = isCaretaker ? { 'caretaker.userId': userId } : {}
+    const gullaks = await Gullak.find(filter)
     const gullakIds = gullaks.map(g => g.gullakId)
     
     const [totalGullaks, totalCollections, pendingVerifications, thisMonthCollections] = await Promise.all([
-        Gullak.countDocuments({ 'caretaker.userId': userId }),
+        Gullak.countDocuments(filter),
         GullakCollection.countDocuments({ gullakReadableId: { $in: gullakIds } }),
         GullakCollection.countDocuments({ 
             gullakReadableId: { $in: gullakIds }, 
@@ -64,18 +68,22 @@ export default async function GullakCaretakerDashboard() {
         redirect('/sign-in')
     }
     
-    // Check if user has gullak_caretaker role
+    // Check if user has permission to access gullak operations
     const userRole = sessionClaims?.metadata?.role as string
     const userRoles = (sessionClaims?.metadata as any)?.roles as string[] || []
     const allRoles = [...(userRoles || []), ...(userRole ? [userRole] : [])]
+    const authorizedRoles = ['gullak_caretaker', 'admin', 'moderator', 'neki_bank_manager']
     
-    if (!allRoles.includes('gullak_caretaker')) {
+    if (!allRoles.some(role => authorizedRoles.includes(role))) {
         redirect('/unauthorized')
     }
     
+    // Determine if user is purely a caretaker or has admin privileges
+    const isCaretaker = allRoles.includes('gullak_caretaker') && !allRoles.includes('admin') && !allRoles.includes('moderator') && !allRoles.includes('neki_bank_manager')
+    
     const [gullaks, stats] = await Promise.all([
-        getCaretakerGullaks(userId),
-        getCaretakerStats(userId)
+        getCaretakerGullaks(userId, isCaretaker),
+        getCaretakerStats(userId, isCaretaker)
     ])
     
     return (
@@ -203,7 +211,7 @@ export default async function GullakCaretakerDashboard() {
                                                 <Button size="sm" asChild>
                                                     <Link href={`/gullak-caretaker/gullak/${gullak.gullakId}/report-collection`}>
                                                         <Plus className="w-4 h-4 mr-1" />
-                                                        Report Collection
+                                                        Request Collection
                                                     </Link>
                                                 </Button>
                                             </div>

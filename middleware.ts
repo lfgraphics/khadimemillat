@@ -93,9 +93,19 @@ const protectedRoutes = [
         routeName: 'Expense Management'
     },
     {
+        matcher: createRouteMatcher(['/admin/gullak(.*)', '/api/expenses(.*)']),
+        allowedRoles: ['admin', 'moderator', 'accountant'],
+        routeName: 'Expense Management'
+    },
+    {
         matcher: createRouteMatcher(['/api/cash-intake(.*)', '/cash-intake']),
         allowedRoles: ['admin', 'moderator', 'accountant', 'auditor'],
         routeName: 'Cash Intake'
+    },
+    {
+        matcher: createRouteMatcher(['/gullak-caretaker(.*)']),
+        allowedRoles: ['admin', 'moderator', 'neki_bank_manager', 'gullak_caretaker'],
+        routeName: 'Gullak Caretaker'
     }
 ]
 
