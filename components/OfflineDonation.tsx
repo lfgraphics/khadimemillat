@@ -28,19 +28,21 @@ export default function OfflineDonationForm() {
     setLoading(true);
 
     try {
+      const body = {
+        donorName: donorName.trim(),
+        amount: Number(amount),
+        notes: notes.trim(),
+        receivedAt,
+        collectedBy: {
+          name: name,
+          userId: user?.id
+        },
+      }
+
       const res = await fetch("/api/cash-intake", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          donorName: donorName.trim(),
-          amount: Number(amount),
-          notes: notes.trim(),
-          receivedAt,
-          collectedBy: {
-            name: name,
-            userId: user?.id
-          },
-        }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();

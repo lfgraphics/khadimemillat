@@ -37,8 +37,8 @@ export async function POST(req: NextRequest) {
             notes: notes || "",
             receivedAt: new Date(receivedAt),
             collectedBy: {
-                user_id: userId,
-                name: collectedBy,
+                userId: collectedBy.userId,
+                name: collectedBy.name,
             }
         });
 
