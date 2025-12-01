@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { donorName, amount, notes, receivedAt, collectedBy } = body;
+        const { donorName, donorNumber, amount, notes, receivedAt, collectedBy } = body;
 
         if (!donorName || !amount || !receivedAt) {
             return NextResponse.json(
@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
 
         const donation = await OfflineDonation.create({
             donorName,
+            donorNumber,
             amount,
             notes: notes || "",
             receivedAt: new Date(receivedAt),
