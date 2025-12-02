@@ -21,7 +21,13 @@ export async function POST(request: NextRequest) {
             donorAddress,
             donorCity,
             donorState,
-            donorPincode
+            donorPincode,
+            // Subscription fields
+            subscriptionId,
+            isRecurring,
+            recurringType,
+            subscriptionPaymentId,
+            paymentSequence
         } = body
 
         if (!donorName || !amount || amount <= 0) {
@@ -121,6 +127,15 @@ export async function POST(request: NextRequest) {
             donationData.donorCity = donorCity.trim()
             donationData.donorState = donorState.trim()
             donationData.donorPincode = donorPincode.trim()
+        }
+
+        // Add subscription information if provided
+        if (subscriptionId) {
+            donationData.subscriptionId = subscriptionId
+            donationData.isRecurring = isRecurring || false
+            donationData.recurringType = recurringType
+            donationData.subscriptionPaymentId = subscriptionPaymentId
+            donationData.paymentSequence = paymentSequence
         }
 
         const donation = new CampaignDonation(donationData)

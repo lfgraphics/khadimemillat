@@ -1,3 +1,5 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getAvailableCaretakers } from '@/actions/gullak-actions'
 import { GullakForm } from '../components/GullakForm'

@@ -196,6 +196,14 @@ export function MobileNav() {
                                     Money Donations
                                 </Link>
                                 <Link
+                                    href="/admin/sadqa-subscriptions"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <Heart className="h-4 w-4" />
+                                    Recurring Donations
+                                </Link>
+                                <Link
                                     href="/cash-intake"
                                     className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                     onClick={() => setOpen(false)}
@@ -474,6 +482,14 @@ export function MobileNav() {
                                 Donate
                             </Link>
                             <Link
+                                href="/sadqa-subscription"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                onClick={() => setOpen(false)}
+                            >
+                                <Heart className="h-4 w-4" />
+                                Sadqa Subscription
+                            </Link>
+                            <Link
                                 href="/marketplace"
                                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                 onClick={() => setOpen(false)}
@@ -497,6 +513,16 @@ export function MobileNav() {
                                 <Heart className="h-4 w-4" />
                                 My Donations
                             </Link>
+                            <SignedIn>
+                                <Link
+                                    href="/sadqa-subscription/manage"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <Heart className="h-4 w-4" />
+                                    Manage Subscriptions
+                                </Link>
+                            </SignedIn>
                             <Link
                                 href="/my-sponsorships"
                                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"

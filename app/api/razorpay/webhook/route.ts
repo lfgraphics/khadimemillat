@@ -30,6 +30,27 @@ export async function POST(req: NextRequest) {
     const eventType: string = event.event
     const payment = event.payload?.payment?.entity
     const order = event.payload?.order?.entity
+    const subscription = event.payload?.subscription?.entity
+
+    // Handle subscription events
+    if (eventType === 'subscription.activated' || eventType === 'subscription.charged' || eventType === 'subscription.halted' || eventType === 'subscription.cancelled') {
+      try {
+        const { SadqaSubscriptionService } = await import('@/lib/services/sadqa-subscription.service')
+        await SadqaSubscriptionService.processSubscriptionWebhook(event)
+        addBreadcrumb({ 
+          category: 'subscriptions', 
+          message: `subscription event processed: ${eventType}`, 
+          level: 'info', 
+          data: { subscriptionId: subscription?.id } 
+        })
+      } catch (subscriptionError) {
+        console.error('[SUBSCRIPTION_WEBHOOK_ERROR]', subscriptionError)
+        captureException(subscriptionError, { 
+          route: 'razorpay-webhook-subscription',
+          extra: { eventType, subscriptionId: subscription?.id }
+        })
+      }
+    }
 
     if (eventType === 'payment.captured' || eventType === 'order.paid') {
       const orderId = order?.id || payment?.order_id

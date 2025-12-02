@@ -104,8 +104,7 @@ const SponsorshipSchema = new Schema<ISponsorship>({
   },
   razorpaySubscriptionId: {
     type: String,
-    required: true,
-    unique: true
+    required: true
   },
   razorpayCustomerId: {
     type: String
