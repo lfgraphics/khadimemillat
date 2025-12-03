@@ -1,7 +1,9 @@
 import mongoose, { Schema, Document, models } from "mongoose";
 
 export interface IOfflineDonation extends Document {
+  isPublic: boolean;
   donorName: string;
+  donorNumber: string,
   amount: number;
   notes?: string;
   collectedBy: {
@@ -16,19 +18,26 @@ export interface IOfflineDonation extends Document {
 
 const OfflineDonationSchema = new Schema<IOfflineDonation>(
   {
-    donorName: { 
-      type: String, 
+    isPublic: {
+      type: Boolean,
+      default: true
+    },
+    donorName: {
+      type: String,
       required: true,
       trim: true,
       maxlength: 100
     },
-    amount: { 
-      type: Number, 
+    donorNumber: {
+      type: String
+    },
+    amount: {
+      type: Number,
       required: true,
       min: 1
     },
-    notes: { 
-      type: String, 
+    notes: {
+      type: String,
       default: "",
       maxlength: 500
     },
@@ -36,17 +45,17 @@ const OfflineDonationSchema = new Schema<IOfflineDonation>(
       name: { type: String, required: true },
       userId: { type: String, required: true } // Clerk user ID
     },
-    type: { 
-      type: String, 
+    type: {
+      type: String,
       enum: ['cash', 'cheque', 'other'],
-      default: "cash" 
+      default: "cash"
     },
-    receivedAt: { 
-      type: Date, 
-      required: true 
+    receivedAt: {
+      type: Date,
+      required: true
     },
   },
-  { 
+  {
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true }

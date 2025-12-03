@@ -5,19 +5,24 @@ import { useUser } from "@clerk/nextjs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, DollarSign, Calendar, User, FileText } from "lucide-react";
+import { Loader2, DollarSign, Calendar, User, FileText, Phone } from "lucide-react";
+import { useRouter } from "next/navigation";
+
 
 export default function OfflineDonationForm() {
   const [donorName, setDonorName] = useState("");
+  const [donorNumber, setDonorNumber] = useState("");
   const [amount, setAmount] = useState("");
   const [notes, setNotes] = useState("");
   const [receivedAt, setReceivedAt] = useState("");
   const [loading, setLoading] = useState(false);
   const { user } = useUser();
+  const router = useRouter()
 
   const name = `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
   const amounts = [500, 1000, 2500, 5000];
@@ -30,6 +35,7 @@ export default function OfflineDonationForm() {
     try {
       const body = {
         donorName: donorName.trim(),
+        donorNumber,
         amount: Number(amount),
         notes: notes.trim(),
         receivedAt,
@@ -39,7 +45,7 @@ export default function OfflineDonationForm() {
         },
       }
 
-      const res = await fetch("/api/cash-intake", {
+      const res = await fetch("/api/cash-intake/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -51,6 +57,7 @@ export default function OfflineDonationForm() {
         toast.success("Donation added successfully!");
         // Reset form
         setDonorName("");
+        setDonorNumber("");
         setAmount("");
         setNotes("");
         setReceivedAt("");
@@ -116,7 +123,7 @@ export default function OfflineDonationForm() {
           </Label>
           <Input
             id="amount"
-            type="string"
+            type="number"
             inputMode="numeric"
             placeholder="Enter custom amount"
             value={amount}
@@ -139,6 +146,21 @@ export default function OfflineDonationForm() {
             value={donorName}
             maxLength={100}
             onChange={(e) => setDonorName(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="donorNumber" className="flex items-center gap-2">
+            <Phone className="w-4 h-4" />
+            Donor Phone Number (Optional)
+          </Label>
+
+          <PhoneInput
+            id="donorNumber"
+            value={donorNumber}
+            onChange={(e) => setDonorNumber(e)}
+            placeholder="Enter your phone number"
+            className="text-sm"
           />
         </div>
 
@@ -203,7 +225,13 @@ export default function OfflineDonationForm() {
           )}
         </Button>
 
-        {/* Form Validation Info */}
+        <Button
+          onClick={() => router.push("/cash-intake/list")}
+          className="w-full h-12 text-lg bg-blue-400 hover:bg-blue-100 text-white"
+        >
+          View Donations
+        </Button>
+
         {!isFormValid && (donorName || amount || receivedAt) && (
           <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
             <p className="font-medium mb-1">Please complete:</p>
@@ -215,6 +243,6 @@ export default function OfflineDonationForm() {
           </div>
         )}
       </CardContent>
-    </Card>
+    </Card >
   );
 }
