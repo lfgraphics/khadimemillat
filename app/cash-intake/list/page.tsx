@@ -1,10 +1,9 @@
-
-import OfflineDonationForm from "@/components/cash-intake/OfflineDonation";
+import ListOfflineDonations from "@/components/cash-intake/ListOfflineDonations";
 
 export default function OfflineDonationPage() {
   return (
     <div className="p-6 flex justify-center">
-      <OfflineDonationForm />
+      <ListOfflineDonations />
     </div>
   );
 }
