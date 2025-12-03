@@ -12,6 +12,7 @@ import {
     List as ListIcon,
     Heart,
     LayoutDashboard,
+    List,
     Plus,
     HandHeart,
     Store,
@@ -202,6 +203,14 @@ export function MobileNav() {
                                 >
                                     <HandCoins className="h-4 w-4" />
                                     Offline Donation
+                                </Link>
+                                <Link
+                                    href="/cash-intake/list"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <List className="h-4 w-4" />
+                                    List Offline Donation
                                 </Link>
                                 {/* Programs */}
                                 <div className="mt-3 mb-2">
