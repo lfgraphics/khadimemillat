@@ -18,6 +18,12 @@ export interface ICampaignDonation extends Document {
     status: 'pending' | 'completed' | 'failed' | 'refunded'
     processedBy?: string // Clerk user ID of admin who processed
     processedAt?: Date
+    // Subscription Integration Fields
+    subscriptionId?: mongoose.Types.ObjectId // Link to SadqaSubscription
+    isRecurring?: boolean // Flag for subscription payments
+    recurringType?: 'daily' | 'weekly' | 'monthly' | 'yearly'
+    subscriptionPaymentId?: string // Razorpay subscription payment ID
+    paymentSequence?: number // 1st, 2nd, 3rd payment in subscription
     // Razorpay tracking fields
     razorpayOrderId?: string
     razorpayPaymentId?: string
@@ -120,6 +126,15 @@ const campaignDonationSchema = new Schema<ICampaignDonation>({
     },
     processedBy: { type: String },
     processedAt: { type: Date },
+    // Subscription Integration Fields
+    subscriptionId: { type: Schema.Types.ObjectId, ref: "SadqaSubscription", index: true },
+    isRecurring: { type: Boolean, default: false, index: true },
+    recurringType: { 
+        type: String, 
+        enum: ['daily', 'weekly', 'monthly', 'yearly']
+    },
+    subscriptionPaymentId: { type: String, index: true },
+    paymentSequence: { type: Number, min: 1 },
     // Razorpay fields
     razorpayOrderId: { type: String, index: true },
     razorpayPaymentId: { type: String, index: true },

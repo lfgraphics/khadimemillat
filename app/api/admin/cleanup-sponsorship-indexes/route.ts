@@ -31,16 +31,7 @@ export async function POST(request: NextRequest) {
     const indexes = await collection.indexes();
     console.log('Current indexes:', indexes);
 
-    // Drop problematic sponsorshipId index if it exists
-    try {
-      await collection.dropIndex('sponsorshipId_1');
-      console.log('Dropped sponsorshipId_1 index');
-    } catch (error) {
-      console.log('sponsorshipId_1 index does not exist or already dropped');
-    }
-
     // Ensure correct indexes exist
-    await collection.createIndex({ razorpaySubscriptionId: 1 }, { unique: true });
     await collection.createIndex({ sponsorId: 1, status: 1 });
     await collection.createIndex({ beneficiaryId: 1, status: 1 });
     await collection.createIndex({ categoryId: 1, status: 1 });

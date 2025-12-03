@@ -39,6 +39,9 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
   const [receiptViaEmail, setReceiptViaEmail] = useState(true)
   const [receiptViaSMS, setReceiptViaSMS] = useState(true)
   const [razorpayManagedReceipt, setRazorpayManagedReceipt] = useState(true)
+  
+  // Recurring donation state
+  const [makeRecurring, setMakeRecurring] = useState(false)
 
   // Auto-populate user data when logged in
   useEffect(() => {
@@ -373,12 +376,21 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
               throw new Error(data.error || 'Payment verification failed')
             }
             
-            // Success! Redirect to thank you page
-            toast.success('Donation completed successfully! Thank you for your support.')
-            toast.loading('Redirecting to confirmation page...', { id: 'redirect-loading' })
-            setTimeout(() => {
-              window.location.href = `/thank-you?donationId=${donation.donationId || donation._id}&paymentId=${resp.razorpay_payment_id}`
-            }, 1500)
+            // Success! Check if recurring subscription should be set up
+            if (makeRecurring && campaignSlug === 'sadqa') {
+              toast.success('Donation completed! Setting up your recurring subscription...')
+              toast.loading('Redirecting to subscription setup...', { id: 'redirect-loading' })
+              setTimeout(() => {
+                window.location.href = `/sadqa-subscription?amount=${amount}&redirect=donate`
+              }, 1500)
+            } else {
+              // Regular success redirect
+              toast.success('Donation completed successfully! Thank you for your support.')
+              toast.loading('Redirecting to confirmation page...', { id: 'redirect-loading' })
+              setTimeout(() => {
+                window.location.href = `/thank-you?donationId=${donation.donationId || donation._id}&paymentId=${resp.razorpay_payment_id}`
+              }, 1500)
+            }
           } catch (err) {
             toast.error(err instanceof Error ? err.message : 'Payment verification failed')
           }
@@ -507,6 +519,34 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
           />
         </div>
       </div>
+
+      {/* Recurring Donation Option - Only for Sadqa */}
+      {campaignSlug === 'sadqa' && (
+        <div className="space-y-3 p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 rounded-lg border border-purple-200 dark:border-purple-800">
+          <div className="flex items-center gap-2">
+            <input
+              id="makeRecurring"
+              type="checkbox"
+              checked={makeRecurring}
+              onChange={(e) => setMakeRecurring(e.target.checked)}
+              className="rounded border-gray-300"
+            />
+            <Label htmlFor="makeRecurring" className="text-sm font-medium">
+              Make this a recurring donation
+            </Label>
+          </div>
+          <p className="text-xs text-muted-foreground ml-6">
+            Set up automatic monthly donations to make charity a habit. You can manage or cancel anytime.
+          </p>
+          {makeRecurring && (
+            <div className="mt-3 p-3 bg-white dark:bg-gray-900 rounded border">
+              <p className="text-sm text-muted-foreground">
+                You'll be redirected to set up your recurring subscription after this donation.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 80G Receipt and Preferences Section */}
       <div className="space-y-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">

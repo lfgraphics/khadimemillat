@@ -16,6 +16,21 @@ export interface IUser extends Document {
     role: Roles
     lastSyncedFromClerkAt?: Date
     purchases?: mongoose.Types.ObjectId[]
+    // Razorpay Integration
+    razorpayCustomerId?: string
+    // Subscription Preferences
+    subscriptionPreferences?: {
+        emailNotifications: boolean
+        smsNotifications: boolean
+        monthlyReports: boolean
+    }
+    // Subscription Statistics
+    subscriptionStats?: {
+        totalSubscriptions: number
+        activeSubscriptions: number
+        totalRecurringDonated: number
+        longestSubscriptionDays: number
+    }
 }
 
 const userSchema = new Schema<IUser>({
@@ -26,7 +41,22 @@ const userSchema = new Schema<IUser>({
     address: { type: String },
     role: { type: String, enum: RolesEnum, default: "user" },
     lastSyncedFromClerkAt: { type: Date },
-    purchases: [{ type: Schema.Types.ObjectId, ref: 'Purchase' }]
+    purchases: [{ type: Schema.Types.ObjectId, ref: 'Purchase' }],
+    // Razorpay Integration
+    razorpayCustomerId: { type: String, index: true },
+    // Subscription Preferences
+    subscriptionPreferences: {
+        emailNotifications: { type: Boolean, default: true },
+        smsNotifications: { type: Boolean, default: true },
+        monthlyReports: { type: Boolean, default: true }
+    },
+    // Subscription Statistics
+    subscriptionStats: {
+        totalSubscriptions: { type: Number, default: 0 },
+        activeSubscriptions: { type: Number, default: 0 },
+        totalRecurringDonated: { type: Number, default: 0 },
+        longestSubscriptionDays: { type: Number, default: 0 }
+    }
 }, { timestamps: true })
 
 export default mongoose.models.User || mongoose.model<IUser>("User", userSchema, 'users')

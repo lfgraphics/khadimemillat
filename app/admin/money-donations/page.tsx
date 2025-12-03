@@ -481,10 +481,10 @@ export default function MoneyDonationsPage() {
                 </div>
 
                 <div>
-                  <p className="font-medium">{donation.programId.title}</p>
+                  <p className="font-medium">{donation.programId?.title}</p>
                   {donation.campaignId && (
                     <p className="text-sm text-muted-foreground">
-                      Campaign: {donation.campaignId.title}
+                      Campaign: {donation.campaignId?.title}
                     </p>
                   )}
                 </div>
@@ -726,12 +726,12 @@ export default function MoneyDonationsPage() {
               </div>
               <div>
                 <label className="text-sm font-medium">Program</label>
-                <p className="text-sm text-muted-foreground">{selectedDonation.programId.title}</p>
+                <p className="text-sm text-muted-foreground">{selectedDonation.programId?.title}</p>
               </div>
               {selectedDonation.campaignId && (
                 <div>
                   <label className="text-sm font-medium">Campaign</label>
-                  <p className="text-sm text-muted-foreground">{selectedDonation.campaignId.title}</p>
+                  <p className="text-sm text-muted-foreground">{selectedDonation.campaignId?.title}</p>
                 </div>
               )}
               <div className="grid grid-cols-2 gap-4">
