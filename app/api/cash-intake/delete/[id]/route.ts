@@ -43,7 +43,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
     }
 
     try {
-      await req.json().catch(() => ({})); // ignore body but validate format
+      await req.json().catch(() => ({}));
     } catch {
       return NextResponse.json(
         { error: "Invalid JSON body" },

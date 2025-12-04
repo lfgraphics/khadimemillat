@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, models } from "mongoose";
 
 export interface IOfflineDonation extends Document {
   isPublic: boolean;
+  createdBy: string;
   donorName: string;
   donorNumber: string,
   amount: number;
@@ -18,6 +19,10 @@ export interface IOfflineDonation extends Document {
 
 const OfflineDonationSchema = new Schema<IOfflineDonation>(
   {
+    createdBy: {
+      type: String,
+      required: true
+    },
     isPublic: {
       type: Boolean,
       default: true

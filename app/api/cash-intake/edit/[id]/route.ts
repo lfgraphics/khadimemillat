@@ -38,6 +38,18 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
       return NextResponse.json({ error: "Donation ID not found" }, { status: 404 });
     }
 
+    const { clerkClient } = await import("@clerk/nextjs/server");
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(userId);
+    const role = clerkUser.publicMetadata?.role as string;
+
+    if (role === "accountant" && donation.createdBy !== "accountant") {
+      return NextResponse.json(
+        { error: "Accountants can only edit their own donations." },
+        { status: 403 }
+      );
+    }
+
     let body;
     try {
       body = await req.json();
