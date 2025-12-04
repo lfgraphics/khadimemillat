@@ -176,9 +176,10 @@ export default function ListOfflineDonation() {
                     <TableCell className="max-w-[200px]">
                       <div
                         className={
-                          (d.notes?.length > 35)
-                            ? `cursor-pointer ${expanded === i ? "whitespace-normal" : "truncate"}`
-                            : "whitespace-normal"
+                          d.notes?.length > 35
+                            ? `cursor-pointer break-words break-all ${expanded === i ? "whitespace-normal" : "truncate"
+                            }`
+                            : "whitespace-normal break-words break-all"
                         }
                         onClick={() => {
                           if (d.notes?.length <= 35) return;
