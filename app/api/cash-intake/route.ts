@@ -14,10 +14,16 @@ export async function POST(req: NextRequest) {
 
     try {
 
-        const authResult = await checkUserPermissionsAPI(['admin', 'moderator', 'accountant', 'auditor']);
+        const authResult = await checkUserPermissionsAPI(['admin', 'moderator', 'accountant']);
         if ('error' in authResult) {
             return NextResponse.json({ error: authResult.error }, { status: authResult.status });
         }
+        const { clerkClient } = await import('@clerk/nextjs/server');
+        const client = await clerkClient();
+        const clerkUser = await client.users.getUser(userId);
+
+        const createdBy = clerkUser.publicMetadata?.role as string;
+
 
         const body = await req.json();
         const { donorName, donorNumber, amount, notes, receivedAt, collectedBy } = body;
@@ -32,6 +38,7 @@ export async function POST(req: NextRequest) {
         await connectDB();
 
         const donation = await OfflineDonation.create({
+            createdBy,
             donorName,
             donorNumber,
             amount,

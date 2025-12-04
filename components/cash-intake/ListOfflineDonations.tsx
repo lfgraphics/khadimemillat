@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Loader2, DollarSign, List, Download, Pencil, MoreVertical, Trash } from "lucide-react";
+import { Plus, Loader2, DollarSign, List, Download, Pencil, MoreVertical, Trash, Eye, EyeOff, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useRouter } from "next/navigation";
 import { exportToCSV } from "@/utils/csvExported";
 import {
@@ -17,25 +19,36 @@ import {
 import EditOfflineDonation from "./EditDonations";
 import DeleteOfflineDonation from "./DeleteOfflineDonation";
 
-export default function ListOfflineDonation() {
+interface Permissions {
+  canToggleDeleted: boolean;
+  canDeleteIcon: boolean;
+}
+
+export default function ListOfflineDonation({ permissions }: { permissions: Permissions }) {
   const [donations, setDonations] = useState<any[]>([]);
   const [expanded, setExpanded] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const router = useRouter();
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(25);
   const [editingDonation, setEditingDonation] = useState(null);
   const [deletingDonation, setDeletingDonation] = useState(null);
-
+  const { canToggleDeleted, canDeleteIcon } = permissions;
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
-    (async () => {
-      const res = await fetch("/api/cash-intake/list");
+    const fetchDonations = async () => {
+      setLoading(true);
+      const res = await fetch(`/api/cash-intake/list?showDeleted=${showDeleted}`);
       const data = await res.json();
-      setDonations(data?.donations || []);
+      setDonations(data.donations);
       setLoading(false);
-    })();
-  }, []);
+      setRole(data.role)
+    };
+
+    fetchDonations();
+  }, [showDeleted]);
 
   const filtered = donations.filter((d) => {
     const s = search.toLowerCase();
@@ -50,7 +63,7 @@ export default function ListOfflineDonation() {
 
   const refreshDonations = async () => {
     try {
-      const res = await fetch("/api/cash-intake/list");
+      const res = await fetch(`/api/cash-intake/list?showDeleted=${showDeleted}`);
       const data = await res.json();
       if (data.success) {
         setDonations(data.donations);
@@ -59,6 +72,10 @@ export default function ListOfflineDonation() {
       console.error("Failed to refresh donations", err);
     }
   };
+
+  if (role === null || role === undefined) {
+    return null
+  }
   return (
 
     <div className="w-full max-w-6xl mx-auto mb-6 flex flex-col gap-4" >
@@ -94,6 +111,20 @@ export default function ListOfflineDonation() {
           <div className="flex items-center gap-4">
             <CardTitle className="text-2xl font-bold">Offline Donations</CardTitle>
 
+            {canToggleDeleted && (
+              <div className="flex items-center gap-3">
+                <Label className="flex items-center gap-1 cursor-pointer">
+                  {showDeleted ? <EyeOff size={18} /> : <Eye size={18} />}
+                  <span>Show Deleted</span>
+                </Label>
+
+                <Switch
+                  checked={showDeleted}
+                  onCheckedChange={setShowDeleted}
+                />
+              </div>
+            )}
+
             <select
               value={limit}
               onChange={(e) => setLimit(Number(e.target.value))}
@@ -108,9 +139,10 @@ export default function ListOfflineDonation() {
           </div>
 
           <div className="flex gap-2">
-            <Button
-              onClick={() => router.push("/cash-intake")}
-            >Add Donation <Plus className="w-4 h-4 ml-2" /></Button>
+            {role !== "auditor" && (
+              <Button
+                onClick={() => router.push("/cash-intake")}
+              >Add Donation <Plus className="w-4 h-4 ml-2" /></Button>)}
 
             <Button
               variant="secondary"
@@ -157,7 +189,9 @@ export default function ListOfflineDonation() {
                   <TableHead>Date</TableHead>
                   <TableHead>Notes</TableHead>
                   <TableHead>Phone No</TableHead>
-                  <TableHead>Actions</TableHead>
+                  {role !== "auditor" && (
+                    <TableHead>Actions</TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
 
@@ -193,32 +227,51 @@ export default function ListOfflineDonation() {
 
                     <TableCell className="text-left">
 
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-5 w-5" />
-                          </Button>
-                        </DropdownMenuTrigger>
 
-                        <DropdownMenuContent align="end" className="w-32">
-                          <DropdownMenuItem
-                            onClick={() => setEditingDonation({ ...d, _id: d._id.toString() })}
-                            className="flex items-center gap-2"
-                          >
-                            <Pencil className="w-4 h-4" />
-                            Edit
-                          </DropdownMenuItem>
+                      {role !== "auditor" && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="h-5 w-5" />
+                            </Button>
+                          </DropdownMenuTrigger>
 
-                          <DropdownMenuItem
-                            onClick={() => setDeletingDonation({ ...d, _id: d._id.toString() })}
-                            className="flex items-center gap-2 text-red-600"
-                          >
-                            <Trash className="w-4 h-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                          <DropdownMenuContent align="end" className="w-32">
 
+                            {(role === "admin" || role === "moderator" ||
+                              (role === "accountant" && d.createdBy === "accountant")) && (
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    setEditingDonation({ ...d, _id: d._id.toString() })
+                                  }
+                                  className="flex items-center gap-2"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                  Edit
+                                </DropdownMenuItem>
+                              )}
+
+                            {(role === "admin" || role === "moderator") && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  setDeletingDonation({ ...d, _id: d._id.toString() })
+                                }
+                                className="flex items-center gap-2 text-red-600"
+                              >
+                                <Trash className="w-4 h-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            )}
+
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {canDeleteIcon && !d.isPublic && (
+                        <Trash2 className="w-5 h-5 text-red-500" />
+                      )}
                     </TableCell>
 
                   </TableRow>
