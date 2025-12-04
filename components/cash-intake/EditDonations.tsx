@@ -111,6 +111,7 @@ export default function EditOfflineDonation({
               maxLength={500}
               onChange={(e) => handleChange("notes", e.target.value)}
               rows={3}
+              className="break-words break-all whitespace-normal"
             />
 
           </div>
