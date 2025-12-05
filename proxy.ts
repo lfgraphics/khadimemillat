@@ -98,7 +98,7 @@ const protectedRoutes = [
         routeName: 'Expense Management'
     },
     {
-        matcher: createRouteMatcher(['/api/cash-intake(.*)', '/cash-intake']),
+        matcher: createRouteMatcher(['/api/cash-intake(.*)', '/cash-intake(.*)']),
         allowedRoles: ['admin', 'moderator', 'accountant', 'auditor'],
         routeName: 'Cash Intake'
     },
