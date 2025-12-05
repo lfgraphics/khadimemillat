@@ -43,11 +43,13 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
     const clerkUser = await client.users.getUser(userId);
     const role = clerkUser.publicMetadata?.role as string;
 
-    if (role === "accountant" && donation.createdBy !== "accountant") {
-      return NextResponse.json(
-        { error: "Accountants can only edit their own donations." },
-        { status: 403 }
-      );
+    if (role === "accountant") {
+      if (donation.collectedBy?.userId !== userId) {
+        return NextResponse.json(
+          { error: "Accountants can edit only the donations they collected." },
+          { status: 403 }
+        );
+      }
     }
 
     let body;
