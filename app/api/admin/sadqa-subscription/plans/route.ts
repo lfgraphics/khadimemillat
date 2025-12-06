@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import connectDB from '@/lib/db'
 import SadqaSubscriptionPlan from '@/models/SadqaSubscriptionPlan'
-import { checkRole } from '@/lib/auth'
+import { checkRole } from '@/utils/roles'
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,8 +11,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const hasPermission = await checkRole(['admin'])
-    if (!hasPermission) {
+    const isAdmin = await checkRole('admin')
+    const isModerator = await checkRole('moderator')
+    
+    if (!isAdmin && !isModerator) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
@@ -45,8 +47,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const hasPermission = await checkRole(['admin'])
-    if (!hasPermission) {
+    const isAdmin = await checkRole('admin')
+    const isModerator = await checkRole('moderator')
+    
+    if (!isAdmin && !isModerator) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 

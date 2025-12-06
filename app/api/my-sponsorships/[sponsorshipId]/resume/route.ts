@@ -46,6 +46,9 @@ export async function POST(
 
     // Update sponsorship status
     sponsorship.status = 'active';
+    if (result.subscription?.current_end) {
+      sponsorship.nextPaymentDate = new Date(result.subscription.current_end * 1000);
+    }
     await sponsorship.save();
 
     return NextResponse.json({
