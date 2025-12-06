@@ -45,7 +45,7 @@ export async function GET(req: Request) {
     }
 
     else if (role === "accountant") {
-      query = { createdBy: "accountant", isPublic: true };
+      query = { "collectedBy.userId": userId, isPublic: true };
     }
 
     const donations = await OfflineDonation.find(query)
