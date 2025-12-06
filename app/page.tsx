@@ -1,4 +1,4 @@
- import { ArrowRight, ClipboardCheck, Headphones, Heart, HeartHandshake, HandHeart, HomeIcon, Mail, Package, Phone, Recycle, ShoppingBag, Truck, Users, HandHelping, UtensilsCrossed } from "lucide-react";
+import { ArrowRight, ClipboardCheck, Headphones, Heart, HeartHandshake, HandHeart, HomeIcon, Mail, Package, Phone, Recycle, ShoppingBag, Truck, Users, HandHelping, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 import SuspenseSection from "@/components/SuspenseSection";
 import Loading from "@/components/Loading";
@@ -365,49 +365,51 @@ export default function Home() {
       </section>
 
       {/* Ways you can support */}
-      <section className="py-16 bg-muted/30">
-        <AnimatedSection variant="fade" className="container mx-auto px-4" rootMargin="-100px" triggerOnce>
-          <AnimatedSection variant="fade" className="text-center mb-12" triggerOnce>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl mb-4">Ways You Can Support the Mission</h2>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              Every act of compassion strengthens our community. Choose the path that speaks to you:
-            </p>
-          </AnimatedSection>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-6">
-            {supportOptions.map((option, index) => (
-              <AnimatedSection key={index} variant="scale" delay={index * 0.1} className={index === 4 ? "md:col-span-2 lg:col-span-1 lg:col-start-2" : ""}>
-                <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hoact:border-primary/50 transition-all duration-300 group">
-                  <CardContent className="p-6">
-                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${option.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                      <option.icon className="w-7 h-7 text-white" />
-                    </div>
-                    <h3 className="text-xl mb-3">{option.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {option.description}
-                    </p>
-                    <Button variant="outline" className="w-full" asChild>
-                      <Link href={option.link}>
-                        {option.cta}
-                        <ArrowRight className="ml-2 w-4 h-4" />
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              </AnimatedSection>
-            ))}
-          </div>
-
-          <AnimatedSection variant="fade" className="text-center" triggerOnce>
-            <Button size="lg" asChild>
-              <Link href="/contribute">
-                See All Ways to Contribute
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Link>
-            </Button>
-          </AnimatedSection>
+      <AnimatedSection variant="scale" className="container mx-auto px-4 py-16 bg-muted/30" rootMargin="-100px" triggerOnce>
+        <AnimatedSection variant="scale" className="text-center mb-12" triggerOnce>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl mb-4">Ways You Can Support the Mission</h2>
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+            Every act of compassion strengthens our community. Choose the path that speaks to you:
+          </p>
         </AnimatedSection>
-      </section>
+
+        <div className="w-full space-y-6 my-6 relative z-10">
+          {supportOptions.map((option, index) => (
+            <Card key={index} className="w-full bg-white dark:bg-card border border-border shadow-sm hover:shadow-md transition-all duration-300">
+              <CardContent className="p-6">
+                <div className="flex flex-col space-y-4">
+                  <div className="flex items-center space-x-4">
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${option.color} flex items-center justify-center flex-shrink-0`}>
+                      <option.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground">{option.title}</h3>
+                  </div>
+                  
+                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                    {option.description}
+                  </p>
+                  
+                  <Button variant="outline" className="w-full mt-4" asChild>
+                    <Link href={option.link} className="flex items-center justify-center">
+                      {option.cta}
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <AnimatedSection variant="fade" className="text-center" triggerOnce>
+          <Button size="lg" asChild>
+            <Link href="/contribute">
+              See All Ways to Contribute
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </Link>
+          </Button>
+        </AnimatedSection>
+      </AnimatedSection>
 
       {/* Testimonials Section (Placeholder for now) */}
       <section className="py-16 md:py-24">
