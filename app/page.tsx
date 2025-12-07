@@ -373,7 +373,7 @@ export default function Home() {
           </p>
         </AnimatedSection>
 
-        <div className="w-full space-y-6 my-6 relative z-10">
+        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 my-6 relative z-10">
           {supportOptions.map((option, index) => (
             <Card key={index} className="w-full bg-white dark:bg-card border border-border shadow-sm hover:shadow-md transition-all duration-300">
               <CardContent className="p-6">

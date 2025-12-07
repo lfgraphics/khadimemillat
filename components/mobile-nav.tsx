@@ -197,7 +197,7 @@ export function MobileNav() {
                                     Money Donations
                                 </Link>
                                 <Link
-                                    href="/admin/sadqa-subscriptions"
+                                    href="/admin/sadqa-subscription"
                                     className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                     onClick={() => setOpen(false)}
                                 >
