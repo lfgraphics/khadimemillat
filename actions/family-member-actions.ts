@@ -1,4 +1,3 @@
-import { auth } from "@clerk/nextjs/server";
 import connectDB from "@/lib/db";
 import FamilyMember from "@/models/FamilyMember";
 import SurveyResponse from "@/models/SurveyResponse";
@@ -9,7 +8,7 @@ import { checkUserPermissions } from "@/lib/auth-utils";
 export async function syncFamilyMembers(surveyId: string, familyMembersData: any[], userId: string) {
   try {
     await connectDB();
-    
+
     const survey = await SurveyResponse.findById(surveyId);
     if (!survey) {
       throw new Error("Survey not found");
@@ -25,7 +24,7 @@ export async function syncFamilyMembers(surveyId: string, familyMembersData: any
     // Process each family member
     for (let index = 0; index < familyMembersData.length; index++) {
       const memberData = familyMembersData[index];
-      
+
       // Check if family member already exists
       let familyMember = await FamilyMember.findOne({
         surveyId: survey._id,
@@ -64,9 +63,9 @@ export async function syncFamilyMembers(surveyId: string, familyMembersData: any
     return { success: true, familyMemberIds };
   } catch (error) {
     console.error("Error syncing family members:", error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Failed to sync family members" 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to sync family members"
     };
   }
 }
@@ -75,7 +74,7 @@ export async function syncFamilyMembers(surveyId: string, familyMembersData: any
 export async function updateMemberSponsorship(memberId: string, sponsorshipData: any) {
   try {
     const { user } = await checkUserPermissions(['admin', 'moderator']);
-    
+
     const member = await FamilyMember.findById(memberId);
     if (!member) {
       throw new Error("Family member not found");
@@ -87,15 +86,15 @@ export async function updateMemberSponsorship(memberId: string, sponsorshipData:
       ...sponsorshipData
     };
     member.lastModifiedBy = user._id;
-    
+
     await member.save();
 
     return { success: true, member };
   } catch (error) {
     console.error("Error updating member sponsorship:", error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Failed to update sponsorship" 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update sponsorship"
     };
   }
 }
@@ -108,7 +107,7 @@ export async function getAvailableMembers(filters?: {
 }) {
   try {
     await connectDB();
-    
+
     const query: any = {
       'sponsorship.availableForSponsorship': true
     };
@@ -131,9 +130,9 @@ export async function getAvailableMembers(filters?: {
     return { success: true, members };
   } catch (error) {
     console.error("Error getting available members:", error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Failed to get members" 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to get members"
     };
   }
 }
@@ -142,7 +141,7 @@ export async function getAvailableMembers(filters?: {
 export async function addMemberPhoto(memberId: string, photoData: any) {
   try {
     await connectDB();
-    
+
     const member = await FamilyMember.findById(memberId);
     if (!member) {
       throw new Error("Family member not found");
@@ -162,9 +161,9 @@ export async function addMemberPhoto(memberId: string, photoData: any) {
     return { success: true, member };
   } catch (error) {
     console.error("Error adding member photo:", error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Failed to add photo" 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to add photo"
     };
   }
 }
@@ -173,16 +172,16 @@ export async function addMemberPhoto(memberId: string, photoData: any) {
 export async function getSurveyFamilyMembers(surveyId: string) {
   try {
     await connectDB();
-    
+
     const members = await FamilyMember.find({ surveyId })
       .sort({ memberIndex: 1 });
 
     return { success: true, members };
   } catch (error) {
     console.error("Error getting survey family members:", error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Failed to get family members" 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to get family members"
     };
   }
 }
