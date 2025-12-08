@@ -15,7 +15,8 @@ import {
   Pause,
   Play,
   X,
-  Eye
+  Eye,
+  Loader2
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -38,6 +39,7 @@ export default function MySponsorshipsPage() {
   const { isSignedIn, userId } = useAuth();
   const [sponsorships, setSponsorships] = useState<Sponsorship[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fixing, setFixing] = useState(false);
 
   useEffect(() => {
     if (isSignedIn) {
@@ -102,6 +104,30 @@ export default function MySponsorshipsPage() {
     }
   };
 
+  const handleFixStatus = async () => {
+    setFixing(true);
+    
+    try {
+      const response = await fetch('/api/my-sponsorships/fix-status', {
+        method: 'POST'
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        toast.success(data.message);
+        fetchSponsorships(); // Refresh the list
+      } else {
+        toast.error(data.error || 'Failed to fix sponsorship status');
+      }
+    } catch (error) {
+      console.error('Error fixing sponsorship status:', error);
+      toast.error('Failed to fix sponsorship status');
+    } finally {
+      setFixing(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800';
@@ -149,10 +175,31 @@ export default function MySponsorshipsPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">My Sponsorships</h1>
-          <p className="text-muted-foreground">
-            Manage your sponsorships and track your impact
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">My Sponsorships</h1>
+              <p className="text-muted-foreground">
+                Manage your sponsorships and track your impact
+              </p>
+            </div>
+            
+            {sponsorships.some(s => s.status === 'pending' || s.status === 'created') && (
+              <Button
+                onClick={handleFixStatus}
+                disabled={fixing}
+                variant="outline"
+              >
+                {fixing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Fixing...
+                  </>
+                ) : (
+                  'Fix Status Issues'
+                )}
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Stats */}

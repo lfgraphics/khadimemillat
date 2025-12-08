@@ -35,14 +35,45 @@ export async function POST(req: NextRequest) {
     // Handle subscription events
     if (eventType === 'subscription.activated' || eventType === 'subscription.charged' || eventType === 'subscription.halted' || eventType === 'subscription.cancelled') {
       try {
-        const { SadqaSubscriptionService } = await import('@/lib/services/sadqa-subscription.service')
-        await SadqaSubscriptionService.processSubscriptionWebhook(event)
-        addBreadcrumb({ 
-          category: 'subscriptions', 
-          message: `subscription event processed: ${eventType}`, 
-          level: 'info', 
-          data: { subscriptionId: subscription?.id } 
-        })
+        // Check if it's a sponsorship subscription by looking at notes
+        const subscriptionNotes = subscription?.notes || {}
+        const isSponsorship = subscriptionNotes.type === 'sponsorship' || subscriptionNotes.beneficiaryId
+
+        if (isSponsorship) {
+          // Handle sponsorship subscription
+          console.log(`[SPONSORSHIP_WEBHOOK] Processing ${eventType} for sponsorship subscription: ${subscription?.id}`)
+          
+          // Import and use the sponsorship webhook handler
+          const sponsorshipWebhookModule = await import('@/app/api/webhooks/razorpay-subscription/route')
+          // Create a mock request with the same body and signature
+          const mockRequest = new Request('http://localhost/api/webhooks/razorpay-subscription', {
+            method: 'POST',
+            body: raw,
+            headers: {
+              'x-razorpay-signature': signature || '',
+              'content-type': 'application/json'
+            }
+          })
+          
+          await sponsorshipWebhookModule.POST(mockRequest as any)
+          
+          addBreadcrumb({ 
+            category: 'sponsorships', 
+            message: `sponsorship subscription event processed: ${eventType}`, 
+            level: 'info', 
+            data: { subscriptionId: subscription?.id, beneficiaryId: subscriptionNotes.beneficiaryId } 
+          })
+        } else {
+          // Handle sadqa subscription
+          const { SadqaSubscriptionService } = await import('@/lib/services/sadqa-subscription.service')
+          await SadqaSubscriptionService.processSubscriptionWebhook(event)
+          addBreadcrumb({ 
+            category: 'subscriptions', 
+            message: `sadqa subscription event processed: ${eventType}`, 
+            level: 'info', 
+            data: { subscriptionId: subscription?.id } 
+          })
+        }
       } catch (subscriptionError) {
         console.error('[SUBSCRIPTION_WEBHOOK_ERROR]', subscriptionError)
         captureException(subscriptionError, { 

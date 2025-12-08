@@ -133,6 +133,14 @@ const adminNavigationItems: NavigationItem[] = [
     category: 'Financial Management'
   },
   {
+    title: 'Sadqa Subscriptions',
+    description: 'Manage recurring sadqa subscriptions and analytics',
+    href: '/admin/sadqa-subscription',
+    icon: TrendingUp,
+    badge: 'New',
+    category: 'Financial Management'
+  },
+  {
     title: 'Expense Management',
     description: 'Track organizational expenses with receipts and audit trails',
     href: '/admin/expenses',
