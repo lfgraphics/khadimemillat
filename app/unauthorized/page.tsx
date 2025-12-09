@@ -1,75 +1,47 @@
-'use client'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
-import Loading from '../loading'
+"use client";
 
-function UnauthorizedContent() {
-    const searchParams = useSearchParams()
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { XCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
 
-    const message = searchParams.get('message')
-    const userRole = searchParams.get('userRole')
-    const requiredRoles = searchParams.get('requiredRoles')
-    const path = searchParams.get('path')
+export default function UnauthorizedPage() {
+    const router = useRouter();
 
     return (
-        <div className="min-h-screen flex items-center justify-center">
-            <Card className="max-w-md w-full">
-                <CardHeader>
-                    <CardTitle>
+        <div className="min-h-screen flex items-center justify-center bg-background px-4">
+            <Card className="w-full max-w-md shadow-lg">
+                <CardHeader className="flex flex-col items-center gap-3">
+                    <div className="rounded-full bg-red-100 p-3">
+                        <XCircle className="h-10 w-10 text-red-600" />
+                    </div>
+
+                    <CardTitle className="text-2xl font-semibold text-red-700">
                         Access Denied
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="text-center">
 
-                    <div className="text-left space-y-3">
-                        <div>
-                            <strong>Message:</strong>
-                            <p className="text-gray-700">{message}</p>
-                        </div>
-
-                        <div>
-                            <strong>Your Role:</strong>
-                            <p className="text-gray-700">{userRole}</p>
-                        </div>
-
-                        <div>
-                            <strong>Required Roles:</strong>
-                            <p className="text-gray-700">{requiredRoles}</p>
-                        </div>
-
-                        <div>
-                            <strong>Attempted Path:</strong>
-                            <p className="text-gray-700">{path}</p>
-                        </div>
-                    </div>
+                <CardContent className="text-center text-md text-muted-foreground px-8">
+                    You don’t have permission to access this page.
                 </CardContent>
-                <CardFooter className="mt-6 gap-2 justify-between">
-                    <Button
-                        onClick={() => window.history.back()}
-                        variant="default"
-                    >
+
+                <CardFooter className="flex justify-between gap-2">
+                    <Button variant="outline" onClick={() => router.back()}>
                         Go Back
                     </Button>
 
-                    <Link
-                        href="/"
-                        className="bg-gray-500 hoact:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-                    >
-                        Home
+                    <Link href="/">
+                        <Button>Home</Button>
                     </Link>
                 </CardFooter>
             </Card>
         </div>
-    )
-}
-
-export default function UnauthorizedPage() {
-    return (
-        <Suspense fallback={<Loading />}>
-            <UnauthorizedContent />
-        </Suspense>
-    )
+    );
 }

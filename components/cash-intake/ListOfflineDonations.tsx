@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Loader2, DollarSign, List, Download, Pencil, MoreVertical, Trash, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Plus, Loader2, DollarSign, List, Download, Pencil, MoreVertical, Trash, Eye, EyeOff, Trash2, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -18,6 +18,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import EditOfflineDonation from "./EditDonations";
 import DeleteOfflineDonation from "./DeleteOfflineDonation";
+import { useReactToPrint } from "react-to-print"
+import DonationPrintSlip from "./DonationPrintSlip";
+import { toast } from "sonner";
 
 interface Permissions {
   canToggleDeleted: boolean;
@@ -36,6 +39,23 @@ export default function ListOfflineDonation({ permissions }: { permissions: Perm
   const { canToggleDeleted, canDeleteIcon } = permissions;
   const [showDeleted, setShowDeleted] = useState(false);
   const [role, setRole] = useState<string | null>(null);
+
+  const [printDonation, setPrintDonation] = useState<any>(null);
+  const printRef = useRef<HTMLDivElement>(null)
+
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: printDonation
+      ? `Donation-by-${printDonation.donorName}`
+      : "donation",
+    onAfterPrint: () => setPrintDonation(null),
+  });
+
+  useLayoutEffect(() => {
+    if (printDonation && printRef.current) {
+      handlePrint();
+    }
+  }, [printDonation, handlePrint]);
 
   useEffect(() => {
     const fetchDonations = async () => {
@@ -69,7 +89,7 @@ export default function ListOfflineDonation({ permissions }: { permissions: Perm
         setDonations(data.donations);
       }
     } catch (err) {
-      console.error("Failed to refresh donations", err);
+      toast.error("Failed to refresh donations.");
     }
   };
 
@@ -77,6 +97,7 @@ export default function ListOfflineDonation({ permissions }: { permissions: Perm
     return null
   }
   return (
+
 
     <div className="w-full max-w-6xl mx-auto mb-6 flex flex-col gap-4" >
       <div className="flex gap-4">
@@ -201,7 +222,7 @@ export default function ListOfflineDonation({ permissions }: { permissions: Perm
                     <TableCell>{i + 1}</TableCell>
                     <TableCell>{d.donorName}</TableCell>
                     <TableCell className="font-semibold text-green-700">
-                      ₹{d.amount}
+                      ₹ {d.amount}
                     </TableCell>
                     <TableCell>{d.collectedBy?.name || "-"}</TableCell>
                     <TableCell>
@@ -238,18 +259,17 @@ export default function ListOfflineDonation({ permissions }: { permissions: Perm
 
                           <DropdownMenuContent align="end" className="w-32">
 
-                            {(role === "admin" || role === "moderator" ||
-                              (role === "accountant" && d.createdBy === "accountant")) && (
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    setEditingDonation({ ...d, _id: d._id.toString() })
-                                  }
-                                  className="flex items-center gap-2"
-                                >
-                                  <Pencil className="w-4 h-4" />
-                                  Edit
-                                </DropdownMenuItem>
-                              )}
+                            {(role === "admin" || role === "moderator" || role === "accountant") && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  setEditingDonation({ ...d, _id: d._id.toString() })
+                                }
+                                className="flex items-center gap-2"
+                              >
+                                <Pencil className="w-4 h-4" />
+                                Edit
+                              </DropdownMenuItem>
+                            )}
 
                             {(role === "admin" || role === "moderator") && (
                               <DropdownMenuItem
@@ -263,6 +283,24 @@ export default function ListOfflineDonation({ permissions }: { permissions: Perm
                               </DropdownMenuItem>
                             )}
 
+                            {(role === "admin" || role === "moderator") && (
+                              <DropdownMenuItem
+                                onClick={() => setPrintDonation(d)}
+                                className="flex items-center gap-2"
+                              >
+                                <Printer className="w-4 h-4" />
+                                Print Slip
+                              </DropdownMenuItem>
+                            )}
+
+                            {printDonation && (
+                              <div
+                                className="fixed inset-0 flex items-center justify-center bg-white"
+                                ref={printRef}
+                              >
+                                <DonationPrintSlip donation={printDonation} />
+                              </div>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       )}

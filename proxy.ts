@@ -132,19 +132,20 @@ export default clerkMiddleware(async (auth, req) => {
     }
 
 
+    const userRole = ((await auth()).sessionClaims?.metadata as { role?: string } | undefined)?.role
+    const pathname = req.nextUrl.pathname
+
+    if (userRole === 'auditor' && pathname === '/cash-intake') {
+        const url = new URL('/cash-intake/list', req.url)
+        return NextResponse.redirect(url)
+    }
+
+
     // Then check role-based authorization for protected routes
     for (const route of protectedRoutes) {
         if (route.matcher(req)) {
-            const userRole = ((await auth()).sessionClaims?.metadata as { role?: string } | undefined)?.role
-
-            // In your middleware
             if (!userRole || !route.allowedRoles.includes(userRole)) {
                 const errorUrl = new URL('/unauthorized', req.url)
-                errorUrl.searchParams.set('message', `Access denied. ${route.routeName} area requires one of the following roles: ${route.allowedRoles.join(', ')}`)
-                errorUrl.searchParams.set('userRole', userRole || 'No role assigned')
-                errorUrl.searchParams.set('requiredRoles', route.allowedRoles.join(', '))
-                errorUrl.searchParams.set('path', req.nextUrl.pathname)
-
                 return NextResponse.redirect(errorUrl)
             }
             break // Exit loop once we find a matching route
