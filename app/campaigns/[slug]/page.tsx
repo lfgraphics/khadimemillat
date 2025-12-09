@@ -4,9 +4,9 @@ import Image from "next/image"
 import Link from "next/link"
 import { Calendar, Target, Users, ArrowLeft, Heart } from "lucide-react"
 import { getDynamicIcon } from "@/lib/iconUtils"
-import DonationForm from "@/components/DonationForm"
+import DonationForm from "@/components/features/donation/DonationForm"
 import MarkdownRenderer from "@/components/MarkdownRenderer"
-import RecentDonations from "@/components/RecentDonations"
+import RecentDonations from "@/components/features/donation/RecentDonations"
 import { getCampaignBySlug } from "@/server/campaigns"
 
 interface Campaign {

@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { Heart, Users, MapPin, Calendar, Award, Target, Eye, Handshake, ShoppingBag, ArrowRight, Recycle, HandHeart, UserCheck, TrendingUp, Shield, Quote, Lightbulb } from "lucide-react";
 import { AnimatedSection } from '@/components/animations';
-import GoogleReviewsServer from '@/components/GoogleReviewsServer';
+import GoogleReviewsServer from '@/components/features/reviews/GoogleReviewsServer';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";

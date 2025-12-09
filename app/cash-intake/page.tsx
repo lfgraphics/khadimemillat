@@ -1,4 +1,3 @@
-
 import OfflineDonationForm from "@/components/cash-intake/OfflineDonation";
 
 export default function OfflineDonationPage() {
