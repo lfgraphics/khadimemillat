@@ -11,8 +11,8 @@ import { NotificationProvider } from "@/contexts/NotificationContext";
 import ClearRedirectCookie from "@/components/ClearRedirectCookie";
 import Script from "next/script";
 import TopNav from "@/components/TopNav";
-
-import ChatBotWrapper from "@/components/ChatBotWrapper";
+import DonationNotifications from "@/components/DonationNotifications";
+import PublicFooterGuard from "@/components/PublicFooterGuard";
 
 export const metadata: Metadata = {
   title: "Khadim-e-Millat Welfare Foundation",
@@ -123,10 +123,13 @@ export default function RootLayout({
                   <main className="min-h-screen">
                     <WebPushManager />
                     <ClearRedirectCookie />
+                    <DonationNotifications />
                     {children}
                     <Toaster richColors closeButton />
                   </main>
-                  <Footer />
+                  <PublicFooterGuard>
+                    <Footer />
+                  </PublicFooterGuard>
                 </SidebarInset>
               </SidebarProvider>
             </NotificationProvider>
