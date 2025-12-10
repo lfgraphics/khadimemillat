@@ -5,7 +5,7 @@
  */
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { BarcodePrintSheet } from '@/components/BarcodePrintSheet';
+import { BarcodePrintSheet } from '@/components/features/scanner/BarcodePrintSheet';
 import connectDB from '@/lib/db';
 import DonationEntry from '@/models/DonationEntry';
 import ScrapItem from '@/models/ScrapItem';

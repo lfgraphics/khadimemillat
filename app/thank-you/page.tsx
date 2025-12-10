@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import connectDB from '@/lib/db'
 import CampaignDonation from '@/models/CampaignDonation'
-import DonationThankYou from '@/components/DonationThankYou'
+import DonationThankYou from '@/components/features/donation/DonationThankYou'
 import Loading from '@/components/Loading'
 
 interface ThankYouPageProps {

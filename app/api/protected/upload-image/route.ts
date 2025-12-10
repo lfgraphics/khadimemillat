@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 export const runtime = 'nodejs'
 import { requireUser } from "@/lib/auth";
-import { uploadImage } from "@/lib/cloudinary";
+import { uploadImage } from "@/lib/cloudinary-server";
 
 export async function POST(req: NextRequest) {
     try {

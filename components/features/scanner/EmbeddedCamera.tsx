@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 
 /**
  * openEmbeddedCamera:

@@ -5,7 +5,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import DonationForm from '@/components/DonationForm';
+import DonationForm from '@/components/features/donation/DonationForm';
 import { CollectionRequestForm } from '@/components/CollectionRequestForm';
 import { toast } from 'sonner';
 

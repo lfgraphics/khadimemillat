@@ -25,6 +25,10 @@ async function connectDB(): Promise<void> {
         console.log("New database connection");
     } catch (error) {
         console.error("Error connecting to database:", error);
+        // Don't exit process during build - throw error instead
+        if (process.env.NODE_ENV === 'production' && process.env.VERCEL) {
+            throw new Error(`Database connection failed: ${error}`);
+        }
         process.exit(1);
     }
 }

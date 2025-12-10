@@ -19,7 +19,7 @@ export default function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
         return null
     }
 
-    const userRole = user?.publicMetadata?.role
+    const userRole = user?.publicMetadata?.role || 'user'
 
     if (!userRole || !allowedRoles.includes(userRole as Roles)) {
         return null
