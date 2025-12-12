@@ -23,7 +23,9 @@ const isPublicRoute = createRouteMatcher([
     '/api/receipts(.*)',
     '/api/upload/cloudinary(.*)',
     '/api/razorpay(.*)',
-    '/workflow'
+    '/workflow',
+    '/members',
+    '/donors'
 ])
 
 // Define protected routes and their allowed roles

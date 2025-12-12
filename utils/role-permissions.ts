@@ -100,6 +100,20 @@ export const ROLE_PERMISSIONS = {
     canViewAnalytics: false
   },
   
+  // Member - verified member with access to financial reports
+  member: {
+    level: 20,
+    canManageUsers: false,
+    canManageGullaks: false,
+    canViewAllConversations: false,
+    canManageExpenses: false,
+    canManageNotifications: false,
+    canManageSponsorship: false,
+    canManageWelfare: false,
+    canDeleteItems: false,
+    canViewAnalytics: true
+  },
+  
   // User - basic access
   user: {
     level: 10,

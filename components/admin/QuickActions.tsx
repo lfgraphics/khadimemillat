@@ -43,7 +43,7 @@ export default function QuickActions({
       title: 'New Notification',
       description: 'Create and send a new notification',
       icon: Send,
-      color: 'bg-blue-500 hoact:bg-blue-600',
+      color: 'bg-primary hover:bg-primary/90',
       textColor: 'text-white',
       onClick: onNewNotification,
       shortcut: 'Ctrl+N'

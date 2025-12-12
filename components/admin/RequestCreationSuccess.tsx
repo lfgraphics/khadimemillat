@@ -83,11 +83,11 @@ export const RequestCreationSuccess: React.FC<RequestCreationSuccessProps> = ({
     <Card className={cn("w-full max-w-2xl mx-auto", className)}>
       <CardHeader className="text-center">
         <div className="flex justify-center mb-4">
-          <div className="rounded-full bg-green-100 dark:bg-green-900/20 p-3">
-            <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+          <div className="rounded-full bg-primary/10 p-3">
+            <CheckCircle className="h-8 w-8 text-primary" />
           </div>
         </div>
-        <CardTitle className="text-2xl text-green-700 dark:text-green-400">
+        <CardTitle className="text-2xl text-primary">
           Collection Request Created Successfully!
         </CardTitle>
         <CardDescription>
@@ -181,7 +181,7 @@ export const RequestCreationSuccess: React.FC<RequestCreationSuccessProps> = ({
                 <CheckCircle className="h-4 w-4 text-muted-foreground" />
                 <span className="font-medium">Status</span>
               </div>
-              <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+              <Badge variant="default" className="bg-primary/10 text-primary">
                 Verified
               </Badge>
             </div>
@@ -247,16 +247,16 @@ export const RequestCreationSuccess: React.FC<RequestCreationSuccessProps> = ({
 
         {/* Status Information */}
         <div className="space-y-3">
-          <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+          <div className="p-4 bg-primary/10 rounded-lg border border-primary/30">
             <div className="flex items-start gap-3">
-              <div className="rounded-full bg-green-100 dark:bg-green-900 p-1">
-                <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+              <div className="rounded-full bg-primary/20 p-1">
+                <CheckCircle className="h-4 w-4 text-primary" />
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                <p className="text-sm font-medium text-primary">
                   Request Verified & Active
                 </p>
-                <p className="text-xs text-green-700 dark:text-green-300">
+                <p className="text-xs text-primary/80">
                   This request has been automatically verified and is now visible to field executives. 
                   They can assign themselves to collect the items at the scheduled time.
                 </p>
@@ -265,16 +265,16 @@ export const RequestCreationSuccess: React.FC<RequestCreationSuccessProps> = ({
           </div>
 
           {request.fieldExecutiveNotificationsSent > 0 ? (
-            <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="p-4 bg-secondary/20 rounded-lg border border-secondary/30">
               <div className="flex items-start gap-3">
-                <div className="rounded-full bg-blue-100 dark:bg-blue-900 p-1">
-                  <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <div className="rounded-full bg-secondary/30 p-1">
+                  <Users className="h-4 w-4 text-secondary-foreground" />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                  <p className="text-sm font-medium text-secondary-foreground">
                     Field Executives Notified
                   </p>
-                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                  <p className="text-xs text-secondary-foreground/80">
                     {request.fieldExecutiveNotificationsSent} field executives have been notified about this new collection request 
                     and can now view it in their assigned requests dashboard.
                   </p>

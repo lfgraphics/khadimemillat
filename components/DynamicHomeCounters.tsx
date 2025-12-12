@@ -11,8 +11,8 @@ export default async function DynamicHomeCounters() {
         { number: counters.itemsCollected, label: 'Items Collected', testId: 'stat-items-collected', href: '#' },
         { number: counters.familiesHelped, label: 'Families Helped', testId: 'stat-families-helped', href: '#' },
         { number: counters.activeVolunteers, label: 'Active Volunteers', testId: 'stat-volunteers', href: '/about#volunteers' },
-        // { number: counters.citiesServed, label: 'Cities Served', testId: 'stat-cities', href: '/about#locations' },
-        { number: counters.donors, label: 'Our Members', testId: 'stat-donors', href: '/donors' },
+        { number: counters.members, label: 'Verified Members', testId: 'stat-members', href: '/members' },
+        { number: counters.donors, label: 'Our Donors', testId: 'stat-donors', href: '/donors' },
       ]}
       threshold={0.3}
       triggerOnce={true}

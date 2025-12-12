@@ -162,8 +162,8 @@ export function ItemCard({ item }: ItemCardProps) {
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Link href={`/admin/items/${(item as any)._id}`}>
-                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hoact:bg-blue-50 transition-colors">
-                                            <Edit className="h-4 w-4 text-blue-600" />
+                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-primary/10 transition-colors">
+                                            <Edit className="h-4 w-4 text-primary" />
                                             <span className="sr-only">Edit item</span>
                                         </Button>
                                     </Link>
@@ -208,7 +208,7 @@ export function ItemCard({ item }: ItemCardProps) {
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-green-600 font-medium">
+                                <p className="text-primary font-medium">
                                     ₹{unitPrice} <span className="text-xs text-muted-foreground">per item</span>
                                 </p>
                                 {showQuantitySelector && selectedQuantity > 1 && (
@@ -297,7 +297,7 @@ export function ItemCard({ item }: ItemCardProps) {
                 {/* Sold Out State */}
                 {item.marketplaceListing.listed && isSoldOut && (
                     <div className="text-center py-2">
-                        <Badge variant="secondary" className="bg-red-100 text-red-800">
+                        <Badge variant="secondary" className="bg-destructive/10 text-destructive">
                             Sold Out
                         </Badge>
                     </div>
@@ -306,7 +306,7 @@ export function ItemCard({ item }: ItemCardProps) {
                 {/* Not Listed State */}
                 {!item.marketplaceListing.listed && (
                     <div className="text-center py-2">
-                        <Badge variant="secondary" className="bg-gray-100 text-gray-600">
+                        <Badge variant="secondary" className="bg-muted text-muted-foreground">
                             Not Available
                         </Badge>
                     </div>

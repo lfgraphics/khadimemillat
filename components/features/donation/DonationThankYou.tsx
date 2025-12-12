@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useUser } from '@clerk/nextjs'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { CheckCircle, Download, Share2, Printer, Mail, MessageSquare } from 'lucide-react'
+import { CheckCircle, Download, Share2, Printer, Mail, MessageSquare, Users, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
+import Link from 'next/link'
 
 interface DonationThankYouProps {
   donationId: string
@@ -34,6 +36,38 @@ export default function DonationThankYou({
   razorpayPaymentId
 }: DonationThankYouProps) {
   const [isSharing, setIsSharing] = useState(false)
+  const [showMembership, setShowMembership] = useState(false)
+  const { user } = useUser()
+
+  useEffect(() => {
+    // Check if user is eligible for membership prompt
+    const checkMembershipEligibility = async () => {
+      if (!user?.id) return
+
+      try {
+        // Check if user has any role in metadata (admin, moderator, member, etc.)
+        const userRole = user.publicMetadata?.role
+        
+        // Show membership prompt only if user has no role (simple donor) and is logged in
+        if (!userRole) {
+          // Check if user already has a membership request
+          const response = await fetch('/api/membership/request')
+          if (response.status === 404) {
+            // No existing request, show prompt
+            setShowMembership(true)
+          }
+        }
+      } catch (error) {
+        // If API call fails, still show prompt for eligible users (no role)
+        const userRole = user.publicMetadata?.role
+        if (!userRole) {
+          setShowMembership(true)
+        }
+      }
+    }
+
+    checkMembershipEligibility()
+  }, [user])
 
   const handlePrint = () => {
     // Create a new window with only the receipt content
@@ -541,6 +575,41 @@ export default function DonationThankYou({
           <p className="text-sm text-gray-600">- Prophet Muhammad (ﷺ)</p>
         </div>
 
+        {/* Membership Prompt */}
+        {showMembership && (
+          <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Users className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-blue-900 mb-2">Become a Verified Member</h4>
+                <p className="text-blue-700 text-sm mb-4">
+                  Join our community as a verified member to access exclusive features including detailed financial reports, 
+                  impact analytics, and member-only updates. Membership requires identity verification for transparency.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Link href="/membership/request">
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                      Apply for Membership
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </Link>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowMembership(false)}
+                    className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                  >
+                    Maybe Later
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Next Steps */}
         <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <h4 className="font-semibold text-yellow-800 mb-2">Next Steps:</h4>
@@ -549,6 +618,7 @@ export default function DonationThankYou({
             <li>• Keep this receipt for your records</li>
             {wants80G && <li>• Form 10BE will appear in your e-filing account automatically</li>}
             <li>• Follow our impact updates on social media</li>
+            {showMembership && <li>• Consider applying for verified membership for exclusive access</li>}
           </ul>
         </div>
       </Card>

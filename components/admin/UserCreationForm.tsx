@@ -185,7 +185,7 @@ export const UserCreationForm: React.FC<UserCreationFormProps> = ({
           <div className="space-y-2">
             <Label htmlFor="name" className="flex items-center gap-2">
               <User className="h-4 w-4" />
-              Full Name <span className="text-red-500">*</span>
+              Full Name <span className="text-destructive">*</span>
             </Label>
             <Input
               id="name"
@@ -197,7 +197,7 @@ export const UserCreationForm: React.FC<UserCreationFormProps> = ({
               disabled={loading}
             />
             {fieldErrors.name && (
-              <p className="text-sm text-red-600">{fieldErrors.name}</p>
+              <p className="text-sm text-destructive">{fieldErrors.name}</p>
             )}
           </div>
 
@@ -217,7 +217,7 @@ export const UserCreationForm: React.FC<UserCreationFormProps> = ({
               disabled={loading}
             />
             {fieldErrors.email && (
-              <p className="text-sm text-red-600">{fieldErrors.email}</p>
+              <p className="text-sm text-destructive">{fieldErrors.email}</p>
             )}
             <p className="text-xs text-muted-foreground">
               Email is optional. If provided, user will receive account details via email.
@@ -228,7 +228,7 @@ export const UserCreationForm: React.FC<UserCreationFormProps> = ({
           <div className="space-y-2">
             <Label htmlFor="phone" className="flex items-center gap-2">
               <Phone className="h-4 w-4" />
-              Phone Number <span className="text-red-500">*</span>
+              Phone Number <span className="text-destructive">*</span>
             </Label>
             <PhoneInput
               id="phone"
@@ -239,7 +239,7 @@ export const UserCreationForm: React.FC<UserCreationFormProps> = ({
               disabled={loading}
             />
             {fieldErrors.phone && (
-              <p className="text-sm text-red-600">{fieldErrors.phone}</p>
+              <p className="text-sm text-destructive">{fieldErrors.phone}</p>
             )}
           </div>
 

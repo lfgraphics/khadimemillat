@@ -1,9 +1,35 @@
 import { NextResponse } from "next/server"
+import { auth } from '@clerk/nextjs/server'
 import connectDB from "@/lib/db"
 import CampaignDonation from "@/models/CampaignDonation"
 
 export async function GET() {
     try {
+        // Check user role - only show donations to members, normal users, or logged-out users
+        const { userId } = await auth()
+        
+        if (userId) {
+            // If user is logged in, check their role
+            try {
+                const { clerkClient } = await import('@clerk/nextjs/server')
+                const client = await clerkClient()
+                const user = await client.users.getUser(userId)
+                const userRole = user.publicMetadata?.role as string
+                
+                // Don't show donations to admin, moderator, or scrapper roles
+                if (userRole && ['admin', 'moderator', 'scrapper'].includes(userRole)) {
+                    return NextResponse.json({
+                        success: true,
+                        donations: [] // Return empty array for admin/staff roles
+                    })
+                }
+            } catch (roleCheckError) {
+                console.warn('Role check failed, allowing access:', roleCheckError)
+                // If role check fails, allow access (treat as normal user)
+            }
+        }
+        // If not logged in or is member/normal user, continue to show donations
+
         await connectDB()
 
         // Try different query strategies in order of preference for privacy and data quality

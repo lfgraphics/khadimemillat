@@ -1,6 +1,6 @@
 {
   "name": "khadimemillat",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -68,10 +68,10 @@
     "prettier": "^3.6.2",
     "puppeteer": "^24.24.1",
     "razorpay": "^2.9.0",
-    "react": "19.2.1",
+    "react": "19.2.0",
     "react-barcode": "^1.6.1",
     "react-day-picker": "^9.9.0",
-    "react-dom": "19.2.1",
+    "react-dom": "19.2.0",
     "react-hook-form": "^7.62.0",
     "react-responsive-carousel": "^3.2.23",
     "react-to-print": "^3.2.0",
@@ -94,8 +94,8 @@
     "@types/jest": "^30.0.0",
     "@types/luxon": "^3.7.1",
     "@types/node": "^20",
-    "@types/react": "19.2.2",
-    "@types/react-dom": "19.2.2",
+    "@types/react": "19.2.0",
+    "@types/react-dom": "19.2.0",
     "@types/turndown": "^5.0.5",
     "@types/web-push": "^3.6.4",
     "baseline-browser-mapping": "^2.8.32",
@@ -110,8 +110,8 @@
   },
   "pnpm": {
     "overrides": {
-      "@types/react": "19.2.2",
-      "@types/react-dom": "19.2.2"
+      "@types/react": "19.2.0",
+      "@types/react-dom": "19.2.0"
     },
     "ignoredBuiltDependencies": [
       "@clerk/shared",

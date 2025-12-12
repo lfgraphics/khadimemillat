@@ -1,6 +1,8 @@
+'use client'
+
 import { Button } from "@/components/ui/button";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
-import { UserCircle } from "lucide-react";
+import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/nextjs";
+import { UserCircle, Users } from "lucide-react";
 import Link from "next/link";
 import { MobileNav } from "./mobile-nav";
 
@@ -10,6 +12,38 @@ const navigationItems = [
     { name: "About Us", href: "/about" },
     { name: "Activities", href: "/activities" },
 ];
+
+function MembershipNavButton() {
+    const { user } = useUser()
+    const userRole = user?.publicMetadata?.role as string
+    
+    // Show different links based on user role
+    if (userRole === 'member') {
+        return (
+            <Link href="/member/dashboard">
+                <Button variant="ghost" size="sm">
+                    <Users className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">Member Dashboard</span>
+                </Button>
+            </Link>
+        )
+    }
+    
+    // For users without roles (simple donors), show membership application
+    if (!userRole) {
+        return (
+            <Link href="/membership/request">
+                <Button variant="ghost" size="sm">
+                    <Users className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">Become Member</span>
+                </Button>
+            </Link>
+        )
+    }
+    
+    // For other roles (admin, moderator, etc.), don't show membership button
+    return null
+}
 
 const TopNav = () => {
     return (
@@ -37,6 +71,9 @@ const TopNav = () => {
             </nav>
 
             <div className="flex items-center gap-2">
+                <SignedIn>
+                    <MembershipNavButton />
+                </SignedIn>
                 <SignedOut>
                     <SignInButton>
                         <Button variant="ghost" size="sm">
