@@ -455,7 +455,6 @@ export default function SubscriptionSetup({ prefilledAmount, redirectSource }: S
               <Button
                 type="button"
                 onClick={() => setStep(3)}
-                disabled={!watchedAmount || watchedAmount < selectedPlan.minAmount || watchedAmount > selectedPlan.maxAmount}
                 className="flex-1"
               >
                 Continue to Review

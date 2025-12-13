@@ -70,13 +70,17 @@ const SadqaSubscriptionPlanSchema = new Schema<ISadqaSubscriptionPlan>({
   timestamps: true
 });
 
-// Validation to ensure maxAmount >= minAmount
+// Validation to ensure amounts are valid
 SadqaSubscriptionPlanSchema.pre('save', function(next) {
-  if (this.maxAmount < this.minAmount) {
-    next(new Error('Maximum amount must be greater than or equal to minimum amount'));
+  if (this.maxAmount < 1) {
+    next(new Error('Maximum amount must be at least ₹1'));
   }
-  if (this.suggestedAmount < this.minAmount || this.suggestedAmount > this.maxAmount) {
-    next(new Error('Suggested amount must be between minimum and maximum amounts'));
+  if (this.suggestedAmount < 1 || this.suggestedAmount > this.maxAmount) {
+    next(new Error('Suggested amount must be between ₹1 and maximum amount'));
+  }
+  // Set minAmount to 1 if not provided or less than 1
+  if (!this.minAmount || this.minAmount < 1) {
+    this.minAmount = 1;
   }
   next();
 });

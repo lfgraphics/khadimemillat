@@ -4,7 +4,6 @@ import CollectionRequest from '@/models/CollectionRequest'
 import MembershipRequest from '@/models/MembershipRequest'
 
 export type HomeCounters = {
-  itemsCollected: number
   familiesHelped: number
   activeVolunteers: number
   citiesServed: number
@@ -18,7 +17,6 @@ export type HomeCounters = {
 export async function getHomeCounters(): Promise<HomeCounters> {
   // Static counters (to be made dynamic later)
   const base: Omit<HomeCounters, 'donors' | 'members'> = {
-    itemsCollected: 25847,
     familiesHelped: 1250,
     activeVolunteers: 187,
     citiesServed: 12,
@@ -26,7 +24,7 @@ export async function getHomeCounters(): Promise<HomeCounters> {
 
   try {
     await connectDB()
-    const [donations, scrap, members] = await Promise.all([
+    const [donations, scrap, members, allMembershipRequests] = await Promise.all([
       CampaignDonation.find({ status: 'completed' })
         .select('donorId donorEmail donorName')
         .lean(),
@@ -35,6 +33,9 @@ export async function getHomeCounters(): Promise<HomeCounters> {
         .lean(),
       MembershipRequest.find({ status: 'approved' })
         .select('userId')
+        .lean(),
+      MembershipRequest.find({})
+        .select('status')
         .lean(),
     ])
 
