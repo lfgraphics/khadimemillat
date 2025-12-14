@@ -205,6 +205,22 @@ export function MobileNav() {
                                     Recurring Donations
                                 </Link>
                                 <Link
+                                    href="/admin/membership-requests"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <UserIcon className="h-4 w-4" />
+                                    Membership Requests
+                                </Link>
+                                <Link
+                                    href="/admin/financial-documents"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <FileCheck className="h-4 w-4" />
+                                    Financial Documents
+                                </Link>
+                                <Link
                                     href="/cash-intake"
                                     className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                     onClick={() => setOpen(false)}
@@ -406,6 +422,23 @@ export function MobileNav() {
                         </div>
                     </RoleGuard>
 
+                    {/* Member Section */}
+                    <RoleGuard allowedRoles={["member"]}>
+                        <div className="mb-6">
+                            <h3 className="mb-2 px-2 text-sm font-semibold text-muted-foreground">Member</h3>
+                            <div className="space-y-1">
+                                <Link
+                                    href="/member/dashboard"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <LayoutDashboard className="h-4 w-4" />
+                                    Member Dashboard
+                                </Link>
+                            </div>
+                        </div>
+                    </RoleGuard>
+
                     {/* General Section */}
                     <div className="mb-6">
                         <h3 className="mb-2 px-2 text-sm font-semibold text-muted-foreground">General</h3>
@@ -479,7 +512,7 @@ export function MobileNav() {
                                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
-                                <Heart className="h-4 w-4 text-blue-500" />
+                                <Heart className="h-4 w-4 text-primary" />
                                 Sponsor a Family
                             </Link>
                             <Link
@@ -537,9 +570,19 @@ export function MobileNav() {
                                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
                                 onClick={() => setOpen(false)}
                             >
-                                <Heart className="h-4 w-4 text-blue-500" />
+                                <Heart className="h-4 w-4 text-primary" />
                                 My Sponsorships
                             </Link>
+                            <SignedIn>
+                                <Link
+                                    href="/membership/request"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                                    onClick={() => setOpen(false)}
+                                >
+                                    <UserIcon className="h-4 w-4" />
+                                    Become a Member
+                                </Link>
+                            </SignedIn>
                             <Link
                                 href="/account#purchases"
                                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"

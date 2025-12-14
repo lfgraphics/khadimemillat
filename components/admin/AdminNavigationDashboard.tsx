@@ -23,6 +23,7 @@ import {
   Mail,
   History,
   FileText as FileTemplate,
+  FileText,
   Package,
   CreditCard,
   TrendingUp,
@@ -120,7 +121,7 @@ const adminNavigationItems: NavigationItem[] = [
   {
     title: 'Cash Intake Entry',
     description: 'Record and manage cash donations and contributions',
-    href: '/admin/money-donations',
+    href: '/cash-intake',
     icon: CreditCard,
     badge: 'Updated',
     category: 'Financial Management'
@@ -153,6 +154,22 @@ const adminNavigationItems: NavigationItem[] = [
     href: '/admin/purchases/lookup',
     icon: Search,
     category: 'Financial Management'
+  },
+  {
+    title: 'Financial Documents',
+    description: 'Generate and manage financial reports for members',
+    href: '/admin/financial-documents',
+    icon: FileText,
+    badge: 'New',
+    category: 'Financial Management'
+  },
+  {
+    title: 'Membership Requests',
+    description: 'Review and approve membership applications',
+    href: '/admin/membership-requests',
+    icon: UserIcon,
+    badge: 'New',
+    category: 'Core Management'
   },
 
   // Programs & Campaigns
@@ -235,13 +252,13 @@ const adminNavigationItems: NavigationItem[] = [
 ];
 
 const categoryColors = {
-  'Core Management': 'bg-blue-50 border-blue-200 text-blue-800',
-  'Request Management': 'bg-green-50 border-green-200 text-green-800',
-  'Collection Management': 'bg-purple-50 border-purple-200 text-purple-800',
-  'Financial Management': 'bg-yellow-50 border-yellow-200 text-yellow-800',
-  'Programs & Campaigns': 'bg-pink-50 border-pink-200 text-pink-800',
-  'Communication': 'bg-indigo-50 border-indigo-200 text-indigo-800',
-  'System & Tools': 'bg-gray-50 border-gray-200 text-gray-800'
+  'Core Management': 'bg-primary/10 border-primary/20 text-primary',
+  'Request Management': 'bg-secondary/10 border-secondary/20 text-secondary-foreground',
+  'Collection Management': 'bg-accent/10 border-accent/20 text-accent-foreground',
+  'Financial Management': 'bg-muted border-muted-foreground/20 text-muted-foreground',
+  'Programs & Campaigns': 'bg-primary/5 border-primary/15 text-primary',
+  'Communication': 'bg-secondary/5 border-secondary/15 text-secondary-foreground',
+  'System & Tools': 'bg-muted/50 border-muted-foreground/10 text-muted-foreground'
 };
 
 export function AdminNavigationDashboard() {

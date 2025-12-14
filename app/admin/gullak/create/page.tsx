@@ -1,5 +1,3 @@
-"use client";
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getAvailableCaretakers } from '@/actions/gullak-actions'
 import { GullakForm } from '../components/GullakForm'
@@ -14,9 +12,9 @@ export default async function CreateGullakPage() {
     if (!caretakersResult.success || !caretakersResult.data) {
         return (
             <div className="container mx-auto px-4 py-8">
-                <Card className="border-red-200 bg-red-50">
+                <Card className="border-destructive/30 bg-destructive/10">
                     <CardContent className="p-6">
-                        <p className="text-red-800">{caretakersResult.message}</p>
+                        <p className="text-destructive">{caretakersResult.message}</p>
                     </CardContent>
                 </Card>
             </div>

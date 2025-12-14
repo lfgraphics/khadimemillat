@@ -51,11 +51,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate amount against plan limits
-    if (amount < plan.minAmount || amount > plan.maxAmount) {
+    // Validate amount against plan limits (only check maximum)
+    if (amount > plan.maxAmount) {
       return NextResponse.json(
         { 
-          error: `Amount must be between ₹${plan.minAmount} and ₹${plan.maxAmount} for ${plan.displayName} plan` 
+          error: `Amount must not exceed ₹${plan.maxAmount} for ${plan.displayName} plan` 
         },
         { status: 400 }
       )

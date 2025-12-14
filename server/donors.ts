@@ -12,7 +12,7 @@ export type Donor = {
   donationsCount: number
 }
 
-export async function getUniqueDonors(): Promise<Donor[]> {
+export async function getUniqueDonors(page: number = 1, limit: number = 20): Promise<{ donors: Donor[], total: number, pages: number }> {
   await connectDB()
 
   const [donations, scrap] = await Promise.all([
@@ -38,16 +38,31 @@ export async function getUniqueDonors(): Promise<Donor[]> {
   for (const u of users) userByClerkId.set((u as any).clerkUserId, { name: (u as any).name, email: (u as any).email })
 
   const map = new Map<string, Donor>()
+  const nameMap = new Map<string, string>() // Track names to prevent duplicates
 
   // Monetary donors
   for (const d of donations) {
     const donorId = (d as any).donorId as string | undefined
-    const key = donorId || (d as any).donorEmail || (d as any).donorName
+    const donorName = (d as any).donorName as string | undefined
+    const donorEmail = (d as any).donorEmail as string | undefined
+    
+    // Priority: Use Clerk ID first, then email, then name
+    let key = donorId || donorEmail || donorName
     if (!key) continue
 
     const enriched = donorId ? userByClerkId.get(donorId) : undefined
-    const name = (d as any).donorName || enriched?.name || 'Anonymous'
-    const email = (d as any).donorEmail || enriched?.email
+    const name = donorName || enriched?.name || 'Anonymous'
+    const email = donorEmail || enriched?.email
+
+    // Check if this name already exists with a different key
+    const normalizedName = name.toLowerCase().trim()
+    const existingKey = nameMap.get(normalizedName)
+    if (existingKey && existingKey !== key) {
+      // Use the existing key to merge data
+      key = existingKey
+    } else {
+      nameMap.set(normalizedName, key)
+    }
 
     const exists = map.get(key)
     if (!exists) {
@@ -62,6 +77,10 @@ export async function getUniqueDonors(): Promise<Donor[]> {
     } else {
       exists.totalAmount += (d as any).amount || 0
       exists.donationsCount += 1
+      // Update last donation date if this one is more recent
+      if (new Date((d as any).createdAt) > new Date(exists.lastDonationAt)) {
+        exists.lastDonationAt = (d as any).createdAt.toISOString()
+      }
     }
   }
 
@@ -70,14 +89,24 @@ export async function getUniqueDonors(): Promise<Donor[]> {
     const donorId = (s as any).donor as string | undefined
     const key = donorId || (s as any).phone
     if (!key) continue
+    
     const enriched = donorId ? userByClerkId.get(donorId) : undefined
     const name = enriched?.name || 'Scrap Donor'
     const email = enriched?.email
 
-    const exists = map.get(key)
+    // Check if this name already exists
+    const normalizedName = name.toLowerCase().trim()
+    const existingKey = nameMap.get(normalizedName)
+    const finalKey = existingKey || key
+    
+    if (!existingKey) {
+      nameMap.set(normalizedName, key)
+    }
+
+    const exists = map.get(finalKey)
     if (!exists) {
-      map.set(key, {
-        id: key,
+      map.set(finalKey, {
+        id: finalKey,
         name,
         email,
         lastDonationAt: (s as any).createdAt.toISOString(),
@@ -86,10 +115,23 @@ export async function getUniqueDonors(): Promise<Donor[]> {
       })
     } else {
       exists.donationsCount += 1
+      // Update last donation date if this one is more recent
+      if (new Date((s as any).createdAt) > new Date(exists.lastDonationAt)) {
+        exists.lastDonationAt = (s as any).createdAt.toISOString()
+      }
     }
   }
 
-  return Array.from(map.values()).sort((a, b) => (
+  // Sort by last donation date (most recent first)
+  const allDonors = Array.from(map.values()).sort((a, b) => (
     new Date(b.lastDonationAt).getTime() - new Date(a.lastDonationAt).getTime()
   ))
+
+  // Apply pagination
+  const total = allDonors.length
+  const pages = Math.ceil(total / limit)
+  const skip = (page - 1) * limit
+  const donors = allDonors.slice(skip, skip + limit)
+
+  return { donors, total, pages }
 }

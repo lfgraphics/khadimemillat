@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 // Import all models to ensure they are registered
 import "@/models";
 
-const MONGODB_URI = process.env.MONGODB_URI || "";
+const MONGODB_URI = process.env.kmwf_MONGODB_URI || "";
 
 if (!MONGODB_URI) {
     throw new Error("Please define the MONGODB_URI environment variable");

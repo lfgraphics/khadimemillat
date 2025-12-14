@@ -76,16 +76,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (maxAmount < minAmount) {
+    if (maxAmount < 1) {
       return NextResponse.json(
-        { error: 'Maximum amount must be greater than or equal to minimum amount' },
+        { error: 'Maximum amount must be at least ₹1' },
         { status: 400 }
       )
     }
 
-    if (suggestedAmount < minAmount || suggestedAmount > maxAmount) {
+    if (suggestedAmount < 1 || suggestedAmount > maxAmount) {
       return NextResponse.json(
-        { error: 'Suggested amount must be between minimum and maximum amounts' },
+        { error: 'Suggested amount must be between ₹1 and maximum amount' },
         { status: 400 }
       )
     }
