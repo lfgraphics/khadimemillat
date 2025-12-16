@@ -1153,23 +1153,52 @@ export class NotificationService {
   }
 
   // Subscribe to web push notifications
-  static async subscribeToWebPush(userId: string, subscription: any): Promise<{ success: boolean; error?: string }> {
+  static async subscribeToWebPush(userId: string | undefined, subscription: any): Promise<{ success: boolean; error?: string }> {
     try {
       await connectDB()
       
-      // Get user details
-      const user = await User.findOne({ clerkUserId: userId }).lean()
-      
+      // First, check if a subscription with this endpoint already exists
+      const existingSubscription = await WebPushSubscription.findOne({ endpoint: subscription.endpoint })
+
+      // If userId is provided and subscription exists without userId, migrate it
+      if (userId && existingSubscription && !existingSubscription.clerkUserId) {
+        // Get user details
+        const user = await User.findOne({ clerkUserId: userId }).lean()
+
+        // Update existing subscription with user information
+        await WebPushSubscription.findOneAndUpdate(
+          { endpoint: subscription.endpoint },
+          {
+            clerkUserId: userId,
+            userEmail: (user as any)?.email,
+            userName: (user as any)?.name,
+            userRole: (user as any)?.role || 'user'
+          }
+        )
+
+        return { success: true }
+      }
+
+      // Prepare update data
+      const updateData: any = {
+        endpoint: subscription.endpoint,
+        keys: subscription.keys,
+        userRole: 'user'
+      }
+
+      // Add user-specific data if userId is provided
+      if (userId) {
+        const user = await User.findOne({ clerkUserId: userId }).lean()
+        updateData.clerkUserId = userId
+        updateData.userEmail = (user as any)?.email
+        updateData.userName = (user as any)?.name
+        updateData.userRole = (user as any)?.role || 'user'
+      }
+
+      // Upsert subscription by endpoint
       await WebPushSubscription.findOneAndUpdate(
-        { clerkUserId: userId },
-        {
-          clerkUserId: userId,
-          endpoint: subscription.endpoint,
-          keys: subscription.keys,
-          userEmail: (user as any)?.email,
-          userName: (user as any)?.name,
-          userRole: (user as any)?.role || 'user'
-        },
+        { endpoint: subscription.endpoint },
+        updateData,
         { upsert: true, new: true }
       )
       
