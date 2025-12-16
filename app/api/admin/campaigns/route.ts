@@ -3,6 +3,7 @@ import { auth, clerkClient } from "@clerk/nextjs/server"
 import connectDB from "@/lib/db"
 import { Campaign, WelfareProgram } from "@/models"
 import { whatsappService } from "@/lib/services/whatsapp.service"
+import { NotificationService } from "@/lib/services/notification.service"
 
 /**
  * Convert HTML/Markdown description to WhatsApp-friendly plain text
@@ -181,6 +182,35 @@ export async function POST(request: NextRequest) {
         if (result.errors && result.errors.length > 0) {
           console.error('Bulk sending errors:', result.errors)
         }
+
+        // Send push notifications to all regular users in batches
+        console.log('📱 Sending push notifications...')
+        let pushSent = 0
+        let pushFailed = 0
+        const batchSize = 10
+        const delayBetweenBatches = 500
+
+        for (let i = 0; i < regularUsers.length; i += batchSize) {
+          const batch = regularUsers.slice(i, i + batchSize)
+          const batchPromises = batch.map(user =>
+            NotificationService.sendWebPushToUser(user.id, {
+              title: title,
+              body: whatsappDescription,
+              icon: coverImage || '/android-chrome-192x192.png',
+              url: `/campaigns/${slug}`,
+              data: {
+                campaignSlug: slug,
+                type: 'new_campaign'
+              }
+            }).then(r => ({ success: r.success, error: r.error }))
+              .catch(e => ({ success: false, error: e.message }))
+          )
+          const results = await Promise.all(batchPromises)
+          results.forEach(r => r.success ? pushSent++ : pushFailed++)
+          if (i + batchSize < regularUsers.length) await new Promise(r => setTimeout(r, delayBetweenBatches))
+        }
+
+        console.log(`✅ Push notifications: ${pushSent} sent, ${pushFailed} failed`)
       } catch (error) {
         console.error('Error sending campaign notifications:', error)
         // Don't fail the campaign creation if notifications fail
