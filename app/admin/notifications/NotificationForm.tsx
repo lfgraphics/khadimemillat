@@ -13,20 +13,15 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
     Send,
     Mail,
-    MessageSquare,
     Smartphone,
     Globe,
     Users,
     Eye,
     CheckCircle,
     XCircle,
-    Loader2,
-    FileText,
-    Plus
+    Loader2
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import Link from 'next/link'
 
 interface NotificationFormProps {
     onNotificationSent?: () => void
@@ -39,15 +34,7 @@ interface SendingProgress {
     inProgress: boolean
 }
 
-interface NotificationTemplate {
-    _id: string
-    name: string
-    title: string
-    message: string
-    channels: string[]
-    targetRoles: string[]
-    category: string
-}
+
 
 export default function NotificationForm({ onNotificationSent }: NotificationFormProps) {
     const [title, setTitle] = useState('')
@@ -58,14 +45,10 @@ export default function NotificationForm({ onNotificationSent }: NotificationFor
     const [sending, setSending] = useState(false)
     const [sendingProgress, setSendingProgress] = useState<SendingProgress | null>(null)
     const [lastResult, setLastResult] = useState<any>(null)
-    const [templates, setTemplates] = useState<NotificationTemplate[]>([])
-    const [selectedTemplate, setSelectedTemplate] = useState<string>('')
-    const [loadingTemplates, setLoadingTemplates] = useState(false)
 
     const channels = [
         { id: 'web_push', label: 'Web Push', icon: Globe, description: 'Browser notifications' },
         { id: 'email', label: 'Email', icon: Mail, description: 'Email notifications' },
-        { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare, description: 'WhatsApp messages' },
         { id: 'sms', label: 'SMS', icon: Smartphone, description: 'Text messages' }
     ]
 
@@ -78,24 +61,7 @@ export default function NotificationForm({ onNotificationSent }: NotificationFor
         { id: 'user', label: 'Users', description: 'Regular users' }
     ]
 
-    useEffect(() => {
-        fetchTemplates()
-    }, [])
 
-    const fetchTemplates = async () => {
-        setLoadingTemplates(true)
-        try {
-            const response = await fetch('/api/admin/notifications/templates')
-            if (response.ok) {
-                const data = await response.json()
-                setTemplates(data.templates || [])
-            }
-        } catch (error) {
-            console.error('Failed to fetch templates:', error)
-        } finally {
-            setLoadingTemplates(false)
-        }
-    }
 
     const handleChannelChange = (channelId: string, checked: boolean) => {
         if (checked) {
@@ -122,57 +88,7 @@ export default function NotificationForm({ onNotificationSent }: NotificationFor
         }
     }
 
-    const handleTemplateSelect = (templateId: string) => {
-        setSelectedTemplate(templateId)
-        if (templateId) {
-            const template = templates.find(t => t._id === templateId)
-            if (template) {
-                setTitle(template.title)
-                setMessage(template.message)
-                setSelectedChannels(template.channels)
-                setSelectedRoles(template.targetRoles)
-                toast.success('Template applied successfully')
-            }
-        }
-    }
 
-    const handleSaveAsTemplate = async () => {
-        if (!title.trim() || !message.trim()) {
-            toast.error('Please fill in title and message before saving as template')
-            return
-        }
-
-        const templateName = prompt('Enter a name for this template:')
-        if (!templateName) return
-
-        try {
-            const response = await fetch('/api/admin/notifications/templates', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    name: templateName.trim(),
-                    title: title.trim(),
-                    message: message.trim(),
-                    channels: selectedChannels,
-                    targetRoles: selectedRoles,
-                    category: 'custom'
-                })
-            })
-
-            if (response.ok) {
-                toast.success('Template saved successfully')
-                fetchTemplates() // Refresh templates list
-            } else {
-                const error = await response.json()
-                toast.error(error.error || 'Failed to save template')
-            }
-        } catch (error) {
-            console.error('Error saving template:', error)
-            toast.error('Failed to save template')
-        }
-    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -206,8 +122,7 @@ export default function NotificationForm({ onNotificationSent }: NotificationFor
                     title: title.trim(),
                     message: message.trim(),
                     channels: selectedChannels,
-                    targetRoles: selectedRoles,
-                    templateId: selectedTemplate || undefined
+                    targetRoles: selectedRoles
                 })
             })
 
@@ -227,21 +142,11 @@ export default function NotificationForm({ onNotificationSent }: NotificationFor
                 setLastResult(result)
                 toast.success(`Notification sent successfully! ${totalSent} sent, ${totalFailed} failed`)
 
-                // Increment template usage if a template was used (non-blocking)
-                if (selectedTemplate) {
-                    try {
-                        await fetch(`/api/admin/notifications/templates/${selectedTemplate}/use`, { method: 'POST' })
-                    } catch (e) {
-                        console.warn('Failed to increment template usage:', e)
-                    }
-                }
-
                 // Reset form
                 setTitle('')
                 setMessage('')
                 setSelectedChannels(['web_push'])
                 setSelectedRoles(['everyone'])
-                setSelectedTemplate('')
 
                 // Notify parent component
                 onNotificationSent?.()
@@ -276,50 +181,6 @@ export default function NotificationForm({ onNotificationSent }: NotificationFor
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Template Selection */}
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <Label className="text-base font-medium">Template</Label>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleSaveAsTemplate}
-                                    disabled={sending}
-                                >
-                                    <Plus className="h-4 w-4 mr-2" />
-                                    Save as Template
-                                </Button>
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                                Or manage all templates in{' '}
-                                <Link href="/admin/notifications/templates" className="underline">Templates</Link>
-                            </div>
-                            <Select value={selectedTemplate} onValueChange={handleTemplateSelect} disabled={sending}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder={loadingTemplates ? "Loading templates..." : "Select a template (optional)"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="no-templates">No template</SelectItem>
-                                    {templates.map((template) => (
-                                        <SelectItem key={template._id} value={template._id}>
-                                            <div className="flex items-center gap-2">
-                                                <FileText className="h-4 w-4" />
-                                                <span>{template.name}</span>
-                                                <Badge variant="secondary" className="text-xs">
-                                                    {template.category}
-                                                </Badge>
-                                            </div>
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            {selectedTemplate && (
-                                <div className="text-sm text-muted-foreground">
-                                    Template applied. You can customize the content below before sending.
-                                </div>
-                            )}
-                        </div>
 
                         {/* Title and Message */}
                         <div className="space-y-4">

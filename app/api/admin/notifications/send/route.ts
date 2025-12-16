@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     // For now, we'll assume the route is protected by middleware
 
     const body = await request.json()
-    const { title, message, channels, targetRoles, templateId } = body
+    const { title, message, channels, targetRoles } = body
 
     // Validate required fields
     if (!title || !message || !channels || !targetRoles) {
@@ -45,7 +45,6 @@ export async function POST(request: NextRequest) {
       channels,
       targetRoles,
       sentBy: userId,
-      templateId: templateId || undefined,
       metadata: {
         source: 'admin_dashboard',
         timestamp: new Date().toISOString()
