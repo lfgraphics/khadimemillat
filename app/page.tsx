@@ -474,12 +474,6 @@ export default function Home() {
                   <Link href="tel:+918081747259" className="hoact:text-primary transition-colors">
                     +91 80817 47259
                   </Link>
-                  <Link href="tel:+919935904289" className="hoact:text-primary transition-colors">
-                    +91 99359 04289
-                  </Link>
-                  <Link href="tel:+919839353055" className="hoact:text-primary transition-colors">
-                    +91 98393 53055
-                  </Link>
                 </div>
               </div>
             </AnimatedSection>

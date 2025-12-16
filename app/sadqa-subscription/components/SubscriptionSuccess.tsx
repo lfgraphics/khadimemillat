@@ -281,7 +281,7 @@ export default function SubscriptionSuccess({ subscriptionId }: SubscriptionSucc
             </p>
             <div className="flex justify-center gap-4 text-sm">
               <span>📧 support@khadimemillat.org</span>
-              <span>📞 +91-XXXXXXXXXX</span>
+              <span>📞 +91 80817 47259</span>
             </div>
           </div>
         </CardContent>

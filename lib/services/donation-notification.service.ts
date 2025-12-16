@@ -57,26 +57,26 @@ export async function sendDonationThankYouNotifications(donation: any) {
         try {
             // Try to find user by email first, then by donorId if available
             let user = null
-            
+
             if (donorEmail && donorEmail.trim()) {
                 user = await User.findOne({ email: donorEmail }).select('phone notificationPreferences clerkUserId').lean()
             }
-            
+
             // If no user found by email and we have a donorId, try finding by Clerk ID
             if (!user && donation.donorId) {
                 user = await User.findOne({ clerkUserId: donation.donorId }).select('phone notificationPreferences clerkUserId').lean()
             }
-            
+
             if (user) {
                 userPhone = (user as any).phone || ''
                 userNotificationPrefs = (user as any).notificationPreferences || userNotificationPrefs
             }
-            
+
             // If still no phone found, use the phone from donation directly
             if (!userPhone && donation.donorPhone) {
                 userPhone = donation.donorPhone
             }
-            
+
         } catch (e) {
             console.warn('[USER_LOOKUP_FOR_DONATION_FAILED]', e)
         }
@@ -179,11 +179,10 @@ export async function sendDonationThankYouNotifications(donation: any) {
 <hr style="margin: 15px 0;">
 <div style="font-size: 12px; color: #666; line-height: 1.4;">
   <strong>Khadim-e-Millat Welfare Foundation</strong><br>
-  📞 +91 80817 47259 | 📧 contact@khadimemillat.org | 🌐 www.khadimemillat.org<br>
-  PAN: AABCK1234E | CIN: U85300DL2019NPL123456<br>
-  ${wants80G ? `<strong>80G Registration:</strong> AABCK1234EF20240001 | <strong>Validity:</strong> Permanent (Valid from FY 2024-25 onwards)<br>
-  Section 80G(5)(vi) - 100% deduction allowed | Registration under Income Tax Act, 1961<br>` : ''}
-  Registered Office: New Delhi, India | Charitable Trust Registration: DL/2019/123456
+  📞 +91 80817 47259 | 📧 support@khadimemillat.org | 🌐 www.khadimemillat.org<br>
+  PAN: AAICK6626K | CIN: U85300UP2021NPL143120<br>
+  ${wants80G ? `Section 80G(5)(vi) - 100% deduction allowed | Registration under Income Tax Act, 1961<br>` : ''}
+  Registered Office: Gorakhpur, Uttar Pradesh, India
 </div>`
 
                 const emailTitle = wants80G ? '🏛️ Thank You for Your Donation - 80G Certificate Included!' : 'Thank You for Your Donation!'
@@ -207,13 +206,13 @@ export async function sendDonationThankYouNotifications(donation: any) {
         }
 
 
-        
+
         // Send WhatsApp notification with receipt image if phone available
         if (userPhone && userNotificationPrefs.whatsapp) {
             try {
                 // Extract phone number from donation.donorPhone if userPhone is empty
                 const phoneToUse = userPhone || donation.donorPhone || ''
-                
+
                 if (phoneToUse) {
                     // Send donation confirmation with receipt image using our enhanced service
                     const whatsappResult = await whatsappService.sendDonationConfirmation(
@@ -234,22 +233,22 @@ export async function sendDonationThankYouNotifications(donation: any) {
                         console.log(`[DONATION_WHATSAPP_SENT] ${phoneToUse.replace(/[^\d]/g, '')} - ${donationId}`)
                     } else {
                         console.error('[DONATION_WHATSAPP_FAILED]', whatsappResult.error)
-                        
+
                         // Enhanced fallback message with 80G information if applicable
                         let fallbackMessage = `*Assalamu Alaikum ${donorName}*\n\nAlhamdulillah! Your generous donation has been received successfully.\n\n💰 *Amount:* ${currency} ${amount.toLocaleString('en-IN')}\n📋 *Receipt ID:* ${donationId.toString().slice(-8)}\n🏛️ *Program:* ${programName || campaignName || 'General Donation'}\n📅 *Date:* ${new Date().toLocaleDateString('en-IN')}`
-                        
+
                         if (wants80G) {
                             fallbackMessage += `\n\n🏛️ *80G Tax Certificate:* Will be generated and sent separately\n💳 *PAN Required:* Yes (for tax exemption)`
                         }
-                        
+
                         fallbackMessage += `\n\n🔗 *View Details:* ${process.env.NEXT_PUBLIC_APP_URL || 'https://khadimemillat.org'}/thank-you?donationId=${donationId}\n\nJazakallahu Khairan! May Allah accept your donation and bless you abundantly.\n\n_Khadim-e-Millat Welfare Foundation_\n📞 +91 80817 47259`
-                        
+
                         const fallbackResult = await whatsappService.sendMessage({
                             to: whatsappService.formatPhoneNumber(phoneToUse),
                             message: fallbackMessage,
                             userName: donorName
                         })
-                        
+
                         if (fallbackResult.success) {
                             console.log(`[DONATION_WHATSAPP_FALLBACK_SENT] ${phoneToUse} - ${donationId} - 80G: ${wants80G}`)
                         } else {
@@ -317,7 +316,7 @@ export async function resendDonationReceiptWhatsApp(donationId: string, phoneNum
     try {
         // Import models dynamically to avoid circular dependencies
         const CampaignDonation = (await import('@/models/CampaignDonation')).default
-        
+
         // Fetch donation details
         const donation = await CampaignDonation.findById(donationId)
             .populate('campaignId', 'name title')
@@ -359,7 +358,7 @@ export async function send80GCertificateWhatsApp(donationId: string, phoneNumber
     try {
         // Import models dynamically to avoid circular dependencies
         const CampaignDonation = (await import('@/models/CampaignDonation')).default
-        
+
         // Fetch donation details
         const donation = await CampaignDonation.findById(donationId).lean()
 
@@ -368,7 +367,7 @@ export async function send80GCertificateWhatsApp(donationId: string, phoneNumber
         }
 
         const donationData = donation as any
-        
+
         // Check if 80G certificate exists
         if (!donationData.certificate80G?.certificateNumber) {
             throw new Error('80G certificate not generated for this donation')
