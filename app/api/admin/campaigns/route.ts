@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
             const userName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User'
 
             return {
-              destination: phone,
+              destination: String(phone),
               userName,
               templateParams: [
                 title,

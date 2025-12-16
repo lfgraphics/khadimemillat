@@ -703,52 +703,26 @@ class WhatsAppService {
       let failed = 0
       const errors: string[] = []
 
-      // AiSensy recommends sending in batches to avoid rate limiting
-      // Send all recipients in one call (AiSensy supports multiple destinations)
-      const requestBody = {
-        apiKey: this.accessToken,
-        campaignName: options.campaignName,
-        destinations: options.recipients.map(recipient => ({
-          destination: formatForWhatsApp(recipient.destination),
-          userName: recipient.userName,
-          ...(recipient.templateParams && { templateParams: recipient.templateParams }),
-          ...(options.source && { source: options.source })
-        }))
+      console.log(`📤 Sending campaign "${options.campaignName}" to ${options.recipients.length} recipients in batches`)
+
+      for (let i = 0; i < options.recipients.length; i += 10) {
+        const batch = options.recipients.slice(i, i + 10)
+        const batchPromises = batch.map(recipient => 
+          this.sendCampaignMessage({
+            campaignName: options.campaignName,
+            destination: recipient.destination,
+            userName: recipient.userName,
+            templateParams: recipient.templateParams,
+            source: options.source
+          }).then(r => ({ success: r.success, error: r.error }))
+          .catch(e => ({ success: false, error: e.message }))
+        )
+        const results = await Promise.all(batchPromises)
+        results.forEach(r => r.success ? sent++ : (failed++, r.error && errors.push(r.error)))
+        if (i + 10 < options.recipients.length) await new Promise(r => setTimeout(r, 1000))
       }
 
-      console.log(`📤 Sending bulk campaign "${options.campaignName}" to ${options.recipients.length} recipients`)
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody)
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        // AiSensy bulk API returns success count
-        sent = options.recipients.length
-        console.log(`✅ Bulk campaign sent successfully to ${sent} recipients`)
-
-        return {
-          success: true,
-          sent,
-          failed: 0
-        }
-      } else {
-        console.error('❌ AiSensy bulk campaign error:', response.status, result)
-        const errorMessage = result.message || result.error || `Bulk campaign "${options.campaignName}" failed`
-
-        return {
-          success: false,
-          sent: 0,
-          failed: options.recipients.length,
-          errors: [errorMessage]
-        }
-      }
+      return { success: sent > 0, sent, failed, errors: errors.length > 0 ? errors.slice(0, 10) : undefined }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       console.error('❌ WhatsApp bulk campaign message failed:', errorMessage)
