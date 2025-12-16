@@ -1193,6 +1193,17 @@ export class NotificationService {
         updateData.userEmail = (user as any)?.email
         updateData.userName = (user as any)?.name
         updateData.userRole = (user as any)?.role || 'user'
+
+        // Check if this user already has a different subscription (different endpoint)
+        // If so, delete it to avoid duplicate clerkUserId error
+        const oldSubscription = await WebPushSubscription.findOne({
+          clerkUserId: userId,
+          endpoint: { $ne: subscription.endpoint }
+        })
+
+        if (oldSubscription) {
+          await WebPushSubscription.deleteOne({ _id: oldSubscription._id })
+        }
       }
 
       // Upsert subscription by endpoint

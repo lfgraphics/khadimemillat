@@ -29,5 +29,6 @@ const webPushSubscriptionSchema = new Schema<IWebPushSubscription>({
 }, { timestamps: true })
 
 webPushSubscriptionSchema.index({ endpoint: 1 }, { unique: true })
+webPushSubscriptionSchema.index({ clerkUserId: 1 }, { unique: true, sparse: true }) // Sparse allows nulls, but ensures one subscription per user
 
 export default mongoose.models.WebPushSubscription || mongoose.model<IWebPushSubscription>('WebPushSubscription', webPushSubscriptionSchema, 'web-push-subscriptions')
