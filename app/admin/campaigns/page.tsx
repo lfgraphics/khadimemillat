@@ -1,9 +1,8 @@
 import { Metadata } from "next"
 import Link from "next/link"
-import Image from "next/image"
-import { Plus, Edit, Trash2, Eye, Calendar, Target, Users } from "lucide-react"
+import { Plus, Edit, Eye, Calendar, Target } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getCampaigns } from "@/server/campaigns"
 
@@ -65,13 +64,12 @@ function CampaignCard({ campaign }: { campaign: any }) {
 
   return (
     <Card className="overflow-hidden">
-      <div className="flex">
+      <div className="flex p-4">
         {/* Cover Image */}
-        <div className="relative w-48 h-32 flex-shrink-0">
-          <Image
+        <div className="relative w-48 h-32 flex-shrink-0 rounded-lg overflow-clip object-center">
+          <img
             src={campaign.coverImage}
             alt={campaign.title}
-            fill
             className="object-cover"
           />
         </div>
@@ -108,9 +106,6 @@ function CampaignCard({ campaign }: { campaign: any }) {
                   <Edit className="h-4 w-4" />
                 </Button>
               </Link>
-              <Button variant="outline" size="sm" className="text-destructive hoact:text-destructive">
-                <Trash2 className="h-4 w-4" />
-              </Button>
             </div>
           </div>
 

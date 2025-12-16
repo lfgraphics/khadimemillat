@@ -177,10 +177,9 @@ function CampaignCard({ campaign, featured = false }: { campaign: CampaignWithSt
         <div className="bg-background rounded-xl overflow-hidden shadow-sm hoact:shadow-lg transition-all duration-300 group-hoact:scale-[1.02]">
           {/* Cover Image */}
           <div className={`relative overflow-hidden ${featured ? 'h-64' : 'h-48'}`}>
-            <Image
+            <img
               src={campaign.coverImage}
               alt={campaign.title}
-              fill
               className="object-cover group-hoact:scale-110 transition-transform duration-300"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />

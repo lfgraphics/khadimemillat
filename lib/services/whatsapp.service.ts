@@ -677,6 +677,91 @@ class WhatsAppService {
   }
 
   /**
+   * Send campaign-based message to multiple recipients via AiSensy API
+   * More efficient than sending one-by-one
+   */
+  async sendBulkCampaignMessage(options: {
+    campaignName: string
+    recipients: Array<{
+      destination: string
+      userName: string
+      templateParams?: string[]
+    }>
+    source?: string
+  }): Promise<{ success: boolean; sent: number; failed: number; errors?: string[] }> {
+    try {
+      if (!this.isConfigured()) {
+        throw new Error('WhatsApp API not configured. Please set WHATSAPP_ACCESS_TOKEN')
+      }
+
+      if (this.provider !== 'aisensy') {
+        throw new Error('Bulk campaign messages are only supported with AiSensy provider')
+      }
+
+      const apiUrl = 'https://backend.aisensy.com/campaign/t1/api/v2'
+      let sent = 0
+      let failed = 0
+      const errors: string[] = []
+
+      // AiSensy recommends sending in batches to avoid rate limiting
+      // Send all recipients in one call (AiSensy supports multiple destinations)
+      const requestBody = {
+        apiKey: this.accessToken,
+        campaignName: options.campaignName,
+        destinations: options.recipients.map(recipient => ({
+          destination: formatForWhatsApp(recipient.destination),
+          userName: recipient.userName,
+          ...(recipient.templateParams && { templateParams: recipient.templateParams }),
+          ...(options.source && { source: options.source })
+        }))
+      }
+
+      console.log(`📤 Sending bulk campaign "${options.campaignName}" to ${options.recipients.length} recipients`)
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        // AiSensy bulk API returns success count
+        sent = options.recipients.length
+        console.log(`✅ Bulk campaign sent successfully to ${sent} recipients`)
+
+        return {
+          success: true,
+          sent,
+          failed: 0
+        }
+      } else {
+        console.error('❌ AiSensy bulk campaign error:', response.status, result)
+        const errorMessage = result.message || result.error || `Bulk campaign "${options.campaignName}" failed`
+
+        return {
+          success: false,
+          sent: 0,
+          failed: options.recipients.length,
+          errors: [errorMessage]
+        }
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      console.error('❌ WhatsApp bulk campaign message failed:', errorMessage)
+
+      return {
+        success: false,
+        sent: 0,
+        failed: options.recipients.length,
+        errors: [errorMessage]
+      }
+    }
+  }
+  /**
    * Send account creation notification via "account_creation" campaign
    * Simplified method for user registration notifications
    * Template parameter {{1}} = phone number (e.g., "9876543210")

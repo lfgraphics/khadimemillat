@@ -2,6 +2,8 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
+import { X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import {
   EnhancedFileSelectorProps,
   FileState,
@@ -61,6 +63,9 @@ export function EnhancedFileSelector({
     previewUrl: null,
     error: null
   })
+
+  // Store uploaded result for deletion
+  const [uploadedResult, setUploadedResult] = useState<any>(null)
 
   // Camera state management
   const [showCamera, setShowCamera] = useState(false)
@@ -145,7 +150,32 @@ export function EnhancedFileSelector({
   }, [updateUploadState, onError, fileState.selectedFile?.name, retryCount])
 
   // Reset component state
-  const resetState = useCallback(() => {
+  const resetState = useCallback(async () => {
+    // Delete from Cloudinary if image was uploaded
+    if (uploadedResult?.publicId) {
+      console.log('Attempting to delete from Cloudinary:', uploadedResult.publicId)
+      try {
+        const response = await fetch('/api/upload/cloudinary/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ publicId: uploadedResult.publicId })
+        })
+
+        const data = await response.json()
+
+        if (response.ok && data.success) {
+          console.log('✅ Successfully deleted image from Cloudinary:', uploadedResult.publicId)
+          showSuccessToast({ url: '', secureUrl: '', publicId: uploadedResult.publicId, width: 0, height: 0, format: '', bytes: 0 }, 'Image removed')
+        } else {
+          console.error('❌ Failed to delete from Cloudinary:', data)
+          showErrorToast({ type: 'upload', message: 'Failed to delete image from cloud storage' })
+        }
+      } catch (error) {
+        console.error('❌ Error deleting from Cloudinary:', error)
+        showErrorToast({ type: 'network', message: 'Network error while deleting image' })
+      }
+    }
+
     if (fileState.previewUrl) {
       URL.revokeObjectURL(fileState.previewUrl)
     }
@@ -164,6 +194,7 @@ export function EnhancedFileSelector({
     setCurrentError(null)
     setRetryCount(0)
     setShowErrorDetails(false)
+    setUploadedResult(null)
     
     updateUploadState({
       uploadState: 'idle',
@@ -173,7 +204,7 @@ export function EnhancedFileSelector({
       error: null,
       uploadInterval: undefined
     })
-  }, [fileState.previewUrl, fileState.uploadInterval, fileState.selectedFile?.name, updateUploadState])
+  }, [fileState.previewUrl, fileState.uploadInterval, fileState.selectedFile?.name, updateUploadState, uploadedResult])
 
   // Handle error dismissal
   const handleErrorDismiss = useCallback(() => {
@@ -227,6 +258,9 @@ export function EnhancedFileSelector({
       setCurrentError(null)
       setRetryCount(0)
       errorRecoveryRef.current.reset()
+
+      // Store uploaded result for deletion
+      setUploadedResult(uploadResult)
 
       // Notify parent component
       onUploadComplete(uploadResult)
@@ -442,37 +476,38 @@ export function EnhancedFileSelector({
           />
         )}
 
-        {/* Enhanced File Preview with management features - mobile optimized */}
+        {/* Enhanced File Preview with management features - hide after successful upload */}
         {showPreview && fileState.previewUrl && fileState.selectedFile && fileState.uploadState === 'success' && (
-          <FilePreview
-            file={fileState.selectedFile}
-            previewUrl={fileState.previewUrl}
-            onRemove={resetState}
-            onReplace={() => {
-              resetState()
-              // Trigger file selection again
-              const input = document?.createElement('input')
-              input.type = 'file'
-              input.accept = acceptedTypes.join(',')
-              input.onchange = async (e) => {
-                const target = e.target as HTMLInputElement
-                const file = target.files?.[0]
-                if (file) {
-                  const validationResult = await validateFile(file)
-                  if (validationResult.isValid) {
-                    const previewUrl = URL.createObjectURL(file)
-                    await handleFileSelect(file, previewUrl)
-                  } else {
-                    const error = createValidationError(validationResult)
-                    handleUploadError(error)
-                  }
-                }
-              }
-              input.click()
-            }}
-            showFullPreview={true}
-            className="mt-3 sm:mt-4"
-          />
+          <div className="mt-3 sm:mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-12 h-12 rounded bg-green-100 dark:bg-green-900/40 flex items-center justify-center overflow-hidden">
+                  <img
+                    src={fileState.previewUrl}
+                    alt={fileState.selectedFile.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-green-900 dark:text-green-100 truncate">
+                    {fileState.selectedFile.name}
+                  </p>
+                  <p className="text-xs text-green-600 dark:text-green-400">
+                    Image uploaded successfully
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={resetState}
+                className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                aria-label="Remove image"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         )}
       </div>
 

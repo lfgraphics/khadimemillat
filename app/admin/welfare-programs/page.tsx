@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { getDynamicIcon } from "@/lib/iconUtils"
 import { getWelfarePrograms } from "@/server/welfare-programs"
 import MarkdownRenderer from "@/components/MarkdownRenderer"
+import { DeleteProgramButton } from "@/components/admin/DeleteProgramButton"
 
 export const metadata: Metadata = {
   title: "Manage Welfare Programs | Admin",
@@ -87,9 +88,10 @@ export default async function AdminWelfareProgramsPage() {
                       <Edit className="h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button variant="outline" size="sm" className="text-destructive hoact:text-destructive">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <DeleteProgramButton
+                    programId={program._id}
+                    programName={program.title}
+                  />
                 </div>
               </div>
             </div>
