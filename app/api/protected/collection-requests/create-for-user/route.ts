@@ -15,6 +15,7 @@ const createDonationRequestForUserSchema = z.object({
     if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(val)) return true
     return !isNaN(Date.parse(val))
   }, { message: 'Invalid pickup time format' }),
+  address: z.string().min(1, 'Address is required'),
   items: z.string().optional(),
   notes: z.string().optional()
 })
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
       }, { status: 400 })
     }
 
-    const { userId: targetUserIdParsed, pickupTime, items, notes } = parsed.data
+    const { userId: targetUserIdParsed, pickupTime, address: requestAddress, items, notes } = parsed.data
     targetUserId = targetUserIdParsed
 
     // Get the target user's information from Clerk
@@ -60,19 +61,28 @@ export async function POST(req: NextRequest) {
     }
 
     // Extract user information for the donation request
-    const userPhone = targetUser.privateMetadata?.phone as string
-    const userAddress = targetUser.publicMetadata?.address as string
-    const userName = `${targetUser.firstName || ''} ${targetUser.lastName || ''}`.trim() || targetUser.username || 'Unknown'
+    // For new users: phone is in phoneNumbers array
+    // For legacy users: phone might be in privateMetadata
+    const userPhone = targetUser.phoneNumbers?.[0]?.phoneNumber ||
+      (targetUser.privateMetadata?.phone as string) ||
+      ''
+    // Use address from request body (admin can override/provide)
+    const userAddress = requestAddress
+    const userName = `${targetUser.firstName || ''} ${targetUser.lastName || ''}`.trim() ||
+      targetUser.username ||
+      'Unknown'
+
+    console.log('[DONATION_REQUEST] User data:', {
+      userId: targetUserId,
+      userName,
+      phone: userPhone,
+      address: userAddress,
+      addressSource: 'form_input'
+    })
 
     if (!userPhone) {
       return NextResponse.json({
         error: 'User phone number is required but not found'
-      }, { status: 400 })
-    }
-
-    if (!userAddress) {
-      return NextResponse.json({
-        error: 'User address is required but not found'
       }, { status: 400 })
     }
 

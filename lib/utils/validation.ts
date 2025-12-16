@@ -270,19 +270,14 @@ function validatePickupTime(pickupTime: string): string | undefined {
   
   const pickupDate = new Date(pickupTime);
   const now = new Date();
-  const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
-  const oneMonthFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
   
   if (isNaN(pickupDate.getTime())) {
     return 'Invalid pickup time format';
   }
   
-  if (pickupDate < oneHourFromNow) {
-    return 'Pickup time must be at least 1 hour from now';
-  }
-  
-  if (pickupDate > oneMonthFromNow) {
-    return 'Pickup time cannot be more than 30 days in the future';
+  // Only validate that it's not in the past
+  if (pickupDate <= now) {
+    return 'Pickup time must be in the future';
   }
   
   return undefined;

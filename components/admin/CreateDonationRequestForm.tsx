@@ -17,11 +17,12 @@ import { fetchWithRetry, DEFAULT_API_RETRY_OPTIONS } from "@/lib/utils/retry";
 
 export interface CreatedUserDisplay {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
   email?: string;
-  username: string;
-  password: string;
-  phone: string;
+  username?: string;
+  password?: string;
   address?: string;
   role: string;
 }
@@ -29,6 +30,7 @@ export interface CreatedUserDisplay {
 interface DonationRequestData {
   userId: string;
   pickupTime: string;
+  address: string;
   items?: string;
   notes?: string;
 }
@@ -51,6 +53,7 @@ export const CreateDonationRequestForm: React.FC<CreateDonationRequestFormProps>
   const [form, setForm] = useState<DonationRequestData>({
     userId: user.id,
     pickupTime: "",
+    address: user.address || "",
     items: "",
     notes: "",
   });
@@ -85,6 +88,10 @@ export const CreateDonationRequestForm: React.FC<CreateDonationRequestFormProps>
       if (pickupDate <= now) {
         errors.pickupTime = "Pickup time must be in the future";
       }
+    }
+
+    if (!form.address?.trim()) {
+      errors.address = "Address is required";
     }
 
     setFieldErrors(errors);
@@ -134,10 +141,10 @@ export const CreateDonationRequestForm: React.FC<CreateDonationRequestFormProps>
           hasNotes: !!form.notes,
         },
         userData: {
-          userName: user.name,
+          userName: `${user.firstName} ${user.lastName}`,
           userEmail: user.email,
           hasAddress: !!user.address,
-          hasPhone: !!user.phone,
+          hasPhone: !!user.phoneNumber,
         },
         errorDetails: extractErrorDetails(err),
       });
@@ -315,7 +322,7 @@ export const CreateDonationRequestForm: React.FC<CreateDonationRequestFormProps>
           Create Donation Request
         </CardTitle>
         <CardDescription>
-          Create a pre-verified donation request for {user.name}. 
+          Create a pre-verified donation request for {user.firstName} {user.lastName}. 
           Field executives will be automatically notified.
         </CardDescription>
       </CardHeader>
@@ -329,10 +336,10 @@ export const CreateDonationRequestForm: React.FC<CreateDonationRequestFormProps>
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
             <div>
-              <span className="font-medium">Name:</span> {user.name}
+              <span className="font-medium">Name:</span> {user.firstName} {user.lastName}
             </div>
             <div>
-              <span className="font-medium">Phone:</span> {user.phone}
+              <span className="font-medium">Phone:</span> {user.phoneNumber}
             </div>
             {user.address && (
               <div className="md:col-span-2">
@@ -366,6 +373,29 @@ export const CreateDonationRequestForm: React.FC<CreateDonationRequestFormProps>
                 Scheduled for: {formatPickupTime(form.pickupTime)}
               </p>
             )}
+          </div>
+
+          {/* Address Field */}
+          <div className="space-y-2">
+            <Label htmlFor="address" className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              Pickup Address <span className="text-red-500">*</span>
+            </Label>
+            <Textarea
+              id="address"
+              value={form.address}
+              onChange={(e) => updateField("address", e.target.value)}
+              placeholder="Enter complete pickup address with landmarks"
+              rows={3}
+              className={cn(fieldErrors.address && "border-red-500")}
+              disabled={loading}
+            />
+            {fieldErrors.address && (
+              <p className="text-sm text-red-600">{fieldErrors.address}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Provide complete address for field executive to locate
+            </p>
           </div>
 
           {/* Items Field */}

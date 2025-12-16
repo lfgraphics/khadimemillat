@@ -114,8 +114,8 @@ const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> 
   };
 
   const handleInputChange = (field: keyof CollectionRequestFormData, value: string) => {
-    // Sanitize input to prevent XSS
-    const sanitizedValue = field === 'address' || field === 'items' || field === 'notes'
+    // Sanitize only items and notes to prevent XSS, but allow full text in address
+    const sanitizedValue = (field === 'items' || field === 'notes')
       ? sanitizeString(value)
       : value;
 
@@ -384,7 +384,6 @@ const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> 
               disabled={disabled || isSubmitting}
               aria-invalid={!!validationErrors.pickupTime}
               className={cn(validationErrors.pickupTime && "border-destructive")}
-              min={new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16)} // Minimum 1 hour from now
             />
             {validationErrors.pickupTime && (
               <div className="flex items-center gap-1 text-sm text-destructive">
@@ -393,7 +392,7 @@ const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> 
               </div>
             )}
             <p className="text-xs text-muted-foreground">
-              Select a future date and time for the pickup
+              Select any future date and time for the pickup
             </p>
           </div>
 

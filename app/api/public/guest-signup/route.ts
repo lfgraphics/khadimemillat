@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createUserRobust } from '@/lib/services/user-create.service'
 
-// Require phone; email optional
+// Accept both new format (firstName/lastName) and legacy format (name)
 const schema = z.object({
-  name: z.string().min(2),
+  firstName: z.string().min(2).optional(),
+  lastName: z.string().optional(),
+  name: z.string().min(2).optional(), // Legacy support
   phone: z.string().min(6),
   email: z.string().email().optional()
+}).refine(data => data.firstName || data.name, {
+  message: "Either firstName or name is required"
 })
 
 export async function POST(req: NextRequest) {
@@ -17,24 +21,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 })
     }
 
-    const { name, phone, email } = parsed.data
+    const { firstName, lastName, name, phone, email } = parsed.data
 
     const created = await createUserRobust({
-      name,
+      firstName: firstName || (name ? name.split(' ')[0] : ''),
+      lastName: lastName || (name ? name.split(' ').slice(1).join(' ') || 'User' : 'User'),
       phone,
       email,
       role: 'user',
-      allowSynthEmail: true,
+      skipPassword: true, // Mobile-first OTP login
       notifyChannels: { email: !!email, whatsapp: true, sms: false }
     })
 
     return NextResponse.json({ 
       success: true, 
-      userId: created.clerkUserId, 
-      username: created.username, 
-      emailUsed: created.emailUsed, 
-      password: created.password, 
-      identifier: created.username 
+      userId: created.clerkUserId,
+      phoneNumber: created.phoneNumber,
+      username: created.username, // Only present if password was generated
+      emailUsed: created.emailUsed,
+      password: created.password, // Only present if password was generated
+      identifier: created.username || created.phoneNumber
     })
   } catch (e: any) {
     console.error('[GUEST_SIGNUP_ERROR]', e)

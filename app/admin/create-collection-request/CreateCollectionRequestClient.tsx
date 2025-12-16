@@ -49,11 +49,7 @@ export default function CreateCollectionRequestClient() {
         setError(null);
 
         if (user) {
-            // Validate that user has minimum required information
-            if (!user.name || !user.email) {
-                setError('Selected user is missing required information. Please select a different user.');
-                return;
-            }
+            // Allow any user to be selected - missing info can be provided in the form
             setCurrentStep('form');
         } else {
             setCurrentStep('search');
