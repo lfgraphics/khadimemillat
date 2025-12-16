@@ -59,7 +59,7 @@ export function MobileNav() {
                     className="h-10 w-10 md:h-6 md:w-6"
                     suppressHydrationWarning
                 >
-                    <Menu className="h-10 w-10 md:h-5 md:w-5" />
+                    <Menu className="scale-180 h-10 w-10 md:h-5 md:w-5" />
                 </Button>
                 {/* <span className="sr-only">Toggle navigation menu</span> */}
                 {/* <Button variant="ghost" className="text-lg">

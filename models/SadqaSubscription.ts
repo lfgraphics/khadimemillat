@@ -3,7 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface ISadqaSubscription extends Document {
   // User Information
   clerkUserId: string;
-  userEmail: string;
+  userEmail?: string;
   userName: string;
   userPhone?: string;
   
@@ -49,7 +49,7 @@ const SadqaSubscriptionSchema = new Schema<ISadqaSubscription>({
   },
   userEmail: {
     type: String,
-    required: true
+    required: false
   },
   userName: {
     type: String,

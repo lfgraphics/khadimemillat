@@ -28,6 +28,7 @@ export interface CollectionRequestFormValues {
     format: string;
     bytes: number;
   }>;
+  name?: string;
 }
 
 interface CollectionRequestFormProps {
@@ -55,6 +56,7 @@ export const CollectionRequestForm: React.FC<CollectionRequestFormProps> = ({
     notes: defaultValues?.notes || "",
     currentLocation: defaultValues?.currentLocation,
     images: defaultValues?.images || [],
+    name: ""
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -194,6 +196,12 @@ export const CollectionRequestForm: React.FC<CollectionRequestFormProps> = ({
         setLoading(false);
         return;
       }
+      // For guest users (not authenticated), name is required
+      if (!user && !form.name?.trim()) {
+        setError("Name is required.");
+        setLoading(false);
+        return;
+      }
       const payload: any = {
         ...form,
         // Include uploaded image URLs and metadata
@@ -204,7 +212,9 @@ export const CollectionRequestForm: React.FC<CollectionRequestFormProps> = ({
           height: img.height,
           format: img.format,
           bytes: img.bytes
-        }))
+        })),
+        // Include name for guest users
+        name: !user ? form.name : undefined
       };
       if (donorId) payload.donor = donorId;
       const res = await fetch("/api/protected/collection-requests", {
@@ -230,6 +240,21 @@ export const CollectionRequestForm: React.FC<CollectionRequestFormProps> = ({
 
   return (
     <form onSubmit={submit} className={cn("space-y-4", className)}>
+      {/* Name field for guest users only */}
+      {!user && isLoaded && (
+        <div className="space-y-1">
+          <label className="block text-sm font-medium">Name<span className="text-red-500">*</span></label>
+          <input
+            type="text"
+            className="w-full border rounded-md px-3 py-2 text-sm"
+            value={form.name || ""}
+            onChange={(e) => updateField("name", e.target.value)}
+            placeholder="Your full name"
+            required
+          />
+        </div>
+      )}
+
       <div className="space-y-1">
         <label className="block text-sm font-medium">Address<span className="text-red-500">*</span></label>
         <input
@@ -358,7 +383,7 @@ export const CollectionRequestForm: React.FC<CollectionRequestFormProps> = ({
         </div>
       )}
       {error && <div className="text-xs text-red-600">{error}</div>}
-      {success && <div className="text-xs text-green-600">Request submitted.</div>}
+      {success && <div className="text-xs text-green-600">Request submitted. Sit back and relax <br /> We'll get in touch with you ASAP</div>}
       <div className="pt-2">
         <Button type="submit" disabled={loading} className="w-full md:w-auto">
           {loading ? "Submitting..." : submitLabel}

@@ -42,7 +42,7 @@ const supportOptions = [
     title: "Donate Scrap or Clothing",
     description: "Your unused items can bring warmth, dignity and relief to another family. We collect, repair, recycle and upcycle scrap and clothing — and the proceeds directly support welfare programs.",
     cta: "Schedule a Pickup",
-    link: "/contact",
+    link: "/donate",
     color: "from-green-500 to-emerald-500"
   },
   {
@@ -58,7 +58,7 @@ const supportOptions = [
     title: "Sadqa Subscription",
     description: "Let giving become a daily habit. Choose from daily, weekly, monthly, or yearly Sadqa plans — small amounts, continuous blessings, lasting impact.",
     cta: "Start a Subscription",
-    link: "/programs",
+    link: "/sadqa-subscription",
     color: "from-purple-500 to-pink-500"
   },
   {
@@ -82,7 +82,7 @@ const supportOptions = [
     title: "Bulk Food Recovery Program",
     description: `From surplus to sustenance.\nThrough our Food Recovery Initiative, leftover food from events and gatherings is collected, inspected, and safely distributed to impoverished communities. A quick call prevents waste and feeds hundreds. Compassion shouldn’t end with the meal — let your occasion nourish others.`,
     cta: "Report Extra Food",
-    link: "/donate",
+    link: "/contact",
     color: "from-orange-500 to-red-500"
   }
 ];
@@ -163,7 +163,7 @@ export default function Home() {
                     <ArrowRight className="ml-2 w-4 h-4 group-hoact:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
-                <Link href="/sponsorship">
+                <Link href="/sponsor">
                   <Button
                     size="lg"
                     variant="outline"
@@ -267,12 +267,12 @@ export default function Home() {
         </div>
       </section>
 
-      <Carousel
+      {/* <Carousel
         images={images}
         autoPlayInterval={5000}
         showIndicators={true}
         showArrows={true}
-      />
+      /> */}
 
       {/* Stats Section (suspense localized) */}
       <section className="bg-bg-background py-16 pt-8 text-center" data-testid="stats-section">

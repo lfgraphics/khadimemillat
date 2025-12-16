@@ -7,6 +7,7 @@ const isPublicRoute = createRouteMatcher([
     '/marketplace(.*)',
     '/campaigns(.*)',
     '/welfare-programs(.*)',
+    '/programs(.*)',
     '/donors',
     '/about',
     '/activities(.*)',
@@ -23,6 +24,7 @@ const isPublicRoute = createRouteMatcher([
     '/api/receipts(.*)',
     '/api/upload/cloudinary(.*)',
     '/api/razorpay(.*)',
+    '/api/protected/collection-requests(.*)',
     '/workflow',
     '/members',
     '/donors'

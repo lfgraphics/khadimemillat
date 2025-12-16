@@ -7,7 +7,6 @@ import {
     Mail,
     MapPin,
     Clock,
-    Send,
     MessageSquare,
     Users,
     Package,
@@ -51,13 +50,13 @@ export default function ContactPage() {
         {
             icon: Phone,
             title: "Phone",
-            details: ["+91 80817 47259", "+91 99359 04289", "+91 98393 53055"],
+            details: ["+91 80817 47259"],
             color: "from-green-500 to-emerald-500"
         },
         {
             icon: Mail,
             title: "Email",
-            details: ["contact@khadimemillat.org"],
+            details: ["support@khadimemillat.org"],
             color: "from-purple-500 to-pink-500"
         },
         {
