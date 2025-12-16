@@ -21,7 +21,8 @@ const adminCollectionRequestSchema = z.object({
     const now = new Date()
     return pickupDate > now
   }, { message: 'Pickup time must be in the future' }),
-  notes: z.string().optional()
+  notes: z.string().optional(),
+  assignedFieldExecutives: z.array(z.string()).optional() // Optional array of field executive IDs
 })
 
 export async function POST(req: Request) {
@@ -60,7 +61,21 @@ export async function POST(req: Request) {
       }, { status: 400 })
     }
 
-    const { donor, address, phone, requestedPickupTime, notes } = parsed.data
+    const { donor, address, phone, requestedPickupTime, notes, assignedFieldExecutives } = parsed.data
+
+    // Validate assignedFieldExecutives if provided
+    if (assignedFieldExecutives && assignedFieldExecutives.length > 0) {
+      // Verify all provided IDs are valid field executives
+      const allFieldExecutives = await collectionRequestService.getAllFieldExecutives()
+      const validFieldExecutiveIds = allFieldExecutives.map((fe: any) => fe.id)
+
+      const invalidIds = assignedFieldExecutives.filter(id => !validFieldExecutiveIds.includes(id))
+      if (invalidIds.length > 0) {
+        return NextResponse.json({
+          error: 'Invalid field executive IDs provided. Please refresh and try again.'
+        }, { status: 400 })
+      }
+    }
 
     // Verify the donor user exists and has required information
     try {
@@ -113,11 +128,13 @@ export async function POST(req: Request) {
       createdBy: clerkUserId // Audit trail
     } as any)
 
-    // Automatically assign to all field executives and notify them
+    // Assign to selected or all field executives and notify them
     let fieldExecutiveNotificationsSent = 0
     try {
+      // If specific field executives are selected, use them; otherwise assign to all
       const updatedRequest = await collectionRequestService.assignFieldExecutives(
-        collectionRequest._id.toString()
+        collectionRequest._id.toString(),
+        assignedFieldExecutives && assignedFieldExecutives.length > 0 ? assignedFieldExecutives : undefined
       )
       
       if (updatedRequest && (updatedRequest as any).assignedFieldExecutives) {

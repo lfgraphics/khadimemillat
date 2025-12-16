@@ -17,7 +17,8 @@ const createDonationRequestForUserSchema = z.object({
   }, { message: 'Invalid pickup time format' }),
   address: z.string().min(1, 'Address is required'),
   items: z.string().optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
+  assignedFieldExecutives: z.array(z.string()).optional() // Optional array of field executive IDs
 })
 
 export async function POST(req: NextRequest) {
@@ -49,8 +50,22 @@ export async function POST(req: NextRequest) {
       }, { status: 400 })
     }
 
-    const { userId: targetUserIdParsed, pickupTime, address: requestAddress, items, notes } = parsed.data
+    const { userId: targetUserIdParsed, pickupTime, address: requestAddress, items, notes, assignedFieldExecutives } = parsed.data
     targetUserId = targetUserIdParsed
+
+    // Validate assignedFieldExecutives if provided
+    if (assignedFieldExecutives && assignedFieldExecutives.length > 0) {
+      // Verify all provided IDs are valid field executives
+      const allFieldExecutives = await collectionRequestService.getAllFieldExecutives()
+      const validFieldExecutiveIds = allFieldExecutives.map((fe: any) => fe.id)
+
+      const invalidIds = assignedFieldExecutives.filter(id => !validFieldExecutiveIds.includes(id))
+      if (invalidIds.length > 0) {
+        return NextResponse.json({
+          error: 'Invalid field executive IDs provided. Please refresh and try again.'
+        }, { status: 400 })
+      }
+    }
 
     // Get the target user's information from Clerk
     let targetUser
@@ -96,8 +111,16 @@ export async function POST(req: NextRequest) {
       status: 'verified' // Pre-verified as per requirements
     })
 
-    // Get all field executives for notification
-    const fieldExecutives = await collectionRequestService.getAllFieldExecutives()
+    // Get field executives for notification (selected or all)
+    let fieldExecutives
+    if (assignedFieldExecutives && assignedFieldExecutives.length > 0) {
+      // Use selected field executives
+      const allFieldExecutives = await collectionRequestService.getAllFieldExecutives()
+      fieldExecutives = allFieldExecutives.filter((fe: any) => assignedFieldExecutives.includes(fe.id))
+    } else {
+      // Use all field executives (default behavior)
+      fieldExecutives = await collectionRequestService.getAllFieldExecutives()
+    }
     const fieldExecutiveIds = fieldExecutives.map((fieldExecutive: any) => fieldExecutive.id)
 
     // Send notifications to all field executives with detailed information
