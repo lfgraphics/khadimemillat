@@ -14,7 +14,7 @@ const razorpay = new Razorpay({
 
 interface CreateSubscriptionData {
   clerkUserId: string
-  userEmail: string
+  userEmail?: string
   userName: string
   userPhone?: string
   planType: 'daily' | 'weekly' | 'monthly' | 'yearly'
@@ -43,6 +43,9 @@ export class SadqaSubscriptionService {
     try {
       await connectDB()
 
+      // Generate temporary email if not provided
+      const userEmail = data.userEmail || `temp_${data.clerkUserId}@khadimemillat.org`
+
       // Get subscription plan details
       const plan = await SadqaSubscriptionPlan.findOne({ 
         planType: data.planType, 
@@ -56,7 +59,7 @@ export class SadqaSubscriptionService {
       // Get or create Razorpay customer
       const customerId = await this.getOrCreateCustomer(data.clerkUserId, {
         name: data.userName,
-        email: data.userEmail,
+        email: userEmail,
         contact: data.userPhone
       })
 
@@ -75,14 +78,14 @@ export class SadqaSubscriptionService {
         amount: firstPaymentAmount,
         currency: 'INR',
         donationId: `subscription_${Date.now()}`,
-        donorEmail: data.userEmail,
+        donorEmail: userEmail,
         donorPhone: data.userPhone
       })
 
       // Create subscription record in pending state
       const subscription = new SadqaSubscription({
         clerkUserId: data.clerkUserId,
-        userEmail: data.userEmail,
+        userEmail: userEmail,
         userName: data.userName,
         userPhone: data.userPhone,
         planType: data.planType,

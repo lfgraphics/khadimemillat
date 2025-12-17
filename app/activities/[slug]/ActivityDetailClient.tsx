@@ -34,7 +34,7 @@ export default function ActivityDetailClient({ activity }: ActivityDetailClientP
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!imageDialogOpen || selectedImageIndex === null) return;
-      
+
       if (event.key === 'ArrowLeft') {
         event.preventDefault();
         navigateImage('prev');
@@ -63,7 +63,7 @@ export default function ActivityDetailClient({ activity }: ActivityDetailClientP
 
   const navigateImage = (direction: 'prev' | 'next') => {
     if (selectedImageIndex === null) return;
-    
+
     if (direction === 'prev') {
       setSelectedImageIndex(selectedImageIndex > 0 ? selectedImageIndex - 1 : activity.images.length - 1);
     } else {
@@ -110,7 +110,7 @@ export default function ActivityDetailClient({ activity }: ActivityDetailClientP
                 </Button>
               </Link>
             </div>
-            
+
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold mb-2">
@@ -160,7 +160,7 @@ export default function ActivityDetailClient({ activity }: ActivityDetailClientP
                   <h2 className="text-xl font-semibold mb-6">
                     Photo Gallery ({activity.images.length})
                   </h2>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {activity.images.map((image, index) => (
                       <div
@@ -187,47 +187,12 @@ export default function ActivityDetailClient({ activity }: ActivityDetailClientP
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <AnimatedSection variant="slideUp" delay={0.4}>
-              <Card className="sticky top-8">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">Activity Details</h3>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Date</label>
-                      <p className="text-sm">
-                        <time dateTime={activity.date}>
-                          {format(new Date(activity.date), 'PPPP')}
-                        </time>
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Photos</label>
-                      <p className="text-sm">{activity.images.length} images</p>
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Status</label>
-                      <div className="mt-1">
-                        <Badge variant={activity.isActive ? 'default' : 'secondary'}>
-                          {activity.isActive ? 'Active' : 'Archived'}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 pt-6 border-t">
-                    <Link href="/activities">
-                      <Button variant="outline" className="w-full">
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        View All Activities
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            </AnimatedSection>
+            <Link href="/activities">
+              <Button variant="outline" className="w-full">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                View All Activities
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
@@ -242,7 +207,7 @@ export default function ActivityDetailClient({ activity }: ActivityDetailClientP
               </DialogTitle>
             </div>
           </DialogHeader>
-          
+
           {selectedImageIndex !== null && (
             <div className="relative p-6 pt-0">
               <img
@@ -250,7 +215,7 @@ export default function ActivityDetailClient({ activity }: ActivityDetailClientP
                 alt={`${activity.title || 'Activity'} - Photo ${selectedImageIndex + 1}`}
                 className="w-full h-auto max-h-[75vh] object-contain rounded-lg"
               />
-              
+
               {/* Navigation Buttons */}
               {activity.images.length > 1 && (
                 <>
@@ -272,7 +237,7 @@ export default function ActivityDetailClient({ activity }: ActivityDetailClientP
                   </Button>
                 </>
               )}
-              
+
               {/* Image Counter */}
               <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
                 {selectedImageIndex + 1} / {activity.images.length}

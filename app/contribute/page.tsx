@@ -10,7 +10,6 @@ import {
     ShoppingBag,
     Home,
     Calendar,
-    MapPin,
     ArrowRight,
     Gift,
     Briefcase
@@ -35,7 +34,7 @@ export default function ContributePage() {
             ],
             cta: [
                 { label: "Learn More", url: "/sponsorship", variant: "default" as const },
-                { label: "See Verified Beneficiaries", url: "/sponsorship/beneficiaries", variant: "outline" as const }
+                { label: "See Verified Beneficiaries", url: "/sponsor", variant: "outline" as const }
             ],
             color: "from-blue-500 to-purple-500"
         },
@@ -50,7 +49,7 @@ export default function ContributePage() {
                 "Yearly: ₹5,000+"
             ],
             cta: [
-                { label: "Start Subscription", url: "/programs/sadqa-subscription", variant: "default" as const }
+                { label: "Start Subscription", url: "/sadqa-subscription", variant: "default" as const }
             ],
             color: "from-purple-500 to-pink-500"
         },
@@ -65,8 +64,7 @@ export default function ContributePage() {
                 "Donors can find nearest Gullak online"
             ],
             cta: [
-                { label: "Locate a Gullak on Map", url: "/programs/golak-map", variant: "default" as const },
-                { label: "Apply to Host a Gullak", url: "/programs/host-golak", variant: "outline" as const }
+                { label: "Locate a Gullak on Map", url: "/programs/golak-map", variant: "default" as const }
             ],
             color: "from-cyan-500 to-blue-500"
         },

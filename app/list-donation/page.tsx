@@ -11,7 +11,7 @@
 import React, { useEffect, useState, useCallback, Suspense } from 'react';
 import { safeJson } from '@/lib/utils';
 import { useUser } from '@clerk/nextjs';
-import Barcode from 'react-barcode';
+// QR codes generated via public API - no library needed
 import { Button } from '@/components/ui/button';
 import SearchableDropDownSelect, { ComboboxOption } from '@/components/searchable-dropdown-select';
 import UserSearchAndCreate, { Donor } from '@/components/UserSearchAndCreate';
@@ -326,7 +326,16 @@ const DonationListManager: React.FC = () => {
   const selectedUser = donor?.mongoUserId || donor?.id || '';
   const selectedUserDetails = donor;
 
-  const [donorPanelOpen, setDonorPanelOpen] = useState<boolean>(!donor);
+  // Use true as initial state to avoid hydration mismatch
+  // Will update when donor is set
+  const [donorPanelOpen, setDonorPanelOpen] = useState<boolean>(true);
+
+  // Close panel when donor is set
+  useEffect(() => {
+    if (donor !== null) {
+      setDonorPanelOpen(false);
+    }
+  }, [donor]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10 lg:space-y-12 relative min-w-0">
@@ -663,23 +672,24 @@ const DonationListManager: React.FC = () => {
                 </div>
               </div>
 
-              {/* Enhanced Barcode Section */}
+              {/* Enhanced QR Code Section */}
               <div className="border-t border-border/50 bg-gradient-to-b from-muted/20 to-muted/40 px-4 py-3 mt-auto">
                 <div className="flex flex-col items-center gap-2.5">
-                  {/* Improved barcode container */}
-                  <div className="w-full bg-white rounded-lg px-3 py-2 shadow-sm border border-border/30 flex justify-center items-center min-h-[40px]">
-                    <div className="max-w-full overflow-hidden">
-                      <Barcode
-                        value={item.serverId || item.tempId}
-                        format="CODE128"
-                        width={1.2}
-                        height={28}
-                        fontSize={7}
-                        margin={0}
-                        displayValue={false}
-                        background="transparent"
+                  {/* QR code container - only show functional QR after submission */}
+                  <div className="w-full bg-white rounded-lg px-2 py-2 shadow-sm border border-border/30 flex justify-center items-center">
+                    {item.serverId ? (
+                      <img 
+                        src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(`https://khadimemillat.org/marketplace/${item.serverId}`)}&size=80x80&margin=2`}
+                        alt="QR Code"
+                        className="w-20 h-20"
                       />
-                    </div>
+                    ) : (
+                      <div className="w-20 h-20 bg-muted/50 rounded flex items-center justify-center">
+                        <svg className="w-10 h-10 text-muted-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                        </svg>
+                      </div>
+                    )}
                   </div>
 
                   {/* Enhanced status indicator */}

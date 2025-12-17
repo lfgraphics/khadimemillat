@@ -1684,10 +1684,9 @@ function generateReceiptImageHTML(data: ReceiptData): string {
         <div class="org-title">Khadim-e-Millat Welfare Foundation</div>
         <div class="org-details">
           Regd. under Indian Trust Act 1882 | 80G Approved by IT Department<br>
-          <strong>PAN:</strong> AABCK1234E | <strong>80G Registration:</strong> AABCK1234EF20240001<br>
-          <strong>80G Validity:</strong> 01/04/2024 to 31/03/2029<br>
-          <strong>Address:</strong> 123 Main Street, Mumbai, Maharashtra - 400001<br>
-          Email: contact@khadimemillat.org | Phone: +91-XXXXXXXXXX<br>
+          <strong>PAN:</strong> AAICK6626K<br>
+          <strong>Address:</strong> Gorakhpur, Uttar Pradesh, India<br>
+          Email: support@khadimemillat.org | Phone: +91 80817 47259<br>
           Visit: www.khadimemillat.org
         </div>
       </div>

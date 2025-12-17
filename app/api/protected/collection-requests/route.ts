@@ -47,20 +47,34 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const { userId: clerkUserId } = await auth()
-    if (!clerkUserId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const json = await req.json()
     const parsed = createCollectionRequestSchema.safeParse(json)
     if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
 
-    // Allow admins/moderators to create on behalf of a donor by passing donor as Clerk ID or Mongo ID; default to current user
-    let donorClerkId = parsed.data.donor || clerkUserId
-    // If donor looks like a Mongo ObjectId, resolve it to Clerk ID
-    if (/^[a-fA-F0-9]{24}$/.test(donorClerkId)) {
-      try {
-        const UserModel = (await import('@/models/User')).default as any
-        const m = await UserModel.findById(donorClerkId).lean()
-        if (m?.clerkUserId) donorClerkId = m.clerkUserId
-      } catch (e) { /* ignore and keep original */ }
+    let donorClerkId = clerkUserId
+
+    // Handle guest users (not authenticated)
+    if (!clerkUserId) {
+      // For guest users, just use name - no account creation needed
+      if (!json.name) {
+        return NextResponse.json({
+          error: 'Name is required for guest users'
+        }, { status: 400 })
+      }
+
+      // Generate a simple guest identifier without creating a user record
+      donorClerkId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    } else {
+      // For authenticated users, allow admins/moderators to create on behalf of a donor
+      donorClerkId = parsed.data.donor || clerkUserId
+      // If donor looks like a Mongo ObjectId, resolve it to Clerk ID
+      if (/^[a-fA-F0-9]{24}$/.test(donorClerkId)) {
+        try {
+          const UserModel = (await import('@/models/User')).default as any
+          const m = await UserModel.findById(donorClerkId).lean()
+          if (m?.clerkUserId) donorClerkId = m.clerkUserId
+        } catch (e) { /* ignore and keep original */ }
+      }
     }
 
     const created = await createCollectionRequest({
@@ -69,14 +83,20 @@ export async function POST(req: Request) {
       address: parsed.data.address,
       phone: parsed.data.phone,
       notes: parsed.data.notes,
-      currentLocation: parsed.data.currentLocation
+      currentLocation: parsed.data.currentLocation,
+      images: json.images || [],
+      // Include guest name if provided
+      guestName: json.name || undefined
     } as any)
 
     // Enrich with donorDetails in response for convenience
     try {
-      const { getClerkUserWithSupplementaryData } = await import('@/lib/services/user.service')
-      const donorDetails = await getClerkUserWithSupplementaryData(donorClerkId)
-      return NextResponse.json({ success: true, request: { ...created, donorDetails } })
+      if (donorClerkId && !donorClerkId.startsWith('guest_')) {
+        const { getClerkUserWithSupplementaryData } = await import('@/lib/services/user.service')
+        const donorDetails = await getClerkUserWithSupplementaryData(donorClerkId)
+        return NextResponse.json({ success: true, request: { ...created, donorDetails } })
+      }
+      return NextResponse.json({ success: true, request: created })
     } catch {
       return NextResponse.json({ success: true, request: created })
     }

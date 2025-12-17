@@ -15,8 +15,10 @@ const createDonationRequestForUserSchema = z.object({
     if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(val)) return true
     return !isNaN(Date.parse(val))
   }, { message: 'Invalid pickup time format' }),
+  address: z.string().min(1, 'Address is required'),
   items: z.string().optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
+  assignedFieldExecutives: z.array(z.string()).optional() // Optional array of field executive IDs
 })
 
 export async function POST(req: NextRequest) {
@@ -48,8 +50,22 @@ export async function POST(req: NextRequest) {
       }, { status: 400 })
     }
 
-    const { userId: targetUserIdParsed, pickupTime, items, notes } = parsed.data
+    const { userId: targetUserIdParsed, pickupTime, address: requestAddress, items, notes, assignedFieldExecutives } = parsed.data
     targetUserId = targetUserIdParsed
+
+    // Validate assignedFieldExecutives if provided
+    if (assignedFieldExecutives && assignedFieldExecutives.length > 0) {
+      // Verify all provided IDs are valid field executives
+      const allFieldExecutives = await collectionRequestService.getAllFieldExecutives()
+      const validFieldExecutiveIds = allFieldExecutives.map((fe: any) => fe.id)
+
+      const invalidIds = assignedFieldExecutives.filter(id => !validFieldExecutiveIds.includes(id))
+      if (invalidIds.length > 0) {
+        return NextResponse.json({
+          error: 'Invalid field executive IDs provided. Please refresh and try again.'
+        }, { status: 400 })
+      }
+    }
 
     // Get the target user's information from Clerk
     let targetUser
@@ -60,19 +76,28 @@ export async function POST(req: NextRequest) {
     }
 
     // Extract user information for the donation request
-    const userPhone = targetUser.privateMetadata?.phone as string
-    const userAddress = targetUser.publicMetadata?.address as string
-    const userName = `${targetUser.firstName || ''} ${targetUser.lastName || ''}`.trim() || targetUser.username || 'Unknown'
+    // For new users: phone is in phoneNumbers array
+    // For legacy users: phone might be in privateMetadata
+    const userPhone = targetUser.phoneNumbers?.[0]?.phoneNumber ||
+      (targetUser.privateMetadata?.phone as string) ||
+      ''
+    // Use address from request body (admin can override/provide)
+    const userAddress = requestAddress
+    const userName = `${targetUser.firstName || ''} ${targetUser.lastName || ''}`.trim() ||
+      targetUser.username ||
+      'Unknown'
+
+    console.log('[DONATION_REQUEST] User data:', {
+      userId: targetUserId,
+      userName,
+      phone: userPhone,
+      address: userAddress,
+      addressSource: 'form_input'
+    })
 
     if (!userPhone) {
       return NextResponse.json({
         error: 'User phone number is required but not found'
-      }, { status: 400 })
-    }
-
-    if (!userAddress) {
-      return NextResponse.json({
-        error: 'User address is required but not found'
       }, { status: 400 })
     }
 
@@ -86,8 +111,16 @@ export async function POST(req: NextRequest) {
       status: 'verified' // Pre-verified as per requirements
     })
 
-    // Get all field executives for notification
-    const fieldExecutives = await collectionRequestService.getAllFieldExecutives()
+    // Get field executives for notification (selected or all)
+    let fieldExecutives
+    if (assignedFieldExecutives && assignedFieldExecutives.length > 0) {
+      // Use selected field executives
+      const allFieldExecutives = await collectionRequestService.getAllFieldExecutives()
+      fieldExecutives = allFieldExecutives.filter((fe: any) => assignedFieldExecutives.includes(fe.id))
+    } else {
+      // Use all field executives (default behavior)
+      fieldExecutives = await collectionRequestService.getAllFieldExecutives()
+    }
     const fieldExecutiveIds = fieldExecutives.map((fieldExecutive: any) => fieldExecutive.id)
 
     // Send notifications to all field executives with detailed information

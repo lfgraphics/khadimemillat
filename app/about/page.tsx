@@ -384,40 +384,8 @@ export default function AboutPage() {
                     </div>
                 </section>
 
-                {/* Testimonials */}
-                <section className="py-16 md:py-24 bg-muted/30">
-                    <div className="container mx-auto px-4">
-                        <AnimatedSection variant="fade" className="max-w-5xl mx-auto" rootMargin="-100px" triggerOnce>
-                            <AnimatedSection variant="fade" className="text-center mb-12" triggerOnce>
-                                <h2 className="text-3xl md:text-4xl mb-4">Voices from Our Community</h2>
-                            </AnimatedSection>
-
-                            <div className="grid md:grid-cols-3 gap-6">
-                                {stories.map((story, index) => (
-                                    <AnimatedSection key={index} variant="scale" className="">
-                                        <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50">
-                                            <CardContent className="p-6">
-                                                <div className="flex flex-col items-center text-center mb-4">
-                                                    <div className="w-20 h-20 rounded-full overflow-hidden mb-4">
-                                                        <ClickableImage
-                                                            src={story.image}
-                                                            alt={story.name}
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                    </div>
-                                                    <h3 className="font-medium mb-1">{story.name}</h3>
-                                                    <p className="text-sm text-primary">{story.role}</p>
-                                                </div>
-                                                <Quote className="w-6 h-6 text-primary/50 mb-2" />
-                                                <p className="text-sm text-muted-foreground italic">"{story.quote}"</p>
-                                            </CardContent>
-                                        </Card>
-                                    </AnimatedSection>
-                                ))}
-                            </div>
-                        </AnimatedSection>
-                    </div>
-                </section>
+                {/* Google Reviews */}
+                <GoogleReviewsServer />
 
                 {/* CTA */}
                 <section className="py-16 md:py-24">

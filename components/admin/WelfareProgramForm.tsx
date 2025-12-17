@@ -12,6 +12,7 @@ import { Loader2, Save, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { getAvailableIcons, getDynamicIcon } from '@/lib/iconUtils'
 import Link from 'next/link'
+import { EnhancedFileSelector } from '@/components/file-selector'
 
 interface WelfareProgramFormProps {
   program?: {
@@ -182,17 +183,35 @@ export default function WelfareProgramForm({ program }: WelfareProgramFormProps)
 
             {/* Cover Image */}
             <div>
-              <Label htmlFor="coverImage" className="text-sm font-medium">
-                Cover Image URL *
+              <Label className="text-sm font-medium">
+                Cover Image *
               </Label>
-              <Input
-                id="coverImage"
-                type="url"
-                value={formData.coverImage}
-                onChange={(e) => setFormData(prev => ({ ...prev, coverImage: e.target.value }))}
-                placeholder="https://example.com/image.jpg"
-                required
+              <EnhancedFileSelector
+                onFileSelect={(file, previewUrl) => {
+                  console.log('File selected:', file.name)
+                }}
+                onUploadComplete={(result) => {
+                  setFormData(prev => ({ ...prev, coverImage: result.url }))
+                  toast.success('Cover image uploaded successfully!')
+                }}
+                onError={(error) => {
+                  toast.error(`Upload failed: ${error.message}`)
+                }}
+                uploadToCloudinary={true}
+                cloudinaryOptions={{
+                  folder: 'kmwf/welfare-programs/',
+                  tags: ['welfare-program', 'cover-image'],
+                }}
+                maxFileSize={10 * 1024 * 1024}
+                acceptedTypes={['image/jpeg', 'image/png', 'image/webp']}
+                placeholder="Drag and drop cover image here or click to select"
+                showPreview={true}
               />
+              {formData.coverImage && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  ✓ Image uploaded successfully
+                </p>
+              )}
             </div>
 
             {/* Icon Selection */}

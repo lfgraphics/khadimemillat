@@ -27,7 +27,6 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [razorpayReady, setRazorpayReady] = useState(false)
   const [emailGenerated, setEmailGenerated] = useState(false)
-  const [allowEditProfileFields, setAllowEditProfileFields] = useState(false)
   
   // 80G Receipt and preferences state
   const [wants80GReceipt, setWants80GReceipt] = useState(false)
@@ -459,7 +458,6 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
             onChange={(e) => handleNameChange(e.target.value)}
             placeholder="Enter your full name"
             required
-            disabled={!!user && !allowEditProfileFields}
             className="text-sm"
           />
         </div>
@@ -475,7 +473,6 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
             onChange={(value) => handlePhoneChange(value)}
             placeholder="Enter your phone number"
             required
-            disabled={!!user && !allowEditProfileFields}
             className="text-sm"
           />
         </div>
@@ -495,7 +492,6 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
             value={donorEmail}
             onChange={(e) => handleEmailChange(e.target.value)}
             placeholder={user ? "Your email (optional)" : "Enter your email (optional)"}
-            disabled={!!user && !allowEditProfileFields}
             className="text-sm"
           />
           {!user && emailGenerated && (
@@ -666,12 +662,7 @@ export default function DonationForm({ campaignSlug }: DonationFormProps) {
         </div>
       </div>
 
-      {user && (
-        <div className="flex items-center gap-2 text-xs">
-          <input id="editProfileFields" type="checkbox" checked={allowEditProfileFields} onChange={e => setAllowEditProfileFields(e.target.checked)} />
-          <label htmlFor="editProfileFields">Edit my name/email for this donation (email optional)</label>
-        </div>
-      )}
+
 
       {/* Submit Button */}
       <Button

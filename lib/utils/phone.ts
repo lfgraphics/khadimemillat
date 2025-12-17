@@ -65,3 +65,17 @@ export function generateWhatsAppUrl(phone: string, message: string, defaultCount
   const text = encodeURIComponent(message)
   return `https://wa.me/${target}?text=${text}`
 }
+
+/**
+ * Convert phone number to E.164 format with + prefix
+ * Required by Clerk API for phone number authentication
+ * @param phone - Phone number in any format
+ * @param defaultCountryCode - Default country code (default: from env or '91')
+ * @returns Phone number in E.164 format (e.g., "+919876543210")
+ */
+export function toE164Format(phone: string, defaultCountryCode = getDefaultCountryCode()): string {
+  const normalized = normalizePhoneNumber(phone, defaultCountryCode)
+  // Ensure it starts with + for E.164 compliance
+  return normalized.startsWith('+') ? normalized : `+${normalized}`
+}
+

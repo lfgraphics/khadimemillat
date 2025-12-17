@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose'
 
 export interface IWebPushSubscription extends Document {
-  clerkUserId: string
+  clerkUserId?: string
   endpoint: string
   keys: {
     p256dh: string
@@ -16,7 +16,7 @@ export interface IWebPushSubscription extends Document {
 }
 
 const webPushSubscriptionSchema = new Schema<IWebPushSubscription>({
-  clerkUserId: { type: String, required: true },
+  clerkUserId: { type: String, required: false },
   endpoint: { type: String, required: true },
   keys: {
     p256dh: { type: String, required: true },
@@ -28,7 +28,7 @@ const webPushSubscriptionSchema = new Schema<IWebPushSubscription>({
   userName: { type: String }
 }, { timestamps: true })
 
-// Unique per user (replace old subscription on re-subscribe)
-webPushSubscriptionSchema.index({ clerkUserId: 1 }, { unique: true })
+webPushSubscriptionSchema.index({ endpoint: 1 }, { unique: true })
+webPushSubscriptionSchema.index({ clerkUserId: 1 }, { unique: true, sparse: true }) // Sparse allows nulls, but ensures one subscription per user
 
 export default mongoose.models.WebPushSubscription || mongoose.model<IWebPushSubscription>('WebPushSubscription', webPushSubscriptionSchema, 'web-push-subscriptions')

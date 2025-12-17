@@ -1,4 +1,4 @@
-import { ArrowRight, ClipboardCheck, Headphones, Heart, HeartHandshake, HandHeart, HomeIcon, Mail, Package, Phone, Recycle, ShoppingBag, Truck, Users, HandHelping, UtensilsCrossed } from "lucide-react";
+import { ArrowRight, ClipboardCheck, Headphones, Heart, HeartHandshake, HandHeart, HomeIcon, Mail, Package, Phone, Recycle, ShoppingBag, Truck, Users, HandHelping, UtensilsCrossed, MessageCircleIcon, Youtube, Facebook, Twitter, Instagram } from "lucide-react";
 import Link from "next/link";
 import SuspenseSection from "@/components/SuspenseSection";
 import Loading from "@/components/Loading";
@@ -42,7 +42,7 @@ const supportOptions = [
     title: "Donate Scrap or Clothing",
     description: "Your unused items can bring warmth, dignity and relief to another family. We collect, repair, recycle and upcycle scrap and clothing — and the proceeds directly support welfare programs.",
     cta: "Schedule a Pickup",
-    link: "/contact",
+    link: "/donate",
     color: "from-green-500 to-emerald-500"
   },
   {
@@ -58,7 +58,7 @@ const supportOptions = [
     title: "Sadqa Subscription",
     description: "Let giving become a daily habit. Choose from daily, weekly, monthly, or yearly Sadqa plans — small amounts, continuous blessings, lasting impact.",
     cta: "Start a Subscription",
-    link: "/programs",
+    link: "/sadqa-subscription",
     color: "from-purple-500 to-pink-500"
   },
   {
@@ -82,7 +82,7 @@ const supportOptions = [
     title: "Bulk Food Recovery Program",
     description: `From surplus to sustenance.\nThrough our Food Recovery Initiative, leftover food from events and gatherings is collected, inspected, and safely distributed to impoverished communities. A quick call prevents waste and feeds hundreds. Compassion shouldn’t end with the meal — let your occasion nourish others.`,
     cta: "Report Extra Food",
-    link: "/donate",
+    link: "/contact",
     color: "from-orange-500 to-red-500"
   }
 ];
@@ -163,7 +163,7 @@ export default function Home() {
                     <ArrowRight className="ml-2 w-4 h-4 group-hoact:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
-                <Link href="/sponsorship">
+                <Link href="/sponsor">
                   <Button
                     size="lg"
                     variant="outline"
@@ -267,12 +267,12 @@ export default function Home() {
         </div>
       </section>
 
-      <Carousel
+      {/* <Carousel
         images={images}
         autoPlayInterval={5000}
         showIndicators={true}
         showArrows={true}
-      />
+      /> */}
 
       {/* Stats Section (suspense localized) */}
       <section className="bg-bg-background py-16 pt-8 text-center" data-testid="stats-section">
@@ -375,7 +375,7 @@ export default function Home() {
 
         <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 my-6 relative z-10">
           {supportOptions.map((option, index) => (
-            <Card key={index} className="w-full bg-white dark:bg-card border border-border shadow-sm hover:shadow-md transition-all duration-300">
+            <Card key={index} className="border-none w-full border border-border shadow-sm hover:shadow-md transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex flex-col space-y-4">
                   <div className="flex items-center space-x-4">
@@ -384,11 +384,11 @@ export default function Home() {
                     </div>
                     <h3 className="text-lg font-semibold text-foreground">{option.title}</h3>
                   </div>
-                  
+
                   <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
                     {option.description}
                   </p>
-                  
+
                   <Button variant="outline" className="w-full mt-4" asChild>
                     <Link href={option.link} className="flex items-center justify-center">
                       {option.cta}
@@ -474,12 +474,6 @@ export default function Home() {
                   <Link href="tel:+918081747259" className="hoact:text-primary transition-colors">
                     +91 80817 47259
                   </Link>
-                  <Link href="tel:+919935904289" className="hoact:text-primary transition-colors">
-                    +91 99359 04289
-                  </Link>
-                  <Link href="tel:+919839353055" className="hoact:text-primary transition-colors">
-                    +91 98393 53055
-                  </Link>
                 </div>
               </div>
             </AnimatedSection>
@@ -516,12 +510,23 @@ export default function Home() {
               <div className="text-center bg-card rounded-lg p-6 shadow-sm hoact:shadow-md transition-shadow h-full flex flex-col justify-between" data-testid="contact-whatsapp">
                 <div>
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Headphones className="h-8 w-8 text-primary" />
+                    <MessageCircleIcon className="h-8 w-8 text-primary" />
                   </div>
-                  <h3 className="font-semibold mb-2 text-foreground">WhatsApp</h3>
+                  <h3 className="font-semibold mb-2 text-foreground">Socials</h3>
                 </div>
-                <div className="text-muted-foreground">
-                  <p>Quick support available</p>
+                <div className="space-x-4 flex flex-wrap" data-testid="footer-social-links">
+                  <Link href="https://www.youtube.com/@muftidawoodqasmiofficial" className="w-9 h-9 bg-muted hoact:bg-primary hoact:text-primary-foreground rounded-lg flex items-center justify-center transition-colors" data-testid="social-facebook">
+                    <Youtube className="h-5 w-5" />
+                  </Link>
+                  <Link href="https://www.facebook.com/p/Khadim-e-Millat-Welfare-Foundation-61557994989166/" className="w-9 h-9 bg-muted hoact:bg-primary hoact:text-primary-foreground rounded-lg flex items-center justify-center transition-colors" data-testid="social-facebook">
+                    <Facebook className="h-5 w-5" />
+                  </Link>
+                  <Link href="https://www.instagram.com/khadimemillat_official?igsh=MWttODBqcHA1dzY2cg==" className="w-9 h-9 bg-muted hoact:bg-primary hoact:text-primary-foreground rounded-lg flex items-center justify-center transition-colors" data-testid="social-instagram">
+                    <Instagram className="h-5 w-5" />
+                  </Link>
+                  <Link href="#" className="w-9 h-9 bg-muted hoact:bg-primary hoact:text-primary-foreground rounded-lg flex items-center justify-center transition-colors" data-testid="social-twitter">
+                    <Twitter className="h-5 w-5" />
+                  </Link>
                 </div>
               </div>
             </AnimatedSection>

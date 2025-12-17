@@ -10,18 +10,20 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ActionableErrorAlert } from "@/components/admin/ActionableErrorAlert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Calendar, Clock, Package, FileText, User, MapPin, Phone, CheckCircle } from "lucide-react";
+import { Loader2, Calendar, Clock, Package, FileText, User, MapPin, Phone, CheckCircle, Users } from "lucide-react";
 import { cn, safeJson } from "@/lib/utils";
 import { errorLogger, formatErrorMessage, extractErrorDetails } from "@/lib/utils/error-logger";
 import { fetchWithRetry, DEFAULT_API_RETRY_OPTIONS } from "@/lib/utils/retry";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export interface CreatedUserDisplay {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
   email?: string;
-  username: string;
-  password: string;
-  phone: string;
+  username?: string;
+  password?: string;
   address?: string;
   role: string;
 }
@@ -29,8 +31,17 @@ export interface CreatedUserDisplay {
 interface DonationRequestData {
   userId: string;
   pickupTime: string;
+  address: string;
   items?: string;
   notes?: string;
+  assignedFieldExecutives?: string[]; // Optional field executive selection
+}
+
+interface FieldExecutive {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
 }
 
 interface CreateDonationRequestFormProps {
@@ -51,6 +62,7 @@ export const CreateDonationRequestForm: React.FC<CreateDonationRequestFormProps>
   const [form, setForm] = useState<DonationRequestData>({
     userId: user.id,
     pickupTime: "",
+    address: user.address || "",
     items: "",
     notes: "",
   });
@@ -60,6 +72,51 @@ export const CreateDonationRequestForm: React.FC<CreateDonationRequestFormProps>
   const [success, setSuccess] = useState(false);
   const [createdRequest, setCreatedRequest] = useState<any>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // Field executive selection state
+  const [fieldExecutives, setFieldExecutives] = useState<FieldExecutive[]>([]);
+  const [selectedFieldExecutives, setSelectedFieldExecutives] = useState<string[]>([]);
+  const [selectAll, setSelectAll] = useState(true);
+  const [loadingFieldExecutives, setLoadingFieldExecutives] = useState(false);
+  const [fieldExecutivesError, setFieldExecutivesError] = useState<string | null>(null);
+
+  // Fetch field executives on mount
+  React.useEffect(() => {
+    const fetchFieldExecutives = async () => {
+      setLoadingFieldExecutives(true);
+      setFieldExecutivesError(null);
+
+      try {
+        const response = await fetch('/api/protected/users?role=field_executive');
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch field executives');
+        }
+
+        const data = await response.json();
+
+        if (data.users && Array.isArray(data.users)) {
+          const executives: FieldExecutive[] = data.users.map((user: any) => ({
+            id: user.id,
+            name: user.name || 'Unknown', // API returns 'name' property, not firstName/lastName
+            email: user.email || '',
+            phone: user.phone || undefined
+          }));
+
+          setFieldExecutives(executives);
+          setSelectedFieldExecutives(executives.map(fe => fe.id));
+          setSelectAll(true);
+        }
+      } catch (error: any) {
+        console.error('[FETCH_FIELD_EXECUTIVES_ERROR]', error);
+        setFieldExecutivesError('Failed to load field executives. Will assign to all by default.');
+      } finally {
+        setLoadingFieldExecutives(false);
+      }
+    };
+
+    fetchFieldExecutives();
+  }, []);
 
   const updateField = <K extends keyof DonationRequestData>(
     key: K,
@@ -87,8 +144,47 @@ export const CreateDonationRequestForm: React.FC<CreateDonationRequestFormProps>
       }
     }
 
+    if (!form.address?.trim()) {
+      errors.address = "Address is required";
+    }
+
+    // Validate field executive selection
+    if (selectedFieldExecutives.length === 0 && fieldExecutives.length > 0) {
+      errors.fieldExecutives = 'Please select at least one field executive';
+    }
+
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  // Handle select all field executives
+  const handleSelectAllFieldExecutives = (checked: boolean) => {
+    setSelectAll(checked);
+    if (checked) {
+      setSelectedFieldExecutives(fieldExecutives.map(fe => fe.id));
+    } else {
+      setSelectedFieldExecutives([]);
+    }
+
+    if (fieldErrors.fieldExecutives) {
+      setFieldErrors(prev => ({ ...prev, fieldExecutives: "" }));
+    }
+  };
+
+  // Handle individual field executive toggle
+  const handleFieldExecutiveToggle = (executiveId: string) => {
+    setSelectedFieldExecutives(prev => {
+      const newSelection = prev.includes(executiveId)
+        ? prev.filter(id => id !== executiveId)
+        : [...prev, executiveId];
+
+      setSelectAll(newSelection.length === fieldExecutives.length);
+      return newSelection;
+    });
+
+    if (fieldErrors.fieldExecutives) {
+      setFieldErrors(prev => ({ ...prev, fieldExecutives: "" }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -108,7 +204,13 @@ export const CreateDonationRequestForm: React.FC<CreateDonationRequestFormProps>
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          // Only send assignedFieldExecutives if specific selection (not all)
+          assignedFieldExecutives: selectedFieldExecutives.length > 0 && selectedFieldExecutives.length < fieldExecutives.length
+            ? selectedFieldExecutives
+            : undefined
+        }),
       }, DEFAULT_API_RETRY_OPTIONS);
 
       const data = await safeJson<any>(response);
@@ -134,10 +236,10 @@ export const CreateDonationRequestForm: React.FC<CreateDonationRequestFormProps>
           hasNotes: !!form.notes,
         },
         userData: {
-          userName: user.name,
+          userName: `${user.firstName} ${user.lastName}`,
           userEmail: user.email,
           hasAddress: !!user.address,
-          hasPhone: !!user.phone,
+          hasPhone: !!user.phoneNumber,
         },
         errorDetails: extractErrorDetails(err),
       });
@@ -315,7 +417,7 @@ export const CreateDonationRequestForm: React.FC<CreateDonationRequestFormProps>
           Create Donation Request
         </CardTitle>
         <CardDescription>
-          Create a pre-verified donation request for {user.name}. 
+          Create a pre-verified donation request for {user.firstName} {user.lastName}. 
           Field executives will be automatically notified.
         </CardDescription>
       </CardHeader>
@@ -329,10 +431,10 @@ export const CreateDonationRequestForm: React.FC<CreateDonationRequestFormProps>
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
             <div>
-              <span className="font-medium">Name:</span> {user.name}
+              <span className="font-medium">Name:</span> {user.firstName} {user.lastName}
             </div>
             <div>
-              <span className="font-medium">Phone:</span> {user.phone}
+              <span className="font-medium">Phone:</span> {user.phoneNumber}
             </div>
             {user.address && (
               <div className="md:col-span-2">
@@ -366,6 +468,29 @@ export const CreateDonationRequestForm: React.FC<CreateDonationRequestFormProps>
                 Scheduled for: {formatPickupTime(form.pickupTime)}
               </p>
             )}
+          </div>
+
+          {/* Address Field */}
+          <div className="space-y-2">
+            <Label htmlFor="address" className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              Pickup Address <span className="text-red-500">*</span>
+            </Label>
+            <Textarea
+              id="address"
+              value={form.address}
+              onChange={(e) => updateField("address", e.target.value)}
+              placeholder="Enter complete pickup address with landmarks"
+              rows={3}
+              className={cn(fieldErrors.address && "border-red-500")}
+              disabled={loading}
+            />
+            {fieldErrors.address && (
+              <p className="text-sm text-red-600">{fieldErrors.address}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Provide complete address for field executive to locate
+            </p>
           </div>
 
           {/* Items Field */}
@@ -403,6 +528,90 @@ export const CreateDonationRequestForm: React.FC<CreateDonationRequestFormProps>
             />
             <p className="text-xs text-muted-foreground">
               Optional: Special instructions for field executives
+            </p>
+          </div>
+
+          {/* Field Executive Selection */}
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Assign Field Executives
+              <span className="text-red-500">*</span>
+            </Label>
+
+            {loadingFieldExecutives && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading field executives...
+              </div>
+            )}
+
+            {fieldExecutivesError && (
+              <div className="flex items-start gap-2 text-sm text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-950/20 p-3 rounded-md">
+                <Clock className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <p>{fieldExecutivesError}</p>
+              </div>
+            )}
+
+            {!loadingFieldExecutives && fieldExecutives.length > 0 && (
+              <div className="border rounded-md">
+                <div className="flex items-center gap-3 p-3 border-b bg-muted/30">
+                  <Checkbox
+                    id="select-all-executives"
+                    checked={selectAll}
+                    onCheckedChange={handleSelectAllFieldExecutives}
+                    disabled={loading}
+                  />
+                  <label
+                    htmlFor="select-all-executives"
+                    className="text-sm font-medium cursor-pointer flex-1"
+                  >
+                    Select All Field Executives ({fieldExecutives.length})
+                  </label>
+                </div>
+
+                <div className="max-h-64 overflow-y-auto">
+                  {fieldExecutives.map((executive) => (
+                    <div
+                      key={executive.id}
+                      className="flex items-start gap-3 p-3 border-b last:border-b-0 hover:bg-muted/20 transition-colors"
+                    >
+                      <Checkbox
+                        id={`executive-${executive.id}`}
+                        checked={selectedFieldExecutives.includes(executive.id)}
+                        onCheckedChange={() => handleFieldExecutiveToggle(executive.id)}
+                        disabled={loading}
+                        className="mt-1"
+                      />
+                      <label
+                        htmlFor={`executive-${executive.id}`}
+                        className="flex-1 cursor-pointer"
+                      >
+                        <div className="font-medium text-sm">{executive.name}</div>
+                        <div className="text-xs text-muted-foreground space-y-0.5 mt-0.5">
+                          <div>{executive.email}</div>
+                          {executive.phone && (
+                            <div className="flex items-center gap-1">
+                              <Phone className="w-3 h-3" />
+                              {executive.phone}
+                            </div>
+                          )}
+                        </div>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {fieldErrors.fieldExecutives && (
+              <p className="text-sm text-red-600">{fieldErrors.fieldExecutives}</p>
+            )}
+
+            <p className="text-xs text-muted-foreground">
+              {selectedFieldExecutives.length === fieldExecutives.length
+                ? `All ${fieldExecutives.length} field executive(s) will be notified`
+                : `${selectedFieldExecutives.length} of ${fieldExecutives.length} field executive(s) will be notified`}
             </p>
           </div>
 

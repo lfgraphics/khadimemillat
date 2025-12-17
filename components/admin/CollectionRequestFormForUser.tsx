@@ -7,10 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Calendar, MapPin, Phone, FileText, MessageSquare } from "lucide-react";
+import { AlertCircle, Calendar, MapPin, Phone, FileText, MessageSquare, Users, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { validateCollectionRequestForm, sanitizeString } from "@/lib/utils/validation";
 import { parseApiError, logError } from "@/lib/utils/errorHandling";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export interface SelectedUser {
   id: string; // Clerk ID
@@ -55,6 +56,14 @@ interface ValidationErrors {
   pickupTime?: string;
   items?: string;
   notes?: string;
+  fieldExecutives?: string;
+}
+
+interface FieldExecutive {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
 }
 
 const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> = ({
@@ -76,6 +85,13 @@ const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> 
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [canRetry, setCanRetry] = useState(false);
+
+  // Field executive selection state
+  const [fieldExecutives, setFieldExecutives] = useState<FieldExecutive[]>([]);
+  const [selectedFieldExecutives, setSelectedFieldExecutives] = useState<string[]>([]);
+  const [selectAll, setSelectAll] = useState(true); // Default to all selected
+  const [loadingFieldExecutives, setLoadingFieldExecutives] = useState(false);
+  const [fieldExecutivesError, setFieldExecutivesError] = useState<string | null>(null);
 
   // Pre-populate form when user is selected
   useEffect(() => {
@@ -107,15 +123,62 @@ const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> 
     }
   }, [selectedUser]);
 
+  // Fetch field executives on component mount
+  useEffect(() => {
+    const fetchFieldExecutives = async () => {
+      setLoadingFieldExecutives(true);
+      setFieldExecutivesError(null);
+
+      try {
+        const response = await fetch('/api/protected/users?role=field_executive');
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch field executives');
+        }
+
+        const data = await response.json();
+
+        if (data.users && Array.isArray(data.users)) {
+          const executives: FieldExecutive[] = data.users.map((user: any) => ({
+            id: user.id,
+            name: user.name || 'Unknown', // API returns 'name' property, not firstName/lastName
+            email: user.email || '',
+            phone: user.phone || undefined
+          }));
+
+          setFieldExecutives(executives);
+          // Default to all selected
+          setSelectedFieldExecutives(executives.map(fe => fe.id));
+          setSelectAll(true);
+        }
+      } catch (error: any) {
+        console.error('[FETCH_FIELD_EXECUTIVES_ERROR]', error);
+        setFieldExecutivesError('Failed to load field executives. Form will assign to all field executives by default.');
+        // Don't block form submission - will fall back to all field executives
+      } finally {
+        setLoadingFieldExecutives(false);
+      }
+    };
+
+    fetchFieldExecutives();
+  }, []);
+
   const validateForm = (): boolean => {
     const validation = validateCollectionRequestForm(formData, selectedUser);
-    setValidationErrors(validation.errors);
-    return validation.isValid;
+    const errors: ValidationErrors = { ...validation.errors };
+
+    // Validate field executive selection
+    if (selectedFieldExecutives.length === 0 && fieldExecutives.length > 0) {
+      errors.fieldExecutives = 'Please select at least one field executive';
+    }
+
+    setValidationErrors(errors);
+    return validation.isValid && !errors.fieldExecutives;
   };
 
   const handleInputChange = (field: keyof CollectionRequestFormData, value: string) => {
-    // Sanitize input to prevent XSS
-    const sanitizedValue = field === 'address' || field === 'items' || field === 'notes'
+    // Sanitize only items and notes to prevent XSS, but allow full text in address
+    const sanitizedValue = (field === 'items' || field === 'notes')
       ? sanitizeString(value)
       : value;
 
@@ -136,6 +199,40 @@ const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> 
     if (submitError) {
       setSubmitError(null);
       setCanRetry(false);
+    }
+  };
+
+  // Handle select all field executives
+  const handleSelectAllFieldExecutives = (checked: boolean) => {
+    setSelectAll(checked);
+    if (checked) {
+      setSelectedFieldExecutives(fieldExecutives.map(fe => fe.id));
+    } else {
+      setSelectedFieldExecutives([]);
+    }
+
+    // Clear validation error
+    if (validationErrors.fieldExecutives) {
+      setValidationErrors(prev => ({ ...prev, fieldExecutives: undefined }));
+    }
+  };
+
+  // Handle individual field executive selection
+  const handleFieldExecutiveToggle = (executiveId: string) => {
+    setSelectedFieldExecutives(prev => {
+      const newSelection = prev.includes(executiveId)
+        ? prev.filter(id => id !== executiveId)
+        : [...prev, executiveId];
+
+      // Update select all checkbox state
+      setSelectAll(newSelection.length === fieldExecutives.length);
+
+      return newSelection;
+    });
+
+    // Clear validation error
+    if (validationErrors.fieldExecutives) {
+      setValidationErrors(prev => ({ ...prev, fieldExecutives: undefined }));
     }
   };
 
@@ -166,7 +263,11 @@ const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> 
         notes: [
           formData.items?.trim() && `Items: ${formData.items.trim()}`,
           formData.notes?.trim() && `Notes: ${formData.notes.trim()}`
-        ].filter(Boolean).join('\n\n') || undefined
+        ].filter(Boolean).join('\n\n') || undefined,
+        // Only send assignedFieldExecutives if specific selection is made (not all)
+        assignedFieldExecutives: selectedFieldExecutives.length > 0 && selectedFieldExecutives.length < fieldExecutives.length
+          ? selectedFieldExecutives
+          : undefined // undefined means assign to all (backend default)
       };
 
       const response = await fetch('/api/protected/collection-requests/admin', {
@@ -384,7 +485,6 @@ const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> 
               disabled={disabled || isSubmitting}
               aria-invalid={!!validationErrors.pickupTime}
               className={cn(validationErrors.pickupTime && "border-destructive")}
-              min={new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16)} // Minimum 1 hour from now
             />
             {validationErrors.pickupTime && (
               <div className="flex items-center gap-1 text-sm text-destructive">
@@ -393,7 +493,7 @@ const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> 
               </div>
             )}
             <p className="text-xs text-muted-foreground">
-              Select a future date and time for the pickup
+              Select any future date and time for the pickup
             </p>
           </div>
 
@@ -448,6 +548,95 @@ const CollectionRequestFormForUser: React.FC<CollectionRequestFormForUserProps> 
             )}
             <p className="text-xs text-muted-foreground">
               Optional: Include access instructions, special requirements, or other relevant information
+            </p>
+          </div>
+
+          {/* Field Executive Selection */}
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Assign Field Executives
+              <span className="text-destructive">*</span>
+            </Label>
+
+            {loadingFieldExecutives && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading field executives...
+              </div>
+            )}
+
+            {fieldExecutivesError && (
+              <div className="flex items-start gap-2 text-sm text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-950/20 p-3 rounded-md">
+                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <p>{fieldExecutivesError}</p>
+              </div>
+            )}
+
+            {!loadingFieldExecutives && fieldExecutives.length > 0 && (
+              <div className="border rounded-md">
+                {/* Select All Checkbox */}
+                <div className="flex items-center gap-3 p-3 border-b bg-muted/30">
+                  <Checkbox
+                    id="select-all-executives"
+                    checked={selectAll}
+                    onCheckedChange={handleSelectAllFieldExecutives}
+                    disabled={disabled || isSubmitting}
+                  />
+                  <label
+                    htmlFor="select-all-executives"
+                    className="text-sm font-medium cursor-pointer flex-1"
+                  >
+                    Select All Field Executives ({fieldExecutives.length})
+                  </label>
+                </div>
+
+                {/* Individual Field Executives */}
+                <div className="max-h-64 overflow-y-auto">
+                  {fieldExecutives.map((executive) => (
+                    <div
+                      key={executive.id}
+                      className="flex items-start gap-3 p-3 border-b last:border-b-0 hover:bg-muted/20 transition-colors"
+                    >
+                      <Checkbox
+                        id={`executive-${executive.id}`}
+                        checked={selectedFieldExecutives.includes(executive.id)}
+                        onCheckedChange={() => handleFieldExecutiveToggle(executive.id)}
+                        disabled={disabled || isSubmitting}
+                        className="mt-1"
+                      />
+                      <label
+                        htmlFor={`executive-${executive.id}`}
+                        className="flex-1 cursor-pointer"
+                      >
+                        <div className="font-medium text-sm">{executive.name}</div>
+                        <div className="text-xs text-muted-foreground space-y-0.5 mt-0.5">
+                          <div>{executive.email}</div>
+                          {executive.phone && (
+                            <div className="flex items-center gap-1">
+                              <Phone className="w-3 h-3" />
+                              {executive.phone}
+                            </div>
+                          )}
+                        </div>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {validationErrors.fieldExecutives && (
+              <div className="flex items-center gap-1 text-sm text-destructive">
+                <AlertCircle className="w-4 h-4" />
+                {validationErrors.fieldExecutives}
+              </div>
+            )}
+
+            <p className="text-xs text-muted-foreground">
+              {selectedFieldExecutives.length === fieldExecutives.length
+                ? `All ${fieldExecutives.length} field executive(s) will be notified`
+                : `${selectedFieldExecutives.length} of ${fieldExecutives.length} field executive(s) will be notified`}
             </p>
           </div>
 

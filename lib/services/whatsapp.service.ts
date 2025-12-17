@@ -28,6 +28,25 @@ interface WhatsAppMessage {
   userName?: string // Name of the recipient (for AiSensy userName field)
 }
 
+/**
+ * Campaign-based WhatsApp message for AiSensy API
+ * Supports dynamic templates with parameters
+ */
+export interface WhatsAppCampaignMessage {
+  campaignName: string           // AiSensy campaign name (e.g., "account_creation")
+  destination: string             // Phone number with country code (E.164 format)
+  userName: string               // Recipient's name
+  templateParams?: string[]      // Dynamic parameters in order [{{1}}, {{2}}, ...]
+  source?: string                // For segmentation (e.g., "web_signup")
+  media?: {
+    url: string
+    filename: string
+  }
+  tags?: string[]                // User tags for targeting
+  attributes?: Record<string, string> // Custom attributes
+}
+
+
 class WhatsAppService {
   private apiUrl: string
   private accessToken: string
@@ -545,8 +564,200 @@ class WhatsAppService {
     }
   }
 
+  /**
+   * Send campaign-based message via AiSensy API
+   * Supports any campaign with dynamic parameters
+   */
+  async sendCampaignMessage(options: WhatsAppCampaignMessage): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    try {
+      if (!this.isConfigured()) {
+        throw new Error('WhatsApp API not configured. Please set WHATSAPP_ACCESS_TOKEN')
+      }
+
+      if (this.provider !== 'aisensy') {
+        throw new Error('Campaign messages are only supported with AiSensy provider')
+      }
+
+      const apiUrl = 'https://backend.aisensy.com/campaign/t1/api/v2'
+
+      // Clean phone number (remove non-digits)
+      const cleanPhone = options.destination.replace(/[^\d]/g, '')
+
+      const requestBody: any = {
+        apiKey: this.accessToken,
+        campaignName: options.campaignName,
+        destination: cleanPhone,
+        userName: options.userName
+      }
+
+      // Add optional fields
+      if (options.templateParams && options.templateParams.length > 0) {
+        requestBody.templateParams = options.templateParams
+      }
+
+      if (options.source) {
+        requestBody.source = options.source
+      }
+
+      if (options.media) {
+        requestBody.media = options.media
+      }
+
+      if (options.tags && options.tags.length > 0) {
+        requestBody.tags = options.tags
+      }
+
+      if (options.attributes) {
+        requestBody.attributes = options.attributes
+      }
+
+      console.log('[WHATSAPP_CAMPAIGN]', {
+        campaign: options.campaignName,
+        destination: cleanPhone,
+        userName: options.userName,
+        params: options.templateParams?.length || 0
+      })
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      })
+
+      const responseText = await response.text()
+      const contentType = response.headers.get('content-type') || ''
+
+      if (!contentType.includes('application/json')) {
+        console.error('❌ AiSensy returned non-JSON response:', {
+          status: response.status,
+          contentType,
+          campaign: options.campaignName
+        })
+
+        if (response.status === 404) {
+          throw new Error(`Campaign "${options.campaignName}" not found. Please create it in AiSensy dashboard.`)
+        } else if (response.status === 401 || response.status === 403) {
+          throw new Error(`AiSensy API authentication failed. Please check your API key.`)
+        } else if (response.status === 400) {
+          throw new Error(`Invalid campaign request for "${options.campaignName}". Please verify campaign is Live and template is approved.`)
+        } else {
+          throw new Error(`AiSensy API error (Status ${response.status})`)
+        }
+      }
+
+      let result
+      try {
+        result = JSON.parse(responseText)
+      } catch (parseError) {
+        console.error('❌ Failed to parse AiSensy response:', responseText.substring(0, 500))
+        throw new Error(`Invalid JSON response from AiSensy API`)
+      }
+
+      if (!response.ok) {
+        console.error('AiSensy campaign error:', response.status, result)
+        const errorMessage = result.message || result.error || `Campaign "${options.campaignName}" failed`
+        throw new Error(errorMessage)
+      }
+
+      return {
+        success: true,
+        messageId: result.messageId || result.id || result.campaignId || 'sent'
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      console.error('WhatsApp campaign message failed:', errorMessage)
+
+      return {
+        success: false,
+        error: errorMessage
+      }
+    }
+  }
+
+  /**
+   * Send campaign-based message to multiple recipients via AiSensy API
+   * More efficient than sending one-by-one
+   */
+  async sendBulkCampaignMessage(options: {
+    campaignName: string
+    recipients: Array<{
+      destination: string
+      userName: string
+      templateParams?: string[]
+    }>
+    source?: string
+  }): Promise<{ success: boolean; sent: number; failed: number; errors?: string[] }> {
+    try {
+      if (!this.isConfigured()) {
+        throw new Error('WhatsApp API not configured. Please set WHATSAPP_ACCESS_TOKEN')
+      }
+
+      if (this.provider !== 'aisensy') {
+        throw new Error('Bulk campaign messages are only supported with AiSensy provider')
+      }
+
+      const apiUrl = 'https://backend.aisensy.com/campaign/t1/api/v2'
+      let sent = 0
+      let failed = 0
+      const errors: string[] = []
+
+      console.log(`📤 Sending campaign "${options.campaignName}" to ${options.recipients.length} recipients in batches`)
+
+      for (let i = 0; i < options.recipients.length; i += 10) {
+        const batch = options.recipients.slice(i, i + 10)
+        const batchPromises = batch.map(recipient => 
+          this.sendCampaignMessage({
+            campaignName: options.campaignName,
+            destination: recipient.destination,
+            userName: recipient.userName,
+            templateParams: recipient.templateParams,
+            source: options.source
+          }).then(r => ({ success: r.success, error: r.error }))
+          .catch(e => ({ success: false, error: e.message }))
+        )
+        const results = await Promise.all(batchPromises)
+        results.forEach(r => r.success ? sent++ : (failed++, r.error && errors.push(r.error)))
+        if (i + 10 < options.recipients.length) await new Promise(r => setTimeout(r, 1000))
+      }
+
+      return { success: sent > 0, sent, failed, errors: errors.length > 0 ? errors.slice(0, 10) : undefined }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      console.error('❌ WhatsApp bulk campaign message failed:', errorMessage)
+
+      return {
+        success: false,
+        sent: 0,
+        failed: options.recipients.length,
+        errors: [errorMessage]
+      }
+    }
+  }
+  /**
+   * Send account creation notification via "account_creation" campaign
+   * Simplified method for user registration notifications
+   * Template parameter {{1}} = phone number (e.g., "9876543210")
+   */
+  async sendAccountCreationNotification(options: {
+    phone: string
+    userName: string
+  }): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    // Extract clean phone number (digits only, no country code prefix)
+    const cleanPhone = options.phone.replace(/^\+?91/, '').replace(/[^\d]/g, '')
+
+    return this.sendCampaignMessage({
+      campaignName: 'account creation',
+      destination: options.phone,
+      userName: options.userName,
+      templateParams: [cleanPhone],
+      source: 'user_registration'
+    })
+  }
 
 }
+
 
 export const whatsappService = new WhatsAppService()
 export default WhatsAppService

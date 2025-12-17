@@ -62,8 +62,6 @@ export default function NotificationDashboard() {
     switch (channel) {
       case 'email':
         return <Mail className="h-4 w-4" />
-      case 'whatsapp':
-        return <MessageSquare className="h-4 w-4" />
       case 'sms':
         return <Smartphone className="h-4 w-4" />
       case 'web_push':
@@ -202,42 +200,18 @@ export default function NotificationDashboard() {
                   <span>Send New Notification</span>
                 </Button>
                 <Button 
-                  onClick={() => setActiveTab('history')} 
+                  onClick={() => setActiveTab('analytics')} 
                   variant="outline" 
                   className="h-20 flex-col space-y-2"
                 >
-                  <History className="h-6 w-6" />
-                  <span>View History</span>
+                  <BarChart3 className="h-6 w-6" />
+                  <span>View Analytics</span>
                 </Button>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>System Status</CardTitle>
-              <CardDescription>
-                Current status of notification channels
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {['web_push', 'email', 'whatsapp', 'sms'].map((channel) => (
-                  <div key={channel} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      {getChannelIcon(channel)}
-                      <span className="capitalize">{channel.replace('_', ' ')}</span>
-                    </div>
-                    <Badge 
-                      variant={stats.activeChannels.includes(channel) ? 'default' : 'secondary'}
-                    >
-                      {stats.activeChannels.includes(channel) ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+
         </TabsContent>
 
         <TabsContent value="send">

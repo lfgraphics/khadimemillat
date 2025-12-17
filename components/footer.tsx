@@ -35,7 +35,7 @@ export function Footer() {
                             <Link href="#" className="w-9 h-9 bg-muted hoact:bg-primary hoact:text-primary-foreground rounded-lg flex items-center justify-center transition-colors" data-testid="social-twitter">
                                 <Twitter className="h-5 w-5" />
                             </Link>
-                            <Link href="#" className="w-9 h-9 bg-muted hoact:bg-primary hoact:text-primary-foreground rounded-lg flex items-center justify-center transition-colors" data-testid="social-instagram">
+                            <Link href="https://www.instagram.com/khadimemillat_official?igsh=MWttODBqcHA1dzY2cg==" className="w-9 h-9 bg-muted hoact:bg-primary hoact:text-primary-foreground rounded-lg flex items-center justify-center transition-colors" data-testid="social-instagram">
                                 <Instagram className="h-5 w-5" />
                             </Link>
                         </div>

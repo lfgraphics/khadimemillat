@@ -74,8 +74,8 @@ export default function ContactForm({ formEndpoint }: Props) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="phone">Phone Number</Label>
-        <Input id="phone" name="phone" type="tel" placeholder="+91-XXXXXXXXXX" className="bg-input-background border-border" />
+        <Label htmlFor="phone">Phone Number *</Label>
+        <Input id="phone" name="phone" type="tel" placeholder="+91 80817 47259" className="bg-input-background border-border" />
       </div>
 
       <div className="space-y-2">

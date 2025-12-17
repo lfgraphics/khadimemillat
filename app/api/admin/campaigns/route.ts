@@ -1,7 +1,30 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@clerk/nextjs/server"
+import { auth, clerkClient } from "@clerk/nextjs/server"
 import connectDB from "@/lib/db"
 import { Campaign, WelfareProgram } from "@/models"
+import { whatsappService } from "@/lib/services/whatsapp.service"
+import { NotificationService } from "@/lib/services/notification.service"
+
+/**
+ * Convert HTML/Markdown description to WhatsApp-friendly plain text
+ */
+function convertToWhatsAppText(html: string): string {
+  // Remove HTML tags
+  let text = html.replace(/<[^>]*>/g, '')
+  // Convert HTML entities
+  text = text.replace(/&nbsp;/g, ' ')
+  text = text.replace(/&amp;/g, '&')
+  text = text.replace(/&lt;/g, '<')
+  text = text.replace(/&gt;/g, '>')
+  text = text.replace(/&quot;/g, '"')
+  // Remove extra whitespace and newlines
+  text = text.replace(/\s+/g, ' ').trim()
+  // Limit to 100 characters for WhatsApp template
+  if (text.length > 100) {
+    text = text.substring(0, 97) + '...'
+  }
+  return text
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -80,10 +103,118 @@ export async function POST(request: NextRequest) {
 
     await campaign.save()
 
-    // TODO: If notifyUsers is true, send notifications to all users
+    // Send WhatsApp notifications if requested
     if (notifyUsers) {
-      // Implement notification logic here
-      console.log('TODO: Send notifications to users about new campaign')
+      try {
+        console.log('📢 Sending campaign notifications via WhatsApp...')
+
+        // Get all users from Clerk with pagination
+        const client = await clerkClient()
+        let allUsers: any[] = []
+        let offset = 0
+        const limit = 500
+        let hasMore = true
+
+        while (hasMore) {
+          const response = await client.users.getUserList({
+            limit,
+            offset
+          })
+
+          allUsers = allUsers.concat(response.data)
+          offset += limit
+          hasMore = response.data.length === limit
+
+          console.log(`Fetched ${allUsers.length} users so far...`)
+        }
+
+        console.log(`✅ Fetched total of ${allUsers.length} users from Clerk`)
+
+        // Filter out admin and moderator users
+        const regularUsers = allUsers.filter(user => {
+          const role = user.publicMetadata?.role || user.privateMetadata?.role
+          return role !== 'admin' && role !== 'moderator'
+        })
+
+        console.log(`Found ${regularUsers.length} regular users to notify (filtered from ${allUsers.length} total users)`)
+
+        // Convert description to WhatsApp-friendly text
+        const whatsappDescription = convertToWhatsAppText(description)
+
+        // Prepare recipients for bulk sending
+        const recipients = regularUsers
+          .map(user => {
+            const phone = user.phoneNumbers?.[0]?.phoneNumber || user.privateMetadata?.phone as string
+            if (!phone) {
+              console.log(`Skipping user ${user.id} - no phone number`)
+              return null
+            }
+
+            const userName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User'
+
+            return {
+              destination: String(phone),
+              userName,
+              templateParams: [
+                title,
+                whatsappDescription,
+                slug
+              ]
+            }
+          })
+          .filter(recipient => recipient !== null) as Array<{
+            destination: string
+            userName: string
+            templateParams: string[]
+          }>
+
+        console.log(`📤 Sending bulk campaign message to ${recipients.length} users...`)
+
+        // Send to all recipients at once
+        const result = await whatsappService.sendBulkCampaignMessage({
+          campaignName: 'Campaign Notification',
+          recipients,
+          source: 'campaign_creation'
+        })
+
+        console.log(`✅ Campaign notifications: ${result.sent} sent, ${result.failed} failed`)
+
+        if (result.errors && result.errors.length > 0) {
+          console.error('Bulk sending errors:', result.errors)
+        }
+
+        // Send push notifications to all regular users in batches
+        console.log('📱 Sending push notifications...')
+        let pushSent = 0
+        let pushFailed = 0
+        const batchSize = 10
+        const delayBetweenBatches = 500
+
+        for (let i = 0; i < regularUsers.length; i += batchSize) {
+          const batch = regularUsers.slice(i, i + batchSize)
+          const batchPromises = batch.map(user =>
+            NotificationService.sendWebPushToUser(user.id, {
+              title: title,
+              body: whatsappDescription,
+              icon: coverImage || '/android-chrome-192x192.png',
+              url: `/campaigns/${slug}`,
+              data: {
+                campaignSlug: slug,
+                type: 'new_campaign'
+              }
+            }).then(r => ({ success: r.success, error: r.error }))
+              .catch(e => ({ success: false, error: e.message }))
+          )
+          const results = await Promise.all(batchPromises)
+          results.forEach(r => r.success ? pushSent++ : pushFailed++)
+          if (i + batchSize < regularUsers.length) await new Promise(r => setTimeout(r, delayBetweenBatches))
+        }
+
+        console.log(`✅ Push notifications: ${pushSent} sent, ${pushFailed} failed`)
+      } catch (error) {
+        console.error('Error sending campaign notifications:', error)
+        // Don't fail the campaign creation if notifications fail
+      }
     }
 
     return NextResponse.json({

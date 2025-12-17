@@ -31,14 +31,14 @@ export const UserManagementClient: React.FC<UserManagementClientProps> = ({ chil
       setCreatedUser(user);
       setModalState('user-success');
       toast.success("User created successfully!", {
-        description: `${user.name} has been added to the system.`,
+        description: `${user.firstName} ${user.lastName} has been added to the system.`,
       });
       // Refresh the page to show the new user in the list
       router.refresh();
     } catch (err) {
       errorLogger.logWorkflowError(err as Error, 'user_creation_success', {
         userId: user.id,
-        userName: user.name,
+        userName: `${user.firstName} ${user.lastName}`,
       });
       toast.error("Error processing user creation", {
         description: "The user was created but there was an issue displaying the success page.",
@@ -52,7 +52,7 @@ export const UserManagementClient: React.FC<UserManagementClientProps> = ({ chil
     } catch (err) {
       errorLogger.logWorkflowError(err as Error, 'transition_to_request_creation', {
         userId: user.id,
-        userName: user.name,
+        userName: `${user.firstName} ${user.lastName}`,
       });
       toast.error("Error opening donation request form", {
         description: "Please try clicking the Create Request button again.",

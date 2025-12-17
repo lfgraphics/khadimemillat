@@ -143,16 +143,11 @@ const UserSearchForRequest: React.FC<UserSearchForRequestProps> = ({
   }, [searchQuery, performSearch]);
 
   const handleUserSelect = (user: SearchResult) => {
-    // Validate user has minimum required information
-    if (!user.name || user.name.trim() === '') {
-      setError('Selected user is missing required information (name). Please select a different user.');
-      return;
-    }
-
+    // Allow any user to be selected - missing details can be provided in the form
     const selectedUser: SelectedUser = {
       id: user.id,
-      name: user.name,
-      email: user.email,
+      name: user.name || 'Unknown User',
+      email: user.email || '',
       phone: user.phone,
       address: user.address,
       username: user.username

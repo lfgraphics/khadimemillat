@@ -24,7 +24,7 @@ export interface CertificateData {
 export class Receipt80GService {
   private static readonly ORGANIZATION_NAME = "Khadim-e-Millat Welfare Foundation"
   private static readonly ORGANIZATION_PAN = "AABCK1234E" // Replace with actual PAN
-  private static readonly ORGANIZATION_ADDRESS = "123 Main Street, Mumbai, Maharashtra - 400001"
+  private static readonly ORGANIZATION_ADDRESS = "Gorakhpur, Uttar Pradesh, India"
   private static readonly ORGANIZATION_80G_REGISTRATION = "AABCK1234EF20240001" // Replace with actual 80G registration number
   private static readonly ORGANIZATION_80G_VALIDITY = "01/04/2024 to 31/03/2029" // Replace with actual validity period
   private static readonly CERTIFICATE_PREFIX = "KMWF-80G" // Organization prefix for certificate numbers
@@ -373,7 +373,7 @@ export class Receipt80GService {
         <strong>Date of Issue:</strong> ${new Date().toLocaleDateString('en-IN')}
       </div>
       <div style="margin-bottom: 15px;">
-        <strong>Place:</strong> Mumbai
+        <strong>Place:</strong> Gorakhpur
       </div>
     </div>
 

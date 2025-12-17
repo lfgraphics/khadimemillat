@@ -93,11 +93,10 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
           <div className="lg:col-span-2">
             {/* Hero Image */}
             <div className="relative h-96 rounded-xl overflow-hidden mb-8">
-              <Image
+              <img
                 src={campaign.coverImage}
                 alt={campaign.title}
-                fill
-                className="object-cover"
+                className="object-contain"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <div className="absolute bottom-6 left-6">

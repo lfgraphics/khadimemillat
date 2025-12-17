@@ -152,25 +152,38 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { name, email, phone, address, role = 'user' } = body
+    const { firstName, lastName, name, email, phone, address, role = 'user', skipPassword = true } = body
 
     // Basic validation
-    if (!name || !phone) {
-      return NextResponse.json({ success: false, error: 'Missing required fields: name and phone are required' }, { status: 400 })
+    if (!phone || (!firstName && !name)) {
+      return NextResponse.json({ success: false, error: 'Missing required fields: phone and (firstName or name) are required' }, { status: 400 })
     }
 
-    // Create via shared service (will synthesize email if missing)
+    // Create via shared service
     const created = await createUserRobust({
-      name,
+      firstName: firstName || (name ? name.split(' ')[0] : ''),
+      lastName: lastName || (name ? name.split(' ').slice(1).join(' ') || 'User' : 'User'),
       phone,
       email,
       role,
       address,
-      allowSynthEmail: true,
-      notifyChannels: { email: !!email, whatsapp: false, sms: false }
+      skipPassword, // Admins can choose to create with or without password
+      notifyChannels: { email: !!email, whatsapp: true, sms: false }
     })
 
-    return NextResponse.json({ success: true, message: 'User created successfully', user: { id: created.clerkUserId, name, email: email || undefined, username: created.username, password: created.password } })
+    return NextResponse.json({
+      success: true,
+      message: 'User created successfully',
+      user: {
+        id: created.clerkUserId,
+        phoneNumber: created.phoneNumber,
+        firstName: firstName || (name ? name.split(' ')[0] : ''),
+        lastName: lastName || (name ? name.split(' ').slice(1).join(' ') || 'User' : 'User'),
+        email: email || undefined,
+        username: created.username,
+        password: created.password
+      }
+    })
   } catch (error: any) {
     console.error('[USER_CREATION_ERROR]', error)
     return NextResponse.json({ success: false, error: error.message || 'Internal server error' }, { status: 500 })

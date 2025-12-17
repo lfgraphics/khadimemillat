@@ -5,90 +5,57 @@ import { whatsappService } from '@/lib/services/whatsapp.service'
 import { smsService } from '@/lib/services/sms.service'
 
 export interface CreateUserInput {
-  name: string
+  firstName: string
+  lastName: string // Required by Clerk
+  name?: string // Deprecated: use firstName/lastName instead (kept for backward compatibility)
   phone: string
   email?: string
   role?: 'user' | 'admin' | 'moderator' | 'field_executive'
   address?: string
+  skipPassword?: boolean // default: true (mobile-first OTP login)
   notifyChannels?: { email?: boolean; whatsapp?: boolean; sms?: boolean }
-  allowSynthEmail?: boolean // when true, synthesize email if missing
 }
 
 export interface CreatedUserResult {
   clerkUserId: string
-  username: string
-  emailUsed: string
-  password: string
+  phoneNumber: string
+  username?: string  // only if skipPassword=false
+  emailUsed?: string // only if email provided
+  password?: string  // only if skipPassword=false
 }
 
 // Remove the wrapper function - clerkClient is ready to use directly
 
 export async function createUserRobust(input: CreateUserInput): Promise<CreatedUserResult> {
-  const {
-    sanitizeName,
-    extractPhoneDigits,
-    generateUniqueUsername,
-    generateStrongPassword,
-    validateUsername,
-    validatePasswordStrength
-  } = await import('@/lib/utils/username')
+  // Backward compatibility: if 'name' is provided instead of firstName/lastName, split it
+  let firstName = input.firstName
+  let lastName = input.lastName
 
-  const name = input.name.trim()
-  const firstName = name.split(' ')[0] || name
-  const lastName = name.split(' ').slice(1).join(' ')
-  const sanitizedName = sanitizeName(name)
-  const phoneDigits = extractPhoneDigits(input.phone)
-  const username = await generateUniqueUsername({ name: sanitizedName, phone: phoneDigits })
-  if (!validateUsername(username)) throw new Error('Generated username invalid')
-
-  const password = generateStrongPassword(sanitizedName)
-  if (!validatePasswordStrength(password)) throw new Error('Generated password not strong enough')
-
-  // email resolution - always synthesize for Clerk compatibility
-  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || '').replace(/\/$/, '')
-  const siteHost = (() => {
-    try {
-      const url = new URL(baseUrl)
-      return url.host
-    } catch {
-      return 'guests.khadimemillat.org'
-    }
-  })()
-
-  let emailUsed = ''
-  let hasRealEmail = false
-  
-  if (input.email && input.email.trim()) {
-    emailUsed = input.email.trim()
-    hasRealEmail = true
-  } else {
-    // Always synthesize email for Clerk compatibility since Clerk requires email
-    emailUsed = `${username}@${siteHost}`
-    // Validate the synthesized email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(emailUsed)) {
-      emailUsed = `${username}@guests.khadimemillat.org`
-    }
-    hasRealEmail = false
+  if (!firstName && input.name) {
+    const nameParts = input.name.trim().split(' ')
+    firstName = nameParts[0] || input.name
+    lastName = nameParts.slice(1).join(' ') || 'User' // Default lastName if not provided
   }
 
-  // Final email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(emailUsed)) {
-    throw new Error(`Invalid email format: ${emailUsed}`)
+  if (!firstName || firstName.length < 1) {
+    throw new Error('First name is required')
   }
 
-  // Additional validation for Clerk requirements
-  if (!firstName || firstName.length < 1) throw new Error('First name is required')
-  if (username.length < 3 || username.length > 20) throw new Error('Username must be 3-20 characters')
-  if (password.length < 8) throw new Error('Password must be at least 8 characters')
+  if (!lastName || lastName.length < 1) {
+    throw new Error('Last name is required')
+  }
 
-  console.log('[DEBUG] Validated user data:', {
+  // Normalize phone number to E.164 format for Clerk
+  const { normalizePhoneNumber, toE164Format } = await import('@/lib/utils/phone')
+  const normalizedPhone = normalizePhoneNumber(input.phone)
+  const e164Phone = toE164Format(input.phone)
+
+  console.log('[USER_CREATE] Starting creation:', {
     firstName,
     lastName: lastName || '[empty]',
-    username,
-    emailUsed,
-    passwordLength: password.length
+    phone: e164Phone,
+    skipPassword: input.skipPassword !== false,
+    hasEmail: !!input.email
   })
 
   // Check if Clerk is properly configured
@@ -97,81 +64,193 @@ export async function createUserRobust(input: CreateUserInput): Promise<CreatedU
   }
 
   const client = await clerkClient()
+  const skipPassword = input.skipPassword !== false // Default to true (mobile-first)
+
+  // Generate username/password only if not skipping password
+  let username: string | undefined
+  let password: string | undefined
+  let emailUsed: string | undefined
+  let hasRealEmail = false
+
+  if (!skipPassword) {
+  // Legacy mode: generate username and password
+    const {
+      sanitizeName,
+      extractPhoneDigits,
+      generateUniqueUsername,
+      generateStrongPassword,
+      validateUsername,
+      validatePasswordStrength
+    } = await import('@/lib/utils/username')
+
+    const fullName = `${firstName} ${lastName || ''}`.trim()
+    const sanitizedName = sanitizeName(fullName)
+    const phoneDigits = extractPhoneDigits(input.phone)
+    username = await generateUniqueUsername({ name: sanitizedName, phone: phoneDigits })
+
+    if (!validateUsername(username)) throw new Error('Generated username invalid')
+
+    password = generateStrongPassword(sanitizedName)
+    if (!validatePasswordStrength(password)) throw new Error('Generated password not strong enough')
+
+    // Need email for username/password mode
+    if (input.email && input.email.trim()) {
+      emailUsed = input.email.trim()
+      hasRealEmail = true
+    } else {
+      // Synthesize email if not provided
+      const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || '').replace(/\/$/, '')
+      const siteHost = (() => {
+        try {
+          const url = new URL(baseUrl)
+          return url.host
+        } catch {
+          return 'guests.khadimemillat.org'
+        }
+      })()
+      emailUsed = `${username}@${siteHost}`
+      hasRealEmail = false
+    }
+  } else {
+    // Phone-only mode: email is optional
+    if (input.email && input.email.trim()) {
+      emailUsed = input.email.trim()
+      hasRealEmail = true
+    }
+  }
 
   try {
-    // Try with minimal required fields first
-    const minimalUserData = {
+    // Build Clerk user data based on mode
+    const clerkUserData: any = {
       firstName,
-      lastName: lastName || undefined, // Don't send empty string
-      username,
-      password,
-      emailAddress: [emailUsed]
+      lastName, // Required by Clerk
+      phoneNumber: [e164Phone] // Phone number in E.164 format
     }
 
-    // Create user with minimal required fields
-
-    const clerkUser = await client.users.createUser(minimalUserData)
-
-    // Normalize phone number before saving
-    const { normalizePhoneNumber } = await import('@/lib/utils/phone')
-    const normalizedPhone = normalizePhoneNumber(input.phone)
-
-    // Update metadata separately if user creation succeeds
-    if (input.role || input.address || input.phone) {
-      try {
-        await client.users.updateUser(clerkUser.id, {
-          publicMetadata: {
-            role: input.role || 'user',
-            ...(input.address && { address: input.address })
-          },
-          privateMetadata: { phone: normalizedPhone }
-        })
-      } catch (metadataError) {
-        console.warn('[METADATA_UPDATE_FAILED]', metadataError)
-        // Don't fail the entire operation if metadata update fails
+    if (!skipPassword) {
+      // Username/password mode
+      clerkUserData.username = username
+      clerkUserData.password = password
+      if (emailUsed) {
+        clerkUserData.emailAddress = [emailUsed]
+      }
+    } else {
+      // Phone-only mode with OTP
+      clerkUserData.skipPasswordRequirement = true
+      if (emailUsed) {
+        clerkUserData.emailAddress = [emailUsed]
       }
     }
 
-    // mongo sync (non-blocking) - only save real email to MongoDB
+    console.log('[CLERK_CREATE] Creating user:', {
+      firstName,
+      lastName: lastName || '[empty]',
+      phone: e164Phone,
+      skipPassword,
+      hasEmail: !!emailUsed,
+      hasUsername: !!username
+    })
+
+    // Create user in Clerk
+    const clerkUser = await client.users.createUser(clerkUserData)
+
+    // Update metadata separately
+    try {
+      await client.users.updateUser(clerkUser.id, {
+        publicMetadata: {
+          role: input.role || 'user',
+          ...(input.address && { address: input.address })
+        },
+        privateMetadata: { phone: normalizedPhone }
+      })
+    } catch (metadataError) {
+      console.warn('[METADATA_UPDATE_FAILED]', metadataError)
+    }
+
+    // MongoDB sync (non-blocking)
     syncNewUserToMongoDB({
       clerkUserId: clerkUser.id,
-      name,
-      email: hasRealEmail ? input.email : undefined,
+      name: `${firstName} ${lastName || ''}`.trim(),
+      email: hasRealEmail ? emailUsed : undefined,
       phone: normalizedPhone,
       address: input.address,
       role: input.role || 'user'
     }).catch(err => console.warn('[USER_SYNC_FAILED]', err))
 
-    // notifications
-    const signInUrl = `${baseUrl || 'https://www.khadimemillat.org'}/sign-in`
+    // Notifications
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.khadimemillat.org'
+    const signInUrl = `${baseUrl}/sign-in`
     const wantEmail = input.notifyChannels?.email !== false
     const wantWhatsApp = input.notifyChannels?.whatsapp !== false
     const wantSMS = input.notifyChannels?.sms === true
 
-    // Only send email if user provided a real email address (not synthesized)
-    if (hasRealEmail && wantEmail) {
+    // Send WhatsApp notification via campaign
+    if (wantWhatsApp) {
       try {
-        const html = emailService.generateDefaultBrandedEmail({
-          title: 'Your account has been created',
-          greetingName: firstName,
-          message: `Your account has been created.\n\nUsername: <b>${username}</b><br/>Password: <b>${password}</b><br/><br/>Sign in: <a href="${signInUrl}">${signInUrl}</a>`
-        })
-        await emailService.sendEmail({ to: input.email!, subject: 'Welcome – Your account details', html })
-      } catch (emailError) {
-        console.warn('[EMAIL_NOTIFICATION_FAILED]', emailError)
-        // Don't fail user creation if email fails
+        if (skipPassword) {
+          // Phone-only user: send account creation notification via campaign
+          await whatsappService.sendAccountCreationNotification({
+            phone: e164Phone,
+            userName: firstName
+          })
+          console.log('[WHATSAPP_SENT] Account creation notification sent')
+        } else {
+          // Legacy user with password: send credentials
+          await whatsappService.sendMessage({
+            to: whatsappService.formatPhoneNumber(input.phone),
+            message: `KM Welfare account created.\nUsername: ${username}\nPassword: ${password}\nSign in: ${signInUrl}`,
+            userName: firstName
+          })
+        }
+      } catch (whatsappError) {
+        console.warn('[WHATSAPP_NOTIFICATION_FAILED]', whatsappError)
       }
     }
 
-    if (wantWhatsApp) {
-      try { await whatsappService.sendMessage({ to: whatsappService.formatPhoneNumber(input.phone), message: `KM Welfare account created.\nUsername: ${username}\nPassword: ${password}\nSign in: ${signInUrl}` }) } catch { }
+    // Email notification (only for users with real email)
+    if (hasRealEmail && wantEmail && emailUsed) {
+      try {
+        if (skipPassword) {
+          // Phone-only user
+          const html = emailService.generateDefaultBrandedEmail({
+            title: 'Welcome to KM Welfare',
+            greetingName: firstName,
+            message: `Your account has been created successfully.\n\nYou can sign in using your mobile number with OTP.\n\nSign in: <a href="${signInUrl}">${signInUrl}</a>`
+          })
+          await emailService.sendEmail({ to: emailUsed, subject: 'Welcome to KM Welfare', html })
+        } else {
+        // Legacy user with password
+          const html = emailService.generateDefaultBrandedEmail({
+            title: 'Your account has been created',
+            greetingName: firstName,
+            message: `Your account has been created.\n\nUsername: <b>${username}</b><br/>Password: <b>${password}</b><br/><br/>Sign in: <a href="${signInUrl}">${signInUrl}</a>`
+          })
+          await emailService.sendEmail({ to: emailUsed, subject: 'Welcome – Your account details', html })
+        }
+      } catch (emailError) {
+        console.warn('[EMAIL_NOTIFICATION_FAILED]', emailError)
+      }
     }
 
+    // SMS notification (optional)
     if (wantSMS) {
-      try { await smsService.sendSMS({ to: input.phone, message: `KM Welfare: Username ${username}, Password ${password}. Sign in: ${signInUrl}` } as any) } catch { }
+      try {
+        const smsMessage = skipPassword
+          ? `KM Welfare: Welcome! Sign in with OTP at ${signInUrl}`
+          : `KM Welfare: Username ${username}, Password ${password}. Sign in: ${signInUrl}`
+        await smsService.sendSMS({ to: input.phone, message: smsMessage } as any)
+      } catch (smsError) {
+        console.warn('[SMS_NOTIFICATION_FAILED]', smsError)
+      }
     }
 
-    return { clerkUserId: clerkUser.id, username, emailUsed, password }
+    return {
+      clerkUserId: clerkUser.id,
+      phoneNumber: e164Phone,
+      username,
+      emailUsed,
+      password
+    }
   } catch (clerkError: any) {
     console.error('[CLERK_ERROR_DETAILS]', {
       message: clerkError.message,
