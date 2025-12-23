@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import moment from 'moment';
+import { format, isValid, parseISO } from 'date-fns';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -8,9 +8,9 @@ export function cn(...inputs: ClassValue[]) {
 
 export const formatDate = (dateInput: string | Date | null): string => {
   if (dateInput == null) return ""
-  const date = moment(dateInput);
-  if (!date || !date.isValid()) return "no date provided";
-  return `${date.format('DD-MM-YY')}, ${date.format('hh:mm A')}`;
+  const date = typeof dateInput === 'string' ? parseISO(dateInput) : dateInput;
+  if (!isValid(date)) return "no date provided";
+  return format(date, 'dd-MM-yy, hh:mm a');
 };
 
 export function camelToWords(str: string) {

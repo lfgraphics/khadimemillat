@@ -105,6 +105,44 @@ export default function AccountPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Push Notifications Toggle */}
+      <Card>
+        <CardHeader className='pb-3'>
+          <CardTitle className='text-base'>Notification Preferences</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className='space-y-3'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <p className='text-sm font-medium'>Push Notifications</p>
+                <p className='text-xs text-muted-foreground'>Receive browser notifications for updates</p>
+              </div>
+              <Button
+                variant={typeof window !== 'undefined' && Notification?.permission === 'granted' ? 'default' : 'outline'}
+                size='sm'
+                onClick={async () => {
+                  if (typeof window === 'undefined' || !('Notification' in window)) {
+                    toast.error('Notifications not supported in this browser')
+                    return
+                  }
+                  const perm = await Notification.requestPermission()
+                  if (perm === 'granted') toast.success('Notifications enabled')
+                  else toast.error('Notifications denied by browser')
+                }}
+              >
+                {typeof window !== 'undefined' && Notification?.permission === 'granted' ? 'Enabled' : 'Enable'}
+              </Button>
+            </div>
+            {typeof window !== 'undefined' && Notification?.permission === 'denied' && (
+              <Alert variant='destructive' className='py-2'>
+                <AlertDescription className='text-xs'>Notifications blocked. Please enable in browser settings.</AlertDescription>
+              </Alert>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       <div className='text-xs text-muted-foreground'>These details auto-fill collection requests. Keep them accurate.</div>
 
       <div className='pt-6'>

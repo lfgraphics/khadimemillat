@@ -24,6 +24,8 @@ export interface IUser extends Document {
         smsNotifications: boolean
         monthlyReports: boolean
     }
+    // Push Notification Preference
+    pushNotificationsEnabled?: boolean // User preference for web push notifications
     // Subscription Statistics
     subscriptionStats?: {
         totalSubscriptions: number
@@ -50,6 +52,8 @@ const userSchema = new Schema<IUser>({
         smsNotifications: { type: Boolean, default: true },
         monthlyReports: { type: Boolean, default: true }
     },
+    // Push Notification Preference
+    pushNotificationsEnabled: { type: Boolean, default: true },
     // Subscription Statistics
     subscriptionStats: {
         totalSubscriptions: { type: Number, default: 0 },

@@ -273,3 +273,96 @@ export async function retryOperation<T>(
   
   throw lastError;
 }
+
+/**
+ * Error logger for monitoring and debugging
+ * Consolidated from error-logger.ts to avoid redundancy
+ */
+export interface ErrorLogEntry {
+  timestamp: Date;
+  component: string;
+  action: string;
+  error: Error | string;
+  userId?: string;
+  metadata?: Record<string, any>;
+}
+
+export class ErrorLogger {
+  private static instance: ErrorLogger;
+  private logs: ErrorLogEntry[] = [];
+
+  private constructor() { }
+
+  public static getInstance(): ErrorLogger {
+    if (!ErrorLogger.instance) {
+      ErrorLogger.instance = new ErrorLogger();
+    }
+    return ErrorLogger.instance;
+  }
+
+  public logError(entry: Omit<ErrorLogEntry, 'timestamp'>): void {
+    const logEntry: ErrorLogEntry = {
+      ...entry,
+      timestamp: new Date(),
+    };
+
+    this.logs.push(logEntry);
+
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`[${logEntry.component}] ${logEntry.action}:`, {
+        error: logEntry.error,
+        userId: logEntry.userId,
+        metadata: logEntry.metadata,
+        timestamp: logEntry.timestamp.toISOString(),
+      });
+    }
+
+    // Keep only last 100 logs
+    if (this.logs.length > 100) {
+      this.logs = this.logs.slice(-100);
+    }
+  }
+
+  public getRecentLogs(limit: number = 10): ErrorLogEntry[] {
+    return this.logs.slice(-limit);
+  }
+
+  public clearLogs(): void {
+    this.logs = [];
+  }
+
+  public logWorkflowError(error: Error | string, workflow: string, metadata?: Record<string, any>): void {
+    this.logError({
+      component: 'UserManagementClient',
+      action: `workflow_${workflow}`,
+      error,
+      metadata,
+    });
+  }
+
+  public logDonationRequestError(error: Error | string, userId?: string, metadata?: Record<string, any>): void {
+    this.logError({
+      component: 'CreateDonationRequestForm',
+      action: 'create_donation_request',
+      error,
+      userId,
+      metadata,
+    });
+  }
+}
+
+export const errorLogger = ErrorLogger.getInstance();
+
+// Helper function to extract error details for logging
+export function extractErrorDetails(error: unknown): Record<string, any> {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    };
+  }
+  return {
+    error: String(error),
+  };
+}
