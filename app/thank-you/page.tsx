@@ -15,33 +15,61 @@ interface ThankYouPageProps {
 async function getDonationDetails(donationId: string) {
   await connectDB()
   
-  const donation = await CampaignDonation.findById(donationId)
+  // Try to find as campaign donation first (online)
+  let donation = await CampaignDonation.findById(donationId)
     .populate('campaignId', 'name title')
     .populate('programId', 'name title')
     .lean()
   
-  if (!donation) {
-    return null
+  if (donation) {
+    return {
+      donationId: (donation as any)._id.toString(),
+      donorName: (donation as any).donorName,
+      amount: (donation as any).amount,
+      currency: 'INR',
+      receiptId: (donation as any)._id.toString().slice(-8),
+      certificateNumber: (donation as any).certificate80G?.certificateNumber,
+      wants80G: (donation as any).wants80GReceipt || false,
+      campaignName: (donation as any).campaignId?.name || (donation as any).campaignId?.title,
+      programName: (donation as any).programId?.title || (donation as any).programId?.name || 'General Donation',
+      razorpayPaymentId: (donation as any).razorpayPaymentId,
+      donationDate: new Date((donation as any).createdAt).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      }),
+      status: (donation as any).status,
+      isOffline: false
+    }
   }
 
-  return {
-    donationId: (donation as any)._id.toString(),
-    donorName: (donation as any).donorName,
-    amount: (donation as any).amount,
-    currency: 'INR',
-    receiptId: (donation as any)._id.toString().slice(-8),
-    certificateNumber: (donation as any).certificate80G?.certificateNumber,
-    wants80G: (donation as any).wants80GReceipt || false,
-    campaignName: (donation as any).campaignId?.name || (donation as any).campaignId?.title,
-    programName: (donation as any).programId?.title || (donation as any).programId?.name || 'General Donation',
-    razorpayPaymentId: (donation as any).razorpayPaymentId,
-    donationDate: new Date((donation as any).createdAt).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
-    }),
-    status: (donation as any).status
+  // Try offline donation
+  const OfflineDonation = (await import('@/models/OfflineDonation')).default
+  const offlineDonation = await OfflineDonation.findById(donationId).lean()
+
+  if (offlineDonation) {
+    return {
+      donationId: (offlineDonation as any)._id.toString(),
+      donorName: (offlineDonation as any).donorName,
+      amount: (offlineDonation as any).amount,
+      currency: 'INR',
+      receiptId: (offlineDonation as any)._id.toString().slice(-8),
+      certificateNumber: undefined,
+      wants80G: false,
+      campaignName: (offlineDonation as any).campaignName || 'Cash Donation',
+      programName: (offlineDonation as any).programName || 'Offline Cash Donation',
+      razorpayPaymentId: undefined,
+      donationDate: new Date((offlineDonation as any).createdAt).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      }),
+      status: 'completed', // Offline donations are always completed
+      isOffline: true
+    }
   }
+
+  return null
 }
 
 export default async function ThankYouPage({ searchParams }: ThankYouPageProps) {
@@ -58,8 +86,8 @@ export default async function ThankYouPage({ searchParams }: ThankYouPageProps) 
     redirect('/donate')
   }
 
-  // Only show thank you page for completed donations
-  if (donationDetails.status !== 'completed') {
+  // Only show thank you page for completed donations (online donations only)
+  if (!donationDetails.isOffline && donationDetails.status !== 'completed') {
     redirect('/donate')
   }
 
