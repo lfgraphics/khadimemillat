@@ -30,12 +30,21 @@ export async function GET(
     
     const { donationId } = await context.params
     
-    // Fetch donation details
-    const donation = await CampaignDonation.findById(donationId)
+    // Try to fetch as campaign donation first (online)
+    let donation = await CampaignDonation.findById(donationId)
       .populate('campaignId', 'name title')
       .populate('programId', 'title name')
       .lean()
     
+    let isOffline = false
+
+    if (!donation) {
+      // Try offline donation
+      const OfflineDonation = (await import('@/models/OfflineDonation')).default
+      donation = await OfflineDonation.findById(donationId).lean()
+      isOffline = true
+    }
+
     if (!donation) {
       return NextResponse.json({ error: 'Donation not found' }, { status: 404 })
     }
@@ -47,8 +56,18 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid donation data' }, { status: 400 })
     }
     
-    const campaignName = donationData.campaignId?.name || donationData.campaignId?.title
-    const programName = donationData.programId?.title || donationData.programId?.name || 'General Donation'
+    // Extract campaign/program names based on donation type
+    let campaignName: string
+    let programName: string
+
+    if (isOffline) {
+      campaignName = donationData.campaignName || 'Cash Donation'
+      programName = donationData.programName || 'Offline Cash Donation'
+    } else {
+      campaignName = donationData.campaignId?.name || donationData.campaignId?.title || ''
+      programName = donationData.programId?.title || donationData.programId?.name || 'General Donation'
+    }
+
     const donationDate = new Date(donationData.createdAt).toLocaleDateString('en-IN', {
       day: '2-digit',
       month: 'long',

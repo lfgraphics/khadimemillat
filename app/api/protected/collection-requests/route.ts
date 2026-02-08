@@ -4,6 +4,9 @@ import { createCollectionRequest, listCollectionRequests } from '../../../../lib
 import { createCollectionRequestSchema } from '../../../../lib/validators/collectionRequest.validator'
 import { getClerkUserWithSupplementaryData } from '../../../../lib/services/user.service'
 
+// NOTE: This route is in /api/protected/collection-requests but is marked as public in proxy.ts
+// This decision was made to allow guest users (not logged in) to submit collection requests
+// The POST handler below supports both authenticated and guest users
 export async function GET(req: Request) {
   try {
     const { userId: clerkUserId } = await auth()
@@ -19,7 +22,16 @@ export async function GET(req: Request) {
 
     // Enrich donor & assigned field executives with Clerk user data
     const enrichedItems = await Promise.all(data.items.map(async (item: any) => {
-      const donorDetails = await getClerkUserWithSupplementaryData(item.donor)
+      let donorDetails = null
+      // Check if this is a guest donor (donor ID starts with 'guest_')
+      // Convert donor to string to handle ObjectId
+      const donorId = String(item.donor || '')
+      if (donorId && !donorId.startsWith('guest_')) {
+        donorDetails = await getClerkUserWithSupplementaryData(donorId)
+      } else if (item.guestName) {
+        // For guest donors, create a simple donor details object
+        donorDetails = { name: item.guestName, isGuest: true }
+      }
       const assignedDetails = await Promise.all((item.assignedFieldExecutives || []).map((id: string) => getClerkUserWithSupplementaryData(id)))
       let collectedByDetails = null
       if (item.status === 'collected' || item.status === 'completed') {

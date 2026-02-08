@@ -24,7 +24,17 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     let donationEntryId: string | undefined
     let donorMongoId: string | undefined
     try {
-      donorDetails = await getClerkUserWithSupplementaryData(doc.donor)
+      // Enrich with donor details
+      const donorId = String(doc.donor || '') // Convert to string to handle ObjectId
+      if (donorId && !donorId.startsWith('guest_')) {
+        try {
+          donorDetails = await getClerkUserWithSupplementaryData(donorId)
+        } catch (e) {
+          console.error(`Failed to fetch donor ${donorId}:`, e)
+        }
+      } else if ((doc as any).guestName) {
+        donorDetails = { name: (doc as any).guestName, isGuest: true }
+      }
     } catch (e) {
       // Failed to enrich donor details, continue without
     }
@@ -73,10 +83,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const role = (sessionClaims as any)?.metadata?.role || 'user'
     const body = await req.json()
 
-    // VERIFY (auto-assign all field executives)
+    // VERIFY (change status to verified, do NOT auto-assign)
+    // Auto-assignment removed as per UX improvement - admins/moderators must explicitly assign field executives
     if (body.action === 'verify') {
       if (!['admin', 'moderator'].includes(role)) return new NextResponse('Forbidden', { status: 403 })
-      const updated = await assignFieldExecutives(id) // no list => auto assign
+      const updated = await updateCollectionRequest(id, { status: 'verified' })
       return NextResponse.json({ success: true, request: updated })
     }
 

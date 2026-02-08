@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useLayoutEffect } from "react";
+import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import EditOfflineDonation from "./EditDonations";
 import DeleteOfflineDonation from "./DeleteOfflineDonation";
-import { useReactToPrint } from "react-to-print"
 import DonationPrintSlip from "./DonationPrintSlip";
 import { toast } from "sonner";
 
@@ -41,21 +40,15 @@ export default function ListOfflineDonation({ permissions }: { permissions: Perm
   const [role, setRole] = useState<string | null>(null);
 
   const [printDonation, setPrintDonation] = useState<any>(null);
-  const printRef = useRef<HTMLDivElement>(null)
 
-  const handlePrint = useReactToPrint({
-    contentRef: printRef,
-    documentTitle: printDonation
-      ? `Donation-by-${printDonation.donorName}`
-      : "donation",
-    onAfterPrint: () => setPrintDonation(null),
-  });
-
-  useLayoutEffect(() => {
-    if (printDonation && printRef.current) {
-      handlePrint();
-    }
-  }, [printDonation, handlePrint]);
+  const handlePrint = (donation: any) => {
+    setPrintDonation(donation);
+    // Use setTimeout to ensure DOM is updated before printing
+    setTimeout(() => {
+      window.print();
+      setPrintDonation(null);
+    }, 100);
+  };
 
   useEffect(() => {
     const fetchDonations = async () => {
@@ -285,21 +278,12 @@ export default function ListOfflineDonation({ permissions }: { permissions: Perm
 
                             {(role === "admin" || role === "moderator") && (
                               <DropdownMenuItem
-                                onClick={() => setPrintDonation(d)}
+                                onClick={() => handlePrint(d)}
                                 className="flex items-center gap-2"
                               >
                                 <Printer className="w-4 h-4" />
                                 Print Slip
                               </DropdownMenuItem>
-                            )}
-
-                            {printDonation && (
-                              <div
-                                className="fixed inset-0 flex items-center justify-center bg-white"
-                                ref={printRef}
-                              >
-                                <DonationPrintSlip donation={printDonation} />
-                              </div>
                             )}
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -331,6 +315,35 @@ export default function ListOfflineDonation({ permissions }: { permissions: Perm
           )}
         </CardContent>
       </Card>
+
+      {/* Print-only component - hidden on screen, visible when printing */}
+      {printDonation && (
+        <div className="print-only">
+          <DonationPrintSlip donation={printDonation} />
+        </div>
+      )}
+
+      <style jsx global>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .print-only,
+          .print-only * {
+            visibility: visible;
+          }
+          .print-only {
+            position: absolute;
+            left: 0;
+            top: 0;
+          }
+        }
+        @media screen {
+          .print-only {
+            display: none;
+          }
+        }
+      `}</style>
     </div >
   );
 }

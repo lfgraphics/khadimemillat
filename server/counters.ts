@@ -25,10 +25,12 @@ export async function getHomeCounters(): Promise<HomeCounters> {
   try {
     await connectDB()
     const [donations, scrap, members, allMembershipRequests] = await Promise.all([
-      CampaignDonation.find({ status: 'completed' })
-        .select('donorId donorEmail donorName')
+      // Query for verified payments instead of status: 'completed'
+      // Since donations can be paymentVerified: true even with status: 'pending'
+      CampaignDonation.find({ paymentVerified: true })
+        .select('donorId donorEmail donorName donorPhone')
         .lean(),
-      CollectionRequest.find({ status: 'completed' })
+      CollectionRequest.find({ status: { $in: ['collected', 'completed'] } })
         .select('donor phone')
         .lean(),
       MembershipRequest.find({ status: 'approved' })
@@ -41,7 +43,8 @@ export async function getHomeCounters(): Promise<HomeCounters> {
 
     const unique = new Set<string>()
     for (const d of donations) {
-      const key = (d as any).donorId || (d as any).donorEmail || (d as any).donorName
+      // Try donorId, then donorPhone, then donorEmail, then donorName
+      const key = (d as any).donorId || (d as any).donorPhone || (d as any).donorEmail || (d as any).donorName
       if (key) unique.add(key)
     }
     for (const s of scrap) {

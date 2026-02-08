@@ -9,7 +9,7 @@ import { CreateDonationRequestForm } from "@/components/admin/CreateDonationRequ
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { errorLogger } from "@/lib/utils/error-logger";
+import { errorLogger } from "@/lib/utils/errorHandling";
 
 interface UserManagementClientProps {
   children: React.ReactNode;

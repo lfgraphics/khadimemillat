@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo } from 'react'
-import { marked } from 'marked'
 import DOMPurify from 'isomorphic-dompurify'
 
 interface MarkdownRendererProps {
@@ -9,19 +8,49 @@ interface MarkdownRendererProps {
     className?: string
 }
 
+// Simple markdown parser instead of using the 'marked' library  
+function parseMarkdown(markdown: string): string {
+    let html = markdown
+        // Headers (h1-h6)
+        .replace(/^######\s(.+)$/gm, '<h6>$1</h6>')
+        .replace(/^#####\s(.+)$/gm, '<h5>$1</h5>')
+        .replace(/^####\s(.+)$/gm, '<h4>$1</h4>')
+        .replace(/^###\s(.+)$/gm, '<h3>$1</h3>')
+        .replace(/^##\s(.+)$/gm, '<h2>$1</h2>')
+        .replace(/^#\s(.+)$/gm, '<h1>$1</h1>')
+        // Bold
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/__(.+?)__/g, '<strong>$1</strong>')
+        // Italic
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/_(.+?)_/g, '<em>$1</em>')
+        // Code (inline)
+        .replace(/`(.+?)`/g, '<code>$1</code>')
+        // Links
+        .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>')
+        // Line breaks
+        .replace(/\n/g, '<br>')
+        // Lists (unordered)
+        .replace(/^\*\s(.+)$/gm, '<li>$1</li>')
+        .replace(/^-\s(.+)$/gm, '<li>$1</li>')
+        // Lists (ordered)
+        .replace(/^\d+\.\s(.+)$/gm, '<li>$1</li>')
+        // Blockquotes
+        .replace(/^>\s(.+)$/gm, '<blockquote>$1</blockquote>')
+        // Horizontal rules
+        .replace(/^---$/gm, '<hr>')
+        .replace(/^\*\*\*$/gm, '<hr>')
+
+    return html
+}
+
 export default function MarkdownRenderer({ content, className = '' }: MarkdownRendererProps) {
     const renderedContent = useMemo(() => {
         if (!content) return ''
 
         try {
-            // Configure marked options
-            marked.setOptions({
-                breaks: true,
-                gfm: true,
-            })
-
-            // Parse markdown to HTML
-            const html = marked.parse(content) as string
+            // Parse markdown to HTML using simple parser
+            const html = parseMarkdown(content)
 
             // Enhance the HTML with better styling
             const styledHtml = html
@@ -32,40 +61,17 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
                 .replace(/<h4>/g, '<h4 class="text-base font-semibold text-foreground mb-2 mt-3">')
                 .replace(/<h5>/g, '<h5 class="text-sm font-semibold text-foreground mb-2 mt-2">')
                 .replace(/<h6>/g, '<h6 class="text-xs font-semibold text-foreground mb-2 mt-2">')
-                
-                // Paragraphs
-                .replace(/<p>/g, '<p class="text-foreground mb-4 leading-relaxed">')
-                
                 // Lists
-                .replace(/<ul>/g, '<ul class="list-disc list-inside mb-4 space-y-2 pl-4">')
-                .replace(/<ol>/g, '<ol class="list-decimal list-inside mb-4 space-y-2 pl-4">')
-                .replace(/<li>/g, '<li class="text-foreground">')
-                
+                .replace(/<li>/g, '<li class="text-foreground mb-1">')
                 // Links
-                .replace(/<a href="/g, '<a href="')
-                .replace(/<a /g, '<a class="text-primary hoact:text-primary/80 underline underline-offset-2 transition-colors" target="_blank" rel="noopener noreferrer" ')
-                
-                // Code blocks
-                .replace(/<pre><code>/g, '<pre class="bg-muted p-4 rounded-lg mb-4 overflow-x-auto"><code class="text-sm font-mono text-foreground">')
-                
+                .replace(/<a /g, '<a class="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors" target="_blank" rel="noopener noreferrer" ')
                 // Inline code
                 .replace(/<code>/g, '<code class="bg-muted px-2 py-1 rounded text-sm font-mono text-foreground">')
-                
                 // Blockquotes
-                .replace(/<blockquote>/g, '<blockquote class="border-l-4 border-primary pl-4 py-2 mb-4 bg-muted/50 rounded-r-lg"><div class="text-muted-foreground italic">')
-                .replace(/<\/blockquote>/g, '</div></blockquote>')
-                
-                // Tables
-                .replace(/<table>/g, '<div class="overflow-x-auto mb-4"><table class="min-w-full border border-border rounded-lg">')
-                .replace(/<\/table>/g, '</table></div>')
-                .replace(/<tr>/g, '<tr class="border-b border-border">')
-                .replace(/<th>/g, '<th class="px-4 py-2 bg-muted font-semibold text-left text-foreground">')
-                .replace(/<td>/g, '<td class="px-4 py-2 text-foreground">')
-                
+                .replace(/<blockquote>/g, '<blockquote class="border-l-4 border-primary pl-4 py-2 mb-4 bg-muted/50 rounded-r-lg text-muted-foreground italic">')
                 // Horizontal rule
                 .replace(/<hr>/g, '<hr class="border-border my-8" />')
                 .replace(/<hr\/>/g, '<hr class="border-border my-8" />')
-                
                 // Strong and emphasis
                 .replace(/<strong>/g, '<strong class="font-semibold text-foreground">')
                 .replace(/<em>/g, '<em class="italic text-foreground">')

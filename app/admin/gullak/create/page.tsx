@@ -1,6 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getAvailableCaretakers } from '@/actions/gullak-actions'
 import { GullakForm } from '../components/GullakForm'
+
+export const dynamic = 'force-dynamic'
+
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'

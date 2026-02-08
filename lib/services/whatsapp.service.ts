@@ -442,9 +442,9 @@ class WhatsAppService {
       // {{6}} = program, {{7}} = date, {{8}} = receiptId, {{9}} = transactionId, {{10}} = thankYouMessage
       const templateParams = [
         donationData.donorName || 'Valued Donor', // {{1}}
-        donationData.currency || '₹', // {{2}}
+        '₹', // {{2}}
         donationData.amount.toString() || '0', // {{3}}
-        donationData.currency || '₹', // {{4}}
+        '₹', // {{4}}
         donationData.amount.toString() || '0', // {{5}}
         donationData.programName || donationData.campaignName || 'General Donation', // {{6}}
         new Date().toLocaleDateString('en-IN'), // {{7}}

@@ -2,7 +2,8 @@ import mongoose, { Schema, Document } from 'mongoose'
 
 // Clerk-first: store Clerk user ids as strings
 export interface ICollectionRequest extends Document {
-  donor: string // Clerk user ID
+  donor: string // Clerk user ID or guest identifier
+  guestName?: string // Name for guest donors (when donor starts with 'guest_')
   requestedPickupTime: Date
   actualPickupTime?: Date
   address: string
@@ -21,6 +22,7 @@ export interface ICollectionRequest extends Document {
 
 const collectionRequestSchema = new Schema<ICollectionRequest>({
   donor: { type: String, required: true },
+  guestName: { type: String }, // For guest donations
   requestedPickupTime: { type: Date, required: true },
   actualPickupTime: { type: Date },
   address: { type: String, required: true },

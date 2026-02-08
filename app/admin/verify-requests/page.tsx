@@ -8,22 +8,25 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { PhoneInput } from '@/components/ui/phone-input'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import FieldExecutiveAssignmentModal from '@/components/FieldExecutiveAssignmentModal'
-import { Loader2, Phone, MapPin, Calendar, User, Navigation } from 'lucide-react'
+import { Loader2, Phone, MapPin, Calendar, User, Navigation, UserCheck } from 'lucide-react'
 import { toast } from 'sonner'
 
-interface RequestItem { 
-  _id: string; 
-  donor?: any; 
-  phone: string; 
-  address: string; 
-  requestedPickupTime: string; 
-  status: string; 
+interface RequestItem {
+  _id: string;
+  donor?: any;
+  phone: string;
+  address: string;
+  requestedPickupTime: string;
+  status: string;
   notes?: string;
   location?: {
     type: 'Point';
-    coordinates: [number, number]; // [longitude, latitude]
+    coordinates: [number, number];
   }
+  assignedFieldExecutives?: string[];
+  assignedDetails?: any[];
 }
 
 export default function VerifyRequestsPage() {
@@ -32,15 +35,16 @@ export default function VerifyRequestsPage() {
   const [error, setError] = useState<string | null>(null)
   const [verifyingId, setVerifyingId] = useState<string | null>(null)
   const [assignDialogId, setAssignDialogId] = useState<string | null>(null)
-  const [autoAssigningId, setAutoAssigningId] = useState<string | null>(null)
   const [processing, setProcessing] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState<{address: string; phone: string; requestedPickupTime: string; notes: string}>({ address: '', phone: '', requestedPickupTime: '', notes: '' })
+  const [editForm, setEditForm] = useState<{ address: string; phone: string; requestedPickupTime: string; notes: string }>({ address: '', phone: '', requestedPickupTime: '', notes: '' })
+  const [activeTab, setActiveTab] = useState<string>('verification')
+  const [statusFilter, setStatusFilter] = useState<string>('pending')
+  const [trackingStatusFilter, setTrackingStatusFilter] = useState<string>('verified')
 
   const { user } = useUser()
   const role = (user?.publicMetadata as any)?.role
-  const canAccess = ['admin','moderator'].includes(role)
-  const [statusFilter, setStatusFilter] = useState<string>('pending')
+  const canAccess = ['admin', 'moderator'].includes(role)
 
   const load = useCallback(async () => {
     if (!canAccess) return;
@@ -48,22 +52,20 @@ export default function VerifyRequestsPage() {
     setError(null)
     try {
       const params = new URLSearchParams()
-      if (statusFilter) params.set('status', statusFilter)
+      const filterStatus = activeTab === 'verification' ? statusFilter : trackingStatusFilter
+      if (filterStatus) params.set('status', filterStatus)
       const res = await fetch(`/api/protected/collection-requests?${params.toString()}`, { cache: 'no-store' })
       const json = await safeJson<any>(res)
       const incoming = json.items || []
-      if (incoming.length === 0) {
-        console.debug('[VERIFY_REQUESTS] No items returned for filter', statusFilter)
-      }
       setItems(incoming)
-    } catch(e:any){
+    } catch (e: any) {
       console.error('[VERIFY_REQUESTS_LOAD_ERROR]', e)
       setError(e.message || 'Failed to load')
       toast.error(e.message || 'Failed to load requests')
     } finally { setLoading(false) }
-  }, [statusFilter, canAccess])
+  }, [statusFilter, trackingStatusFilter, activeTab, canAccess])
 
-  useEffect(()=>{ load() },[load])
+  useEffect(() => { load() }, [load])
 
   const verifyRequest = async (id: string) => {
     setProcessing(true)
@@ -72,18 +74,18 @@ export default function VerifyRequestsPage() {
       if (!res.ok) throw new Error('Verification failed')
       setItems(prev => prev.filter(p => p._id !== id))
       toast.success('Request verified')
-    } catch(e){ console.error(e); } finally { setProcessing(false); setVerifyingId(null) }
+    } catch (e) { console.error(e); } finally { setProcessing(false); setVerifyingId(null) }
   }
 
-  const autoAssign = async (id: string) => {
-    setAutoAssigningId(id)
+  const updateStatus = async (id: string, newStatus: string) => {
+    setProcessing(true)
     try {
-      const res = await fetch(`/api/protected/collection-requests/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'assign', fieldExecutiveIds: [] }) })
-      if (!res.ok) throw new Error('Auto-assign failed')
-      // remove from list after assignment attempt (or refresh list)
-      setItems(prev => prev.filter(p => p._id !== id))
-      toast.success('Auto-assignment triggered')
-    } catch(e:any){ console.error(e); toast.error(e.message || 'Auto-assign failed') } finally { setAutoAssigningId(null) }
+      const res = await fetch(`/api/protected/collection-requests/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: newStatus }) })
+      if (!res.ok) throw new Error('Status update failed')
+      const json = await safeJson<any>(res)
+      setItems(prev => prev.map(p => p._id === id ? { ...p, ...json.request } : p))
+      toast.success(`Status updated to ${newStatus}`)
+    } catch (e: any) { console.error(e); toast.error(e.message || 'Status update failed') } finally { setProcessing(false) }
   }
 
   const openEdit = (r: any) => {
@@ -91,13 +93,13 @@ export default function VerifyRequestsPage() {
     setEditForm({
       address: r.address || '',
       phone: r.phone || '',
-      requestedPickupTime: r.requestedPickupTime ? new Date(r.requestedPickupTime).toISOString().slice(0,16) : '',
+      requestedPickupTime: r.requestedPickupTime ? new Date(r.requestedPickupTime).toISOString().slice(0, 16) : '',
       notes: r.notes || ''
     })
   }
 
   const submitEdit = async () => {
-    if(!editingId) return
+    if (!editingId) return
     setProcessing(true)
     try {
       const body: any = {
@@ -106,12 +108,12 @@ export default function VerifyRequestsPage() {
         notes: editForm.notes,
         requestedPickupTime: editForm.requestedPickupTime
       }
-  const res = await fetch(`/api/protected/collection-requests/${editingId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-  const json = await safeJson<any>(res)
+      const res = await fetch(`/api/protected/collection-requests/${editingId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const json = await safeJson<any>(res)
       setItems(prev => prev.map(it => it._id === editingId ? { ...it, ...json.request } : it))
       setEditingId(null)
       toast.success('Request updated')
-    } catch(e:any){ console.error(e); toast.error(e.message || 'Update failed') } finally { setProcessing(false) }
+    } catch (e: any) { console.error(e); toast.error(e.message || 'Update failed') } finally { setProcessing(false) }
   }
 
   if (!canAccess) {
@@ -125,71 +127,156 @@ export default function VerifyRequestsPage() {
 
   return (
     <div className='p-6 space-y-6'>
-      <div className='flex items-center justify-between'>
-        <h1 className='text-2xl font-semibold'>Pending Collection Requests</h1>
-        <div className='flex items-center gap-2'>
-          <select className='border rounded px-2 py-1 text-sm bg-background' value={statusFilter} onChange={e=> setStatusFilter(e.target.value)}>
-            {['pending','verified','collected','completed'].map(s=> <option key={s} value={s}>{s}</option>)}
-          </select>
-          <Button variant='outline' size='sm' onClick={load} disabled={loading}>{loading ? <Loader2 className='h-4 w-4 animate-spin' /> : 'Refresh'}</Button>
-        </div>
-      </div>
-      {error && (
-        <Alert variant='destructive'>
-          <AlertDescription className='text-xs'>{error}</AlertDescription>
-        </Alert>
-      )}
-      {loading && items.length === 0 && (
-        <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
-          {Array.from({ length: 6 }).map((_,i)=>(<Card key={i} className='p-4 animate-pulse h-48' />))}
-        </div>
-      )}
-      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
-        {items.map(r => (
-          <Card key={r._id} className='p-4 space-y-3 flex flex-col'>
-            <div className='flex items-start justify-between'>
-              <Badge variant='secondary' className='uppercase tracking-wide'>{r.status}</Badge>
-              <span className='text-[10px] text-muted-foreground'>{new Date(r.requestedPickupTime).toLocaleDateString()}</span>
+      <h1 className='text-2xl font-semibold'>Collection Requests Management</h1>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="verification">Verification</TabsTrigger>
+          <TabsTrigger value="tracking">Tracking</TabsTrigger>
+        </TabsList>
+
+        {/* VERIFICATION TAB */}
+        <TabsContent value="verification" className="space-y-4 mt-4">
+          <div className='flex items-center justify-between'>
+            <p className='text-sm text-muted-foreground'>Verify and assign pending collection requests</p>
+            <div className='flex items-center gap-2'>
+              <select className='border rounded px-2 py-1 text-sm bg-background' value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                {['pending', 'verified'].map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <Button variant='outline' size='sm' onClick={load} disabled={loading}>{loading ? <Loader2 className='h-4 w-4 animate-spin' /> : 'Refresh'}</Button>
             </div>
-            <div className='space-y-1 text-xs'>
-              <p className='flex items-center gap-1'><User className='h-3 w-3' /> {(r as any).donorDetails?.name || r.donor?.name || '—'}</p>
-              <p className='flex items-center gap-1'><Phone className='h-3 w-3' /> <a href={`tel:${r.phone}`} className='text-blue-600'>{r.phone}</a></p>
-              <p className='flex items-center gap-1'><MapPin className='h-3 w-3' /> {r.address}</p>
-              <p className='flex items-center gap-1'><Calendar className='h-3 w-3' /> {new Date(r.requestedPickupTime).toLocaleString()}</p>
-              {r.location && (
-                <div className='flex items-center gap-1 text-green-600 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded text-xs'>
-                  <Navigation className='h-3 w-3' /> 
-                  <span>GPS location available</span>
+          </div>
+
+          {error && (
+            <Alert variant='destructive'>
+              <AlertDescription className='text-xs'>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {loading && items.length === 0 && (
+            <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
+              {Array.from({ length: 6 }).map((_, i) => (<Card key={i} className='p-4 animate-pulse h-48' />))}
+            </div>
+          )}
+
+          <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
+            {items.map(r => (
+              <Card key={r._id} className='p-4 space-y-3 flex flex-col'>
+                <div className='flex items-start justify-between'>
+                  <Badge variant='secondary' className='uppercase tracking-wide'>{r.status}</Badge>
+                  <span className='text-[10px] text-muted-foreground'>{new Date(r.requestedPickupTime).toLocaleDateString()}</span>
                 </div>
-              )}
-              {r.notes && <p className='italic text-[11px]'>{r.notes}</p>}
+                <div className='space-y-1 text-xs'>
+                  <p className='flex items-center gap-1'><User className='h-3 w-3' /> {(r as any).donorDetails?.name || r.donor?.name || '—'}</p>
+                  <p className='flex items-center gap-1'><Phone className='h-3 w-3' /> <a href={`tel:${r.phone}`} className='text-blue-600'>{r.phone}</a></p>
+                  <p className='flex items-center gap-1'><MapPin className='h-3 w-3' /> {r.address}</p>
+                  <p className='flex items-center gap-1'><Calendar className='h-3 w-3' /> {new Date(r.requestedPickupTime).toLocaleString()}</p>
+                  {r.location && (
+                    <div className='flex items-center gap-1 text-green-600 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded text-xs'>
+                      <Navigation className='h-3 w-3' />
+                      <span>GPS location available</span>
+                    </div>
+                  )}
+                  {r.notes && <p className='italic text-[11px]'>{r.notes}</p>}
+                </div>
+                <div className='mt-auto pt-2 flex gap-2 flex-wrap'>
+                  <Dialog open={verifyingId === r._id} onOpenChange={(o) => setVerifyingId(o ? r._id : null)}>
+                    <DialogTrigger asChild>
+                      <Button size='sm' className='flex-1' variant='default'>Verify</Button>
+                    </DialogTrigger>
+                    <DialogContent className='max-w-sm'>
+                      <DialogHeader>
+                        <DialogTitle>Verify Request</DialogTitle>
+                      </DialogHeader>
+                      <p className='text-xs text-muted-foreground'>Confirm verification for donor <span className='font-medium'>{(r as any).donorDetails?.name || '—'}</span>? This will move the request to the verified queue for assignment.</p>
+                      <DialogFooter className='pt-2'>
+                        <Button variant='outline' size='sm' onClick={() => setVerifyingId(null)} disabled={processing}>Cancel</Button>
+                        <Button size='sm' onClick={() => verifyRequest(r._id)} disabled={processing}>{processing ? <Loader2 className='h-3 w-3 animate-spin' /> : 'Confirm'}</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                  <Button size='sm' variant='outline' className='flex-1' onClick={() => openEdit(r)}>Edit</Button>
+                  <Button size='sm' variant='outline' className='flex-1' onClick={() => setAssignDialogId(r._id)}>Assign</Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {!loading && items.length === 0 && !error && (
+            <p className='text-sm text-muted-foreground text-center py-8'>No requests to verify</p>
+          )}
+        </TabsContent>
+
+        {/* TRACKING TAB */}
+        <TabsContent value="tracking" className="space-y-4 mt-4">
+          <div className='flex items-center justify-between'>
+            <p className='text-sm text-muted-foreground'>Track assigned and in-progress collection requests</p>
+            <div className='flex items-center gap-2'>
+              <select className='border rounded px-2 py-1 text-sm bg-background' value={trackingStatusFilter} onChange={e => setTrackingStatusFilter(e.target.value)}>
+                {['verified', 'collected', 'completed'].map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <Button variant='outline' size='sm' onClick={load} disabled={loading}>{loading ? <Loader2 className='h-4 w-4 animate-spin' /> : 'Refresh'}</Button>
             </div>
-            <div className='mt-auto pt-2 flex gap-2 flex-wrap'>
-              <Dialog open={verifyingId === r._id} onOpenChange={(o)=> setVerifyingId(o ? r._id : null)}>
-                <DialogTrigger asChild>
-                  <Button size='sm' className='flex-1' variant='default'>Verify</Button>
-                </DialogTrigger>
-                <DialogContent className='max-w-sm'>
-                  <DialogHeader>
-                    <DialogTitle>Verify Request</DialogTitle>
-                  </DialogHeader>
-                  <p className='text-xs text-muted-foreground'>Confirm verification for donor <span className='font-medium'>{(r as any).donorDetails?.name || '—'}</span>? This will move the request to the verified queue for assignment.</p>
-                  <DialogFooter className='pt-2'>
-                    <Button variant='outline' size='sm' onClick={()=> setVerifyingId(null)} disabled={processing}>Cancel</Button>
-                    <Button size='sm' onClick={()=> verifyRequest(r._id)} disabled={processing}>{processing ? <Loader2 className='h-3 w-3 animate-spin' /> : 'Confirm'}</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-              <Button size='sm' variant='outline' className='flex-1' onClick={()=> openEdit(r)}>Edit</Button>
-              <Button size='sm' variant='outline' className='flex-1' onClick={()=> setAssignDialogId(r._id)}>Assign</Button>
-              <Button size='sm' variant='ghost' className='flex-1' onClick={()=> autoAssign(r._id)} disabled={autoAssigningId === r._id}>
-                {autoAssigningId === r._id ? <Loader2 className='h-3 w-3 animate-spin' /> : 'Auto'}
-              </Button>
+          </div>
+
+          {error && (
+            <Alert variant='destructive'>
+              <AlertDescription className='text-xs'>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {loading && items.length === 0 && (
+            <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
+              {Array.from({ length: 6 }).map((_, i) => (<Card key={i} className='p-4 animate-pulse h-48' />))}
             </div>
-          </Card>
-        ))}
-      </div>
-      <Dialog open={!!editingId} onOpenChange={(o)=> { if(!o) setEditingId(null) }}>
+          )}
+
+          <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
+            {items.map(r => (
+              <Card key={r._id} className='p-4 space-y-3 flex flex-col'>
+                <div className='flex items-start justify-between'>
+                  <Badge variant={r.status === 'completed' ? 'default' : 'secondary'} className='uppercase tracking-wide'>{r.status}</Badge>
+                  <span className='text-[10px] text-muted-foreground'>{new Date(r.requestedPickupTime).toLocaleDateString()}</span>
+                </div>
+                <div className='space-y-1 text-xs'>
+                  <p className='flex items-center gap-1'><User className='h-3 w-3' /> {(r as any).donorDetails?.name || '—'}</p>
+                  <p className='flex items-center gap-1'><Phone className='h-3 w-3' /> <a href={`tel:${r.phone}`} className='text-blue-600'>{r.phone}</a></p>
+                  <p className='flex items-center gap-1'><MapPin className='h-3 w-3' /> {r.address}</p>
+                  {r.assignedDetails && r.assignedDetails.length > 0 && (
+                    <div className='bg-muted px-2 py-1 rounded'>
+                      <p className='flex items-center gap-1 font-medium'><UserCheck className='h-3 w-3' /> Assigned to:</p>
+                      {r.assignedDetails.map((fe: any, idx: number) => (
+                        <p key={idx} className='pl-4 text-[11px]'>• {fe?.name || 'Unknown'}</p>
+                      ))}
+                    </div>
+                  )}
+                  {r.notes && <p className='italic text-[11px]'>{r.notes}</p>}
+                </div>
+                <div className='mt-auto pt-2 flex gap-2 flex-wrap'>
+                  {r.status === 'verified' && (
+                    <Button size='sm' variant='outline' className='flex-1' onClick={() => updateStatus(r._id, 'collected')}>
+                      {processing ? <Loader2 className='h-3 w-3 animate-spin' /> : 'Mark Collected'}
+                    </Button>
+                  )}
+                  {r.status === 'collected' && (
+                    <Button size='sm' variant='default' className='flex-1' onClick={() => updateStatus(r._id, 'completed')}>
+                      {processing ? <Loader2 className='h-3 w-3 animate-spin' /> : 'Complete'}
+                    </Button>
+                  )}
+                  <Button size='sm' variant='outline' className='flex-1' onClick={() => setAssignDialogId(r._id)}>Reassign</Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {!loading && items.length === 0 && !error && (
+            <p className='text-sm text-muted-foreground text-center py-8'>No requests in tracking</p>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingId} onOpenChange={(o) => { if (!o) setEditingId(null) }}>
         <DialogContent className='max-w-sm'>
           <DialogHeader>
             <DialogTitle>Edit Request</DialogTitle>
@@ -197,36 +284,35 @@ export default function VerifyRequestsPage() {
           <div className='space-y-3 text-xs'>
             <div>
               <label className='block mb-1 font-medium'>Address</label>
-              <input className='w-full border rounded px-2 py-1 bg-background' value={editForm.address} onChange={e=> setEditForm(f=> ({...f, address: e.target.value}))} />
+              <input className='w-full border rounded px-2 py-1 bg-background' value={editForm.address} onChange={e => setEditForm(f => ({ ...f, address: e.target.value }))} />
             </div>
             <div>
               <label className='block mb-1 font-medium'>Phone</label>
-              <PhoneInput value={editForm.phone} onChange={value => setEditForm(f => ({...f, phone: value}))} className="text-sm" />
+              <PhoneInput value={editForm.phone} onChange={value => setEditForm(f => ({ ...f, phone: value }))} className="text-sm" />
             </div>
             <div>
               <label className='block mb-1 font-medium'>Requested Pickup</label>
-              <input type='datetime-local' className='w-full border rounded px-2 py-1 bg-background' value={editForm.requestedPickupTime} onChange={e=> setEditForm(f=> ({...f, requestedPickupTime: e.target.value}))} />
+              <input type='datetime-local' className='w-full border rounded px-2 py-1 bg-background' value={editForm.requestedPickupTime} onChange={e => setEditForm(f => ({ ...f, requestedPickupTime: e.target.value }))} />
             </div>
             <div>
               <label className='block mb-1 font-medium'>Notes</label>
-              <textarea className='w-full border rounded px-2 py-1 bg-background' rows={3} value={editForm.notes} onChange={e=> setEditForm(f=> ({...f, notes: e.target.value}))} />
+              <textarea className='w-full border rounded px-2 py-1 bg-background' rows={3} value={editForm.notes} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} />
             </div>
           </div>
           <DialogFooter className='pt-2'>
-            <Button variant='outline' size='sm' onClick={()=> setEditingId(null)} disabled={processing}>Cancel</Button>
+            <Button variant='outline' size='sm' onClick={() => setEditingId(null)} disabled={processing}>Cancel</Button>
             <Button size='sm' onClick={submitEdit} disabled={processing}>{processing ? <Loader2 className='h-3 w-3 animate-spin' /> : 'Save'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Field Executive Assignment Modal */}
       <FieldExecutiveAssignmentModal
         open={!!assignDialogId}
-        onOpenChange={(o)=> { if(!o) setAssignDialogId(null) }}
+        onOpenChange={(o) => { if (!o) setAssignDialogId(null) }}
         requestId={assignDialogId}
-        onAssigned={()=> load()}
+        onAssigned={() => load()}
       />
-      {!loading && items.length === 0 && !error && (
-        <p className='text-sm text-muted-foreground'>No pending requests.</p>
-      )}
     </div>
   )
 }

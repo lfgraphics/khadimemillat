@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, Calendar, Clock, Package, FileText, User, MapPin, Phone, CheckCircle, Users } from "lucide-react";
 import { cn, safeJson } from "@/lib/utils";
-import { errorLogger, formatErrorMessage, extractErrorDetails } from "@/lib/utils/error-logger";
+import { errorLogger, formatErrorMessage, extractErrorDetails } from "@/lib/utils/errorHandling";
 import { fetchWithRetry, DEFAULT_API_RETRY_OPTIONS } from "@/lib/utils/retry";
 import { Checkbox } from "@/components/ui/checkbox";
 

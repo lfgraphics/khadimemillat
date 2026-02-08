@@ -7,6 +7,10 @@ export interface IOfflineDonation extends Document {
   donorNumber: string,
   amount: number;
   notes?: string;
+  programId?: mongoose.Types.ObjectId;
+  campaignId?: mongoose.Types.ObjectId;
+  programName?: string; // Store name for easy display
+  campaignName?: string; // Store name for easy display
   collectedBy: {
     name: string;
     userId: string; // Clerk user ID (consistent with Gullak system)
@@ -45,6 +49,20 @@ const OfflineDonationSchema = new Schema<IOfflineDonation>(
       type: String,
       default: "",
       maxlength: 500
+    },
+    programId: {
+      type: Schema.Types.ObjectId,
+      ref: 'WelfareProgram'
+    },
+    campaignId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Campaign'
+    },
+    programName: {
+      type: String
+    },
+    campaignName: {
+      type: String
     },
     collectedBy: {
       name: { type: String, required: true },
