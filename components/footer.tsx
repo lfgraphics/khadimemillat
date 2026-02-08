@@ -2,6 +2,7 @@ import { Facebook, Twitter, Instagram, Phone, Mail, Globe, MapPin, Youtube } fro
 import Link from "next/link";
 
 export function Footer() {
+    const currentYear = new Date().getFullYear();
     return (
         <footer className="bg-card border-t border-border" data-testid="footer">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-2">
@@ -104,7 +105,7 @@ export function Footer() {
 
                 <div className="border-t border-border pt-8 mt-8 text-center" data-testid="footer-copyright">
                     <p className="text-muted-foreground">
-                        © 2025 Khadim-e-Millat Welfare Foundation. All rights reserved. <br /> Under Development by <Link href="https://www.codvista.com" target="_blank" className="text-purple-600 underline">Cod Vista</Link>
+                        © {currentYear} Khadim-e-Millat Welfare Foundation. All rights reserved. <br /> Developed by <Link href="https://www.codvista.com" target="_blank" className="text-purple-600 underline">Cod Vista</Link>
                     </p>
                 </div>
             </div>
