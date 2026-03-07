@@ -43,6 +43,20 @@ export const OfflineDonationReceipt: React.FC<Props> = ({ donation }) => {
     return `${baseUrl}?${params.toString()}`;
   };
 
+  const handleClose = () => {
+    // Try closing window first (if popup)
+    try {
+      window.close();
+    } catch (e) {
+      // Fallback to navigating back
+      window.location.href = '/cash-intake';
+    }
+    // If window.close() fails/is blocked, we can also ensure navigation
+    if (!window.closed) {
+      window.location.href = '/cash-intake';
+    }
+  };
+
   return (
     <div className="p-4 print:p-0">
       {/* Controls (hidden when printing) */}
@@ -64,10 +78,10 @@ export const OfflineDonationReceipt: React.FC<Props> = ({ donation }) => {
             Print Receipt
           </button>
           <button
-            onClick={() => window.close()}
+            onClick={handleClose}
             className="px-3 py-1 rounded border text-sm"
           >
-            Close
+            Back
           </button>
         </div>
       </div>
@@ -199,7 +213,7 @@ export const OfflineDonationReceipt: React.FC<Props> = ({ donation }) => {
             border: 1px solid currentColor !important;
             box-shadow: none !important;
             padding: 0.15cm !important;
-            width: 3.3cm !important;
+            width: 4.3cm !important;
             margin: 0;
             background: white !important;
             color: black !important;

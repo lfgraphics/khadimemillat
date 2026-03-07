@@ -80,11 +80,7 @@ export default async function DonorsPage({ searchParams }: { searchParams: { pag
       <div className="flex items-end justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold">Our Generous Donors</h1>
-          <p className="text-sm text-muted-foreground mt-2">
-            {total} unique donors • Page {currentPage} of {pages}
-          </p>
         </div>
-        <div className="text-sm text-muted-foreground">Latest first</div>
       </div>
 
       {donors.length === 0 ? (
@@ -100,18 +96,6 @@ export default async function DonorsPage({ searchParams }: { searchParams: { pag
                   </div>
                   <div>
                     <div className="font-medium">{d.name}</div>
-                    {d.email && <div className="text-xs text-muted-foreground">{d.email}</div>}
-                  </div>
-                </div>
-                <div className="flex items-center gap-6 text-sm">
-                  <div className="text-right">
-                    <div className="text-xs text-muted-foreground">
-                      {d.donationsCount} donation{d.donationsCount > 1 ? 's' : ''}
-                    </div>
-                  </div>
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <Calendar className="w-3.5 h-3.5 mr-1" />
-                    {new Date(d.lastDonationAt).toLocaleDateString('en-IN')}
                   </div>
                 </div>
               </div>

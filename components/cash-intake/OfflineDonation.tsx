@@ -98,6 +98,9 @@ export default function OfflineDonationForm() {
         // Store donation ID and show success UI
         setDonationId(data.donation._id);
         setShowSuccess(true);
+        
+        // Automatically redirect to receipt page for printing
+        router.push(`/cash-intake/receipt?id=${data.donation._id}`);
       } else {
         toast.error(data.error || "Something went wrong");
       }
