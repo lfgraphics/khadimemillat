@@ -19,6 +19,7 @@ interface ReceiptData {
   donationDate: string
   donationId: string
   razorpayPaymentId?: string
+  isOffline: boolean
 }
 
 export async function GET(
@@ -174,7 +175,8 @@ export async function GET(
         programName,
         donationDate,
         donationId: donationData._id.toString(),
-        razorpayPaymentId: donationData.razorpayPaymentId
+        razorpayPaymentId: donationData.razorpayPaymentId,
+        isOffline
       })
 
       console.log('Creating new page...')
@@ -1663,7 +1665,7 @@ function generateReceiptImageHTML(data: ReceiptData): string {
         
         <div class="detail-row">
           <span class="detail-label">Payment Method</span>
-          <span class="detail-value">Online Payment</span>
+          <span class="detail-value">${data.isOffline ? 'Cash Donation' : 'Online Donation'}</span>
         </div>
       </div>
       
