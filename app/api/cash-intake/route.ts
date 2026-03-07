@@ -113,6 +113,8 @@ export async function POST(req: NextRequest) {
                     }
                 );
 
+                console.log('result: ', whatsappResult)
+
                 if (whatsappResult.success) {
                     console.log(`[OFFLINE_DONATION_WHATSAPP_SENT] ${donorNumber} - ${donation._id}`);
                 } else {

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Loader2, DollarSign, List, Download, Pencil, MoreVertical, Trash, Eye, EyeOff, Trash2, Printer } from "lucide-react";
+import { Plus, Loader2, DollarSign, List, Download, Pencil, MoreVertical, Trash, Eye, EyeOff, Trash2, Printer, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -48,6 +48,31 @@ export default function ListOfflineDonation({ permissions }: { permissions: Perm
       window.print();
       setPrintDonation(null);
     }, 100);
+  };
+
+  const handleResendWhatsApp = async (donation: any) => {
+    if (!donation.donorNumber) {
+      toast.error("No phone number available for this donor");
+      return;
+    }
+
+    toast.loading("Sending WhatsApp message...", { id: "resend-whatsapp" });
+
+    try {
+      const res = await fetch(`/api/cash-intake/resend-whatsapp/${donation._id}`, {
+        method: "POST",
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        toast.success("WhatsApp message sent successfully!", { id: "resend-whatsapp" });
+      } else {
+        toast.error(data.error || "Failed to send message", { id: "resend-whatsapp" });
+      }
+    } catch (error) {
+      console.error("Resend error:", error);
+      toast.error("Network error. Please try again.", { id: "resend-whatsapp" });
+    }
   };
 
   useEffect(() => {
@@ -283,6 +308,16 @@ export default function ListOfflineDonation({ permissions }: { permissions: Perm
                               >
                                 <Printer className="w-4 h-4" />
                                 Print Slip
+                              </DropdownMenuItem>
+                            )}
+
+                            {(role === "admin" || role === "moderator" || role === "accountant") && d.donorNumber && (
+                              <DropdownMenuItem
+                                onClick={() => handleResendWhatsApp(d)}
+                                className="flex items-center gap-2 text-green-600 focus:text-green-700"
+                              >
+                                <MessageCircle className="w-4 h-4" />
+                                Resend WhatsApp
                               </DropdownMenuItem>
                             )}
                           </DropdownMenuContent>
