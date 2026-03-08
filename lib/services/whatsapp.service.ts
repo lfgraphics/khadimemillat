@@ -99,7 +99,7 @@ class WhatsAppService {
 
   private async sendAiSensyMessage(cleanPhone: string, options: WhatsAppMessage) {
     const apiUrl = 'https://backend.aisensy.com/campaign/t1/api/v2'
-    const campaignName = options.type === 'image' ? "Donation Confirmation Message" : "api_text_campaign"
+    const campaignName = options.type === 'image' ? "Donation_Confirmation" : "api_text_campaign"
 
     // Extract template parameters from the message if it contains donation data
     let templateParams: string[] = []
@@ -120,7 +120,7 @@ class WhatsAppService {
       "userName": options.userName || "User" // Name of the message recipient
     }
 
-    // Always add templateParams for donation confirmation messages
+    // Always add templateParams for Donation_Confirmations
     // The template expects exactly 10 parameters for donation confirmations
     if (templateParams.length > 1) {
       requestBody.templateParams = templateParams
