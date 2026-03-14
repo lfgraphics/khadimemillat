@@ -2,7 +2,11 @@ import Link from 'next/link'
 import { AnimatedStatsSection } from '@/components/animations'
 import { getHomeCounters } from '@/server/counters'
 
+// Force dynamic rendering to ensure fresh data on every request
+export const dynamic = 'force-dynamic'
+
 export default async function DynamicHomeCounters() {
+  // Fetch live data on every request (cached internally for 5 minutes)
   const counters = await getHomeCounters()
 
   return (
