@@ -365,7 +365,7 @@ export default function Home() {
       </section>
 
       {/* Ways you can support */}
-      <AnimatedSection variant="scale" className="container mx-auto px-4 py-16 bg-muted/30" rootMargin="-100px" triggerOnce>
+      <AnimatedSection variant="scale" className="container mx-auto px-4 py-16" rootMargin="-100px" triggerOnce>
         <AnimatedSection variant="scale" className="text-center mb-12" triggerOnce>
           <h2 className="text-3xl md:text-4xl lg:text-5xl mb-4">Ways You Can Support the Mission</h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
@@ -412,7 +412,7 @@ export default function Home() {
       </AnimatedSection>
 
       {/* Testimonials Section (Placeholder for now) */}
-      <section className="py-16 md:py-24">
+      <section className="py-16 md:py-24 bg-muted/30">
         <AnimatedSection variant="fade" className="container mx-auto px-4" rootMargin="-100px" triggerOnce>
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl lg:text-5xl mb-4">Stories of Impact</h2>
