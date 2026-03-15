@@ -196,10 +196,17 @@ export class SadqaSubscriptionService {
       // Create actual Razorpay subscription now that first payment is done
       let razorpaySubscription
       try {
+        // Calculate start date (next payment date)
+        const nextPaymentDate = this.calculateNextPaymentDate(new Date(), subscription.planType)
+        const startAt = Math.floor(nextPaymentDate.getTime() / 1000) // Unix timestamp
+        
         razorpaySubscription = await razorpay.subscriptions.create({
           plan_id: subscription.tempPlanId,
           customer_id: subscription.razorpayCustomerId,
           total_count: totalCount,
+          quantity: 1,
+          start_at: startAt,
+          customer_notify: 1,
           notes: {
             clerkUserId: subscription.clerkUserId,
             planType: subscription.planType,
@@ -768,15 +775,15 @@ export class SadqaSubscriptionService {
    * Get appropriate total_count for Razorpay subscription based on plan type
    */
   private static getTotalCountForPlan(planType: string): number {
-    // Based on Razorpay limits and our actual plan intervals
+    // Reasonable values for subscription cycles (1-2 years)
     const totalCountLimits = {
-      daily: 1200,   // Weekly period, interval 1 - max 1200 (23 years)
-      weekly: 600,   // Weekly period, interval 2 (bi-weekly) - max 600 (23 years) 
-      monthly: 1200, // Monthly period, interval 1 - max 1200 (100 years)
-      yearly: 1200   // Yearly period, interval 1 - max 1200 (1200 years)
+      daily: 52,     // Weekly payments for 1 year (52 weeks)
+      weekly: 52,    // Bi-weekly payments for 1 year (26 fortnights)
+      monthly: 12,   // Monthly payments for 1 year
+      yearly: 5      // Yearly payment for 1 year
     }
     
-    return totalCountLimits[planType as keyof typeof totalCountLimits] || 600
+    return totalCountLimits[planType as keyof typeof totalCountLimits] || 12
   }
 
   /**
