@@ -91,23 +91,5 @@
     "tsx": "^4.19.2",
     "tw-animate-css": "^1.3.8",
     "typescript": "^5"
-  },
-  "pnpm": {
-    "overrides": {
-      "@types/react": "19.2.0",
-      "@types/react-dom": "19.2.0"
-    },
-    "ignoredBuiltDependencies": [
-      "@clerk/shared",
-      "@tailwindcss/oxide",
-      "canvas",
-      "core-js-pure",
-      "esbuild",
-      "sharp"
-    ],
-    "onlyBuiltDependencies": [
-      "core-js",
-      "puppeteer"
-    ]
   }
 }
