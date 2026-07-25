@@ -5,6 +5,8 @@ import { GullakMap } from '@/app/admin/gullak/components/GullakMap'
 import { MapPin, Users, DollarSign } from 'lucide-react'
 import type { Metadata } from 'next'
 
+export const revalidate = 300
+
 export const metadata: Metadata = {
     title: 'Find Neki Bank (Gullak) Locations - Khadim-e-Millat',
     description: 'Locate the nearest Neki Bank (Gullak) contribution points in your area. Small contributions, big impact.',

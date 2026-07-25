@@ -9,6 +9,7 @@ import { revalidatePath } from 'next/cache'
 import { notificationService } from '@/lib/services/notification.service'
 
 type ActionState = { success: boolean; message: string; data?: any }
+const PUBLIC_GULLAK_MAP_PATH = '/programs/golak-map'
 
 // Check if user has permission for Gullak operations
 async function checkGullakPermission(): Promise<{ authorized: boolean; userId: string }> {
@@ -93,6 +94,7 @@ export async function createGullak(formData: FormData): Promise<ActionState> {
         await newGullak.save()
 
         revalidatePath('/admin/gullak')
+        revalidatePath(PUBLIC_GULLAK_MAP_PATH)
         return {
             success: true,
             message: `Gullak ${gullakId} created successfully`,
@@ -178,6 +180,7 @@ export async function updateGullak(gullakId: string, formData: FormData): Promis
         await gullak.save()
 
         revalidatePath('/admin/gullak')
+        revalidatePath(PUBLIC_GULLAK_MAP_PATH)
         return { success: true, message: `Gullak ${gullakId} updated successfully` }
 
     } catch (error: any) {
@@ -212,6 +215,7 @@ export async function deleteGullak(gullakId: string): Promise<ActionState> {
         }
 
         revalidatePath('/admin/gullak')
+        revalidatePath(PUBLIC_GULLAK_MAP_PATH)
         return { success: true, message: `Gullak ${gullakId} deleted successfully` }
 
     } catch (error: any) {
@@ -507,6 +511,7 @@ export async function createGullakCollection(formData: FormData): Promise<Action
         revalidatePath('/admin/gullak')
         revalidatePath(`/admin/gullak/${gullakReadableId}`)
         revalidatePath('/gullak-caretaker')
+        revalidatePath(PUBLIC_GULLAK_MAP_PATH)
 
         const message = status === 'collection_requested' 
             ? `Collection request ${collectionId} submitted successfully`
@@ -650,6 +655,7 @@ export async function verifyGullakCollection(collectionId: string, formData: For
         revalidatePath('/admin/gullak')
         revalidatePath(`/admin/gullak/${collection.gullakReadableId}`)
         revalidatePath('/gullak-caretaker')
+        revalidatePath(PUBLIC_GULLAK_MAP_PATH)
         
         return {
             success: true,
