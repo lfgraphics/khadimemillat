@@ -41,7 +41,7 @@ class GoogleReviewsService {
     this.apiKey = process.env.GOOGLE_PLACES_API_KEY || '';
     // Extract place ID from the Google Business URL
     // https://g.page/r/CbQCl9C5slOyEBE/review -> CbQCl9C5slOyEBE
-    this.placeId = 'CbQCl9C5slOyEBE'; // Your Google Business place ID
+    this.placeId = process.env.GOOGLE_BUSINESS_PLACE_ID || '';
   }
 
   async getBusinessDetails(): Promise<GooglePlaceDetails | null> {

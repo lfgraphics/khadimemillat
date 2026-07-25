@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Star, ExternalLink, Quote } from "lucide-react";
 import { AnimatedSection } from '@/components/animations';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -78,24 +79,45 @@ interface ReviewCardProps {
   review: GoogleReview;
 }
 
+function normalizeUrl(url?: string) {
+  return url?.trim().replace(/^`+|`+$/g, "");
+}
+
+function getInitials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
 function ReviewCard({ review }: ReviewCardProps) {
+  const profilePhoto = normalizeUrl(review.profilePhoto);
+  const authorUrl = normalizeUrl(review.authorUrl);
+
   return (
     <Card className="h-full">
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center space-x-3">
-            {review.profilePhoto && (
-              <img
-                src={review.profilePhoto}
-                alt={review.author}
-                className="w-10 h-10 rounded-full object-cover"
-              />
-            )}
+            <Avatar className="h-10 w-10">
+              {profilePhoto && (
+                <AvatarImage
+                  src={profilePhoto}
+                  alt={review.author}
+                  className="object-cover"
+                />
+              )}
+              <AvatarFallback className="text-xs font-medium">
+                {getInitials(review.author)}
+              </AvatarFallback>
+            </Avatar>
             <div>
               <h4 className="font-semibold text-foreground">
-                {review.authorUrl ? (
+                {authorUrl ? (
                   <a 
-                    href={review.authorUrl} 
+                    href={authorUrl}
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="hoact:text-primary transition-colors"
